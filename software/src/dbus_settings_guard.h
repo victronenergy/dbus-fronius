@@ -13,8 +13,6 @@ class DBusSettingsGuard : public QObject
 public:
 	DBusSettingsGuard(Settings *settings, QObject *parent = 0);
 
-	~DBusSettingsGuard();
-
 private slots:
 	void onPropertyChanged(const QString &property);
 

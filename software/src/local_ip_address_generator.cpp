@@ -49,9 +49,8 @@ void LocalIpAddressGenerator::reset()
 	mLocalHost = 0;
 	mLast = 0;
 	mPriorityIndex = 0;
-	if (mPriorityOnly) {
+	if (mPriorityOnly)
 		return;
-	}
 	foreach (QNetworkInterface iface, QNetworkInterface::allInterfaces()) {
 		QNetworkInterface::InterfaceFlags flags = iface.flags();
 		if (flags.testFlag(QNetworkInterface::IsUp) &&
@@ -86,9 +85,11 @@ bool LocalIpAddressGenerator::priorityOnly() const
 
 void LocalIpAddressGenerator::setPriorityOnly(bool p)
 {
-	qDebug() << __FUNCTION__ << p;
+	if (mPriorityOnly == p)
+		return;
 	mPriorityOnly = p;
-	reset();
+	if (p)
+		reset();
 }
 
 const QList<QHostAddress> &LocalIpAddressGenerator::priorityAddresses() const
@@ -99,7 +100,9 @@ const QList<QHostAddress> &LocalIpAddressGenerator::priorityAddresses() const
 void LocalIpAddressGenerator::setPriorityAddresses(
 		const QList<QHostAddress> &addresses)
 {
-	qDebug() << __FUNCTION__ << addresses;
+	bool atEnd = mPriorityIndex > 0 &&
+			mPriorityIndex >= mPriorityAddresses.size();
 	mPriorityAddresses = addresses;
-	reset();
+	mPriorityIndex = atEnd ? mPriorityAddresses.size() : 0;
+	qDebug() << __FUNCTION__ << mPriorityIndex;
 }

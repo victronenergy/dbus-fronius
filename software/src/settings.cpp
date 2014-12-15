@@ -16,7 +16,6 @@ void Settings::setAutoDetect(bool a)
 {
 	if (mAutoDetect == a)
 		return;
-	qDebug() << __FUNCTION__ << a;
 	mAutoDetect = a;
 	emit propertyChanged("autoDetect");
 }
@@ -28,7 +27,17 @@ const QList<QHostAddress> &Settings::ipAddresses() const
 
 void Settings::setIpAddresses(const QList<QHostAddress> &addresses)
 {
-	qDebug() << __FUNCTION__ << addresses;
 	mIpAddresses = addresses;
 	emit propertyChanged("ipAddresses");
+}
+
+const QList<QHostAddress> &Settings::knownIpAddresses() const
+{
+	return mKnownIpAddresses;
+}
+
+void Settings::setKnownIpAddresses(const QList<QHostAddress> &addresses)
+{
+	mKnownIpAddresses = addresses;
+	emit propertyChanged("knownIpAddresses");
 }

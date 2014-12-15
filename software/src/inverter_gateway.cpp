@@ -11,7 +11,7 @@ static const int MaxSimultaneousRequests = 10;
 
 InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
-	mAddressGenerator(settings->ipAddresses(), !settings->autoDetect())
+	mSettings(settings)
 {
 	assert(settings != 0);
 	for (int i=0; i<MaxSimultaneousRequests; ++i) {
@@ -23,14 +23,29 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 
 void InverterGateway::onStartDetection()
 {
+	QString hostName;
 	if (!mAddressGenerator.hasNext()) {
+		updateAddressGenerator();
 		mAddressGenerator.reset();
+	}
+	else
+	{
+		hostName = mAddressGenerator.next().toString();
+		foreach (FroniusSolarApi *api, mApis) {
+			if (api->hostName() == hostName) {
+				hostName.clear();
+				break;
+			}
+		}
+	}
+	if (hostName.isEmpty())
+	{
 		QTimer::singleShot(5000, this, SLOT(onStartDetection()));
 		return;
 	}
-	QString hostName = mAddressGenerator.next().toString();
 	qDebug() << __FUNCTION__ << hostName;
 	FroniusSolarApi *api = new FroniusSolarApi(hostName, Port, this);
+	mApis.append(api);
 	connect(api, SIGNAL(converterInfoFound(InverterListData)),
 			this, SLOT(onConverterInfoFound(InverterListData)));
 	api->getConverterInfoAsync();
@@ -44,6 +59,12 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 		QString hostName = api->hostName();
 		int port = api->port();
 		qDebug() << __FUNCTION__ << hostName << port;
+		QList<QHostAddress> knownIpAddresses = mSettings->knownIpAddresses();
+		QHostAddress addr(hostName);
+		if (!knownIpAddresses.contains(addr)) {
+			knownIpAddresses.append(addr);
+			mSettings->setKnownIpAddresses(knownIpAddresses);
+		}
 		for (QList<InverterInfo>::const_iterator it = data.inverters.begin();
 			 it != data.inverters.end();
 			 ++it)
@@ -60,16 +81,17 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 		}
 	}
 	onStartDetection();
+	mApis.removeOne(api);
 	api->deleteLater();
 }
 
 void InverterGateway::onSettingsChanged(const QString &property)
 {
-	Settings *settings = static_cast<Settings *>(sender());
-	if (property == "autoDetect")
-		mAddressGenerator.setPriorityOnly(!settings->autoDetect());
-	else if (property == "ipAddresses")
-		mAddressGenerator.setPriorityAddresses(settings->ipAddresses());
+	qDebug() << __FUNCTION__ << property;
+	if (property == "autoDetect" || property == "ipAddresses" ||
+			property == "knownIpAddresses") {
+		updateAddressGenerator();
+	}
 }
 
 InverterUpdater *InverterGateway::findUpdater(const QString &hostName,
@@ -97,4 +119,17 @@ InverterUpdater *InverterGateway::findUpdater(const QString &hostName)
 			return *it;
 	}
 	return 0;
+}
+
+void InverterGateway::updateAddressGenerator()
+{
+	QList<QHostAddress> addresses = mSettings->ipAddresses();
+	foreach (QHostAddress a, mSettings->knownIpAddresses()) {
+		if (!addresses.contains(a)) {
+			qDebug() << __FUNCTION__ << a;
+			addresses.append(a);
+		}
+	}
+	mAddressGenerator.setPriorityAddresses(addresses);
+	mAddressGenerator.setPriorityOnly(!mSettings->autoDetect());
 }

@@ -13,13 +13,9 @@ DBusSettingsGuard::DBusSettingsGuard(Settings *settings, QObject *parent) :
 {
 	addBusItem("/Settings/Fronius/AutoDetect", "autoDetect");
 	addBusItem("/Settings/Fronius/IPAddresses", "ipAddresses");
-}
-
-DBusSettingsGuard::~DBusSettingsGuard()
-{
-	foreach (ItemPropertyBridge b, mVBusItems) {
-		delete b.item;
-	}
+	addBusItem("/Settings/Fronius/KnownIPAddresses", "knownIpAddresses");
+	connect(settings, SIGNAL(propertyChanged(QString)),
+			this, SLOT(onPropertyChanged(QString)));
 }
 
 void DBusSettingsGuard::onPropertyChanged(const QString &property)
@@ -28,7 +24,7 @@ void DBusSettingsGuard::onPropertyChanged(const QString &property)
 	foreach (ItemPropertyBridge b, mVBusItems) {
 		if (b.property == property) {
 			QVariant value = mSettings->property(property.toAscii().data());
-			if (property == "ipAddresses") {
+			if (property == "ipAddresses" || property == "knownIpAddresses") {
 				// Convert QList<QHostAddress> to QStringList, because DBus
 				// support for custom types is sketchy. (How do you supply type
 				// information?)
@@ -50,7 +46,8 @@ void DBusSettingsGuard::onVBusItemChanged()
 		if (b.item == sender()) {
 			qDebug() << __FUNCTION__ << b.property;
 			QVariant value = b.item->getValue();
-			if (b.property == "ipAddresses") {
+			if (b.property == "ipAddresses" ||
+					b.property == "knownIpAddresses") {
 				// Convert from DBus type back to to QList<QHostAddress>.
 				// See onPropertyChanged.
 				QList<QHostAddress> addresses;
@@ -69,7 +66,7 @@ void DBusSettingsGuard::addBusItem(const QString &path, const QString &property)
 {
 	qDebug() << __FUNCTION__ << path << property;
 	QDBusConnection connection = QDBusConnection::sessionBus();
-	VBusItem *item = new VBusItem(mSettings);
+	VBusItem *item = new VBusItem(this);
 	item->consume(connection, "com.victronenergy.settings", path);
 	connect(item, SIGNAL(valueChanged()), this, SLOT(onVBusItemChanged()));
 	ItemPropertyBridge b;

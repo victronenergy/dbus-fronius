@@ -5,6 +5,7 @@
 #include <QtNetwork/QHostAddress>
 #include "local_ip_address_generator.h"
 
+class FroniusSolarApi;
 class InverterUpdater;
 class Settings;
 struct InverterListData;
@@ -15,6 +16,7 @@ class InverterGateway : public QObject
 public:
 	InverterGateway(Settings *settings, QObject *parent = 0);
 
+	void updateAddressGenerator();
 signals:
 	void inverterFound(InverterUpdater &iu);
 
@@ -31,7 +33,9 @@ private:
 
 	InverterUpdater *findUpdater(const QString &hostName);
 
+	Settings *mSettings;
 	QList<InverterUpdater *> mUpdaters;
+	QList<FroniusSolarApi *> mApis;
 	LocalIpAddressGenerator mAddressGenerator;
 };
 
