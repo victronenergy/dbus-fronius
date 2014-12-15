@@ -1,18 +1,21 @@
 #include <QDebug>
 #include "dbus_test.h"
 #include "dbus_inverter_guard.h"
+#include "dbus_settings_guard.h"
 #include "inverter.h"
 #include "inverter_gateway.h"
 #include "inverter_updater.h"
+#include "settings.h"
 
 DBusTest::DBusTest(QObject *parent) :
 	QObject(parent),
-	mGateway(new InverterGateway(this))
+	mSettings(new Settings(this)),
+	mGateway(new InverterGateway(mSettings, this)),
+	mSettingsGuard(new DBusSettingsGuard(mSettings, this))
 {
 	connect(
 		mGateway, SIGNAL(inverterFound(InverterUpdater&)),
 		this, SLOT(onInverterFound(InverterUpdater&)));
-	// new DBusClient(this);
 }
 
 void DBusTest::onInverterFound(InverterUpdater &iu)

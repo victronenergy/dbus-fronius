@@ -26,7 +26,6 @@ contains(machine,ccgx) {
 	DEFINES += TARGET_ccgx
 }
 
-
 # Note: we need the script module to parse JSON fragments
 QT += core network dbus script
 QT -= gui
@@ -38,8 +37,9 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 include(src/json/json.pri)
+include(ext/qslog/QsLog.pri)
 
-INCLUDEPATH += ext/velib/inc ext/velib/lib/Qvelib
+INCLUDEPATH += ext/qslog ext/velib/inc ext/velib/lib/Qvelib
 
 SOURCES += \
 	src/main.cpp \
@@ -47,35 +47,39 @@ SOURCES += \
 	src/froniussolar_api_test.cpp \
 	src/inverter.cpp \
 	src/dbus_test.cpp \
+	src/dbus_inverter_guard.cpp \
+	src/dbus_settings_guard.cpp \
+	src/power_info.cpp \
+	src/inverter_updater.cpp \
+	src/inverter_gateway.cpp \
+	src/local_ip_address_generator.cpp \
+	src/settings.cpp \
 	ext/velib/src/qt/v_busitem.cpp \
 	ext/velib/src/qt/v_busitem_adaptor.cpp \
 	ext/velib/src/qt/v_busitem_proxy.cpp \
 	ext/velib/src/qt/v_busitems.cpp \
 	ext/velib/src/qt/v_busitem_private_prod.cpp \
-	ext/velib/src/qt/v_busitem_private_cons.cpp \
-	src/dbus_inverter_guard.cpp \
-	src/power_info.cpp \
-	src/inverter_updater.cpp \
-	src/inverter_gateway.cpp \
-	src/local_ip_address_generator.cpp
+	ext/velib/src/qt/v_busitem_private_cons.cpp
 
 HEADERS += \
 	src/froniussolar_api.h \
 	src/froniussolar_api_test.h \
 	src/inverter.h \
 	src/dbus_test.h \
+	src/dbus_inverter_guard.h \
+	src/dbus_settings_guard.h \
+	src/power_info.h \
+	src/inverter_updater.h \
+	src/inverter_gateway.h \
+	src/local_ip_address_generator.h \
+	src/settings.h \
 	ext/velib/inc/velib/qt/v_busitem.h \
 	ext/velib/inc/velib/qt/v_busitems.h \
 	ext/velib/src/qt/v_busitem_adaptor.h \
 	ext/velib/src/qt/v_busitem_private.h \
 	ext/velib/src/qt/v_busitem_proxy.h \
 	ext/velib/src/qt/v_busitem_private_prod.h \
-	ext/velib/src/qt/v_busitem_private_cons.h \
-	src/dbus_inverter_guard.h \
-	src/power_info.h \
-	src/inverter_updater.h \
-	src/inverter_gateway.h \
-	src/local_ip_address_generator.h
+	ext/velib/src/qt/v_busitem_private_cons.h
 
 OTHER_FILES += \
 	log.txt

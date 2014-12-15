@@ -81,16 +81,16 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 	case SolarApiReply::NoError:
 	{
 		PowerInfo *l1 = mInverter->l1PowerInfo();
-		l1->setCurrent(data.iacL1);
-		l1->setVoltage(data.uacL1);
+		l1->setCurrent(data.acCurrentPhase1);
+		l1->setVoltage(data.acVoltagePhase1);
 
 		PowerInfo *l2 = mInverter->l2PowerInfo();
-		l2->setCurrent(data.iacL2);
-		l2->setVoltage(data.uacL2);
+		l2->setCurrent(data.acCurrentPhase2);
+		l2->setVoltage(data.acVoltagePhase2);
 
 		PowerInfo *l3 = mInverter->l3PowerInfo();
-		l3->setCurrent(data.iacL3);
-		l3->setVoltage(data.uacL3);
+		l3->setCurrent(data.acCurrentPhase3);
+		l3->setVoltage(data.acVoltagePhase3);
 		mInverter->setIsConnected(1);
 		mInverter->setSupports3Phases(true);
 		setInitialized();

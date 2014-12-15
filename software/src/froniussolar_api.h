@@ -12,7 +12,7 @@ class QNetworkReply;
 class QTimer;
 
 /*!
- * \brief Base class for all data packages returned by FroniusSolarApi.
+ * @brief Base class for all data packages returned by FroniusSolarApi.
  */
 struct SolarApiReply
 {
@@ -30,35 +30,35 @@ struct SolarApiReply
 struct InverterInfo : public SolarApiReply
 {
 	/*!
-	 * \brief The id of the inverter.
+	 * @brief The id of the inverter.
 	 * This id is unique only within the DATCOM chain is used to address
 	 * inverters within this chain. Use this ID in the FroniusSolarApi where
 	 * a deviceId is required.
 	 */
 	QString id;
 	/*!
-	 * \brief uniqueId Unique ID of the inverter (serial number?)
+	 * @brief uniqueId Unique ID of the inverter (serial number?)
 	 */
 	QString uniqueId;
 	/*!
-	 * \brief customName Name of the inverted as assigned by the user.
+	 * @brief customName Name of the inverted as assigned by the user.
 	 * May be empty.
 	 */
 	QString customName;
 	/*!
-	 * \brief deviceType Type of the device. This value is not documented,
+	 * @brief deviceType Type of the device. This value is not documented,
 	 * but inverters seem to have value 192. Also seen 123 on an 3 phase
 	 * inverter.
 	 */
 	int deviceType;
 	/*!
-	 * \brief errorCode
+	 * @brief errorCode
 	 * -1	No _valid_ error code
 	 *  0	OK
 	 */
 	int errorCode;
 	/*!
-	 * \brief statusCode
+	 * @brief statusCode
 	 * 0-6	Startup
 	 * 7	Running
 	 * 8	Standby
@@ -68,9 +68,29 @@ struct InverterInfo : public SolarApiReply
 	int statusCode;
 };
 
-struct InverterInfoData : public SolarApiReply
+struct InverterListData : public SolarApiReply
 {
+	/*!
+	 * @brief The list of inverters available to the data manager card.
+	 */
 	QList<InverterInfo> inverters;
+};
+
+struct CumulationInverterData : public SolarApiReply
+{
+	double acPower;
+	/*!
+	 * @brief Energy generated on current day
+	 */
+	double dayEnergy;
+	/*!
+	 * @brief Energy generated in current year
+	 */
+	double yearEnergy;
+	/*!
+	 * @brief Energy generated overall
+	 */
+	double totalEnergy;
 };
 
 struct CommonInverterData : public SolarApiReply
@@ -83,41 +103,32 @@ struct CommonInverterData : public SolarApiReply
 	double dcCurrent;
 	double dcVoltage;
 	/*!
-	 * \brief Energy generated on current day
+	 * @brief Energy generated on current day
 	 */
 	double dayEnergy;
 	/*!
-	 * \brief Energy generated in current year
+	 * @brief Energy generated in current year
 	 */
 	double yearEnergy;
 	/*!
-	 * \brief Energy generated overall
+	 * @brief Energy generated overall
 	 */
-	double totalEnergy;
-};
-
-struct CumulationInverterData : public SolarApiReply
-{
-	QString deviceId;
-	double pac;
-	double dayEnergy;
-	double yearEnergy;
 	double totalEnergy;
 };
 
 struct ThreePhasesInverterData : public SolarApiReply
 {
 	QString deviceId;
-	double iacL1;
-	double uacL1;
-	double iacL2;
-	double uacL2;
-	double iacL3;
-	double uacL3;
+	double acCurrentPhase1;
+	double acVoltagePhase1;
+	double acCurrentPhase2;
+	double acVoltagePhase2;
+	double acCurrentPhase3;
+	double acVoltagePhase3;
 };
 
 /*!
- * \brief Implements the Fronius solar API.
+ * @brief Implements the Fronius solar API.
  * This is the API running on the data manager extension cards which may be
  * installed in Fronius converters.
  * A single data manager card can report information from multiple inverters,
@@ -134,7 +145,7 @@ public:
 	int port() const;
 
 	/*!
-	 * \brief retrieves the list of inverters from the data manager specified
+	 * @brief retrieves the list of inverters from the data manager specified
 	 * by the hostName and port parameters passed to the constructor.
 	 * This function is asynchronous and will return immediatlye.
 	 * The converterInfoFound signal will be emitted when the API call has been
@@ -143,28 +154,55 @@ public:
 	void getConverterInfoAsync();
 
 	/*!
-	 * \brief returns cumulated data from all connected inverters.
+	 * @brief returns cumulated data from all connected inverters.
 	 */
 	void getCumulationDataAsync();
 
 	/*!
-	 * \brief retrieves 'common' data from the specified inverter. Common data
+	 * @brief retrieves common data from the specified inverter. Common data
 	 * is available from all inverters (with or without 3 phases).
-	 * \param deviceId The ID of the inverter. This should be the content of
-	 * the 'id' field in the InverterInfo object recieved after calling the
+	 * @param deviceId The ID of the inverter. This should be the content of
+	 * the `id` field in the InverterInfo object recieved after calling the
 	 * getConverterInfoAsync function.
+	 * The commonDataFound signal will be emitted when the API call has been
+	 * handled, even if an error has occured.
 	 */
 	void getCommonDataAsync(const QString &deviceId);
 
+	/*!
+	 * @brief retrieves values from 3 phase inverters.
+	 * @param deviceId The ID of the inverter. This should be the content of
+	 * the 'id' field in the InverterInfo object recieved after calling the
+	 * getConverterInfoAsync function.
+	 * The threePhasesDataFound signal will be emitted when the API call has
+	 * been handled, even if an error has occured.
+	 */
 	void getThreePhasesInverterDataAsync(const QString &deviceId);
 
 signals:
-	void converterInfoFound(const InverterInfoData &data);
+	/*!
+	 * @brief emitted when getConverterInfo request has been completed.
+	 * @param data payload
+	 */
+	void converterInfoFound(const InverterListData &data);
 
-	void commonDataFound(const CommonInverterData &data);
-
+	/*!
+	 * @brief emitted when getCumulationData request has been completed.
+	 * @param data payload
+	 */
 	void cumulationDataFound(const CumulationInverterData &data);
 
+	/*!
+	 * @brief emitted when getCommonData request has been completed.
+	 * @param data payload
+	 */
+	void commonDataFound(const CommonInverterData &data);
+
+	/*!
+	 * @brief emitted when getThreePhasesInverterData request has been
+	 * completed.
+	 * @param data payload
+	 */
 	void threePhasesDataFound(const ThreePhasesInverterData &data);
 
 private slots:
@@ -177,11 +215,18 @@ private:
 
 	QVariantMap parseReply(QNetworkReply *reply);
 
-	static QVariant getByPath(const QVariant &map, QString path);
+	/*!
+	 * @brief Retrieves a nested value from the specified map.
+	 * @param map
+	 * @param path A list of id's separated by slashes ('/').
+	 * @return The nested value or an empty variant of the value could not be
+	 * found.
+	 */
+	static QVariant getByPath(const QVariant &map, const QString &path);
 
+	static QNetworkAccessManager *mNam;
 	QString mHostName;
 	int mPort;
-	static QNetworkAccessManager *mNam;
 	QNetworkReply *mReply;
 	QTimer *mTimeoutTimer;
 };

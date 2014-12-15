@@ -7,8 +7,8 @@ FroniusSolarApiTest::FroniusSolarApiTest(QString hostName, int port,
 	mApi(new FroniusSolarApi(hostName, port, this))
 {
 	connect(
-		mApi, SIGNAL(converterInfoFound(InverterInfoData)),
-		this, SLOT(converterInfoFound(InverterInfoData)));
+		mApi, SIGNAL(converterInfoFound(InverterListData)),
+		this, SLOT(converterInfoFound(InverterListData)));
 	connect(
 		mApi, SIGNAL(commonDataFound(CommonInverterData)),
 		this, SLOT(commonDataFound(CommonInverterData)));
@@ -26,7 +26,7 @@ void FroniusSolarApiTest::start()
 	mApi->getConverterInfoAsync();
 }
 
-void FroniusSolarApiTest::converterInfoFound(const InverterInfoData &data)
+void FroniusSolarApiTest::converterInfoFound(const InverterListData &data)
 {
 	qDebug() << __FUNCTION__ << data.error << data.errorMessage;
 	qDebug() << data.inverters.size();
@@ -51,12 +51,12 @@ void FroniusSolarApiTest::commonDataFound(const CommonInverterData &data)
 void FroniusSolarApiTest::cumulationDataFound(const CumulationInverterData &data)
 {
 	qDebug() << __FUNCTION__ << data.error << data.errorMessage;
-	qDebug() << data.pac;
+	qDebug() << data.acPower;
 }
 
 void FroniusSolarApiTest::threePhasesDataFound(const ThreePhasesInverterData &data)
 {
 	qDebug() << __FUNCTION__ << data.error << data.errorMessage;
 	qDebug() << data.deviceId;
-	qDebug() << data.iacL1;
+	qDebug() << data.acCurrentPhase1;
 }

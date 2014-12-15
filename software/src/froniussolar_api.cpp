@@ -1,7 +1,7 @@
 #include <cassert>
 #include <QUrl>
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtNetwork/QNetworkReply>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QDebug>
 #include <QStringList>
 #include <QTimer>
@@ -17,7 +17,7 @@ FroniusSolarApi::FroniusSolarApi(QString hostName, int port, QObject *parent) :
 	mTimeoutTimer(new QTimer(this))
 {
 	if (mNam == 0)
-		mNam = new QNetworkAccessManager;
+		mNam = new QNetworkAccessManager();
 	mTimeoutTimer->setInterval(5000);
 	connect(mTimeoutTimer, SIGNAL(timeout()), this, SLOT(OnTimeout()));
 }
@@ -47,7 +47,7 @@ void FroniusSolarApi::getCumulationDataAsync()
 	sendGetRequest(url, "getCumulationData");
 }
 
-void FroniusSolarApi::getCommonDataAsync(QString deviceId)
+void FroniusSolarApi::getCommonDataAsync(const QString &deviceId)
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
@@ -57,7 +57,7 @@ void FroniusSolarApi::getCommonDataAsync(QString deviceId)
 	sendGetRequest(url, "getCommonData");
 }
 
-void FroniusSolarApi::getThreePhasesInverterDataAsync(QString deviceId)
+void FroniusSolarApi::getThreePhasesInverterDataAsync(const QString &deviceId)
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
@@ -90,7 +90,7 @@ void FroniusSolarApi::onReply()
 		qDebug() << "API error:" << errorMessage;
 	}
 	if (id == "getInverterInfo") {
-		InverterInfoData data;
+		InverterListData data;
 		data.error = error;
 		data.errorMessage = errorMessage;
 		if (error == SolarApiReply::NoError) {
@@ -117,13 +117,12 @@ void FroniusSolarApi::onReply()
 			data.deviceId = getByPath(result, "Head/RequestArguments/DeviceId").
 					toString();
 			QVariant d = getByPath(result, "Body/Data");
-			data.pac = getByPath(d, "PAC/Value").toInt();
-			data.sac = getByPath(d, "SAC/Value").toInt();
-			data.iac = getByPath(d, "IAC/Value").toDouble();
-			data.uac = getByPath(d, "UAC/Value").toDouble();
-			data.fac = getByPath(d, "FAC/Value").toDouble();
-			data.idc = getByPath(d, "IDC/Value").toDouble();
-			data.uac = getByPath(d, "UAC/Value").toDouble();
+			data.acPower = getByPath(d, "PAC/Value").toInt();
+			data.acCurrent = getByPath(d, "IAC/Value").toDouble();
+			data.acVoltage = getByPath(d, "UAC/Value").toDouble();
+			data.acFrequency = getByPath(d, "FAC/Value").toDouble();
+			data.dcCurrent = getByPath(d, "IDC/Value").toDouble();
+			data.acVoltage = getByPath(d, "UAC/Value").toDouble();
 			data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
 			data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
 			data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
@@ -137,12 +136,12 @@ void FroniusSolarApi::onReply()
 			data.deviceId = getByPath(result, "Head/RequestArguments/DeviceId").
 					toString();
 			QVariant d = getByPath(result, "Body/Data");
-			data.iacL1 = getByPath(d, "IAC_L1/Value").toDouble();
-			data.uacL1 = getByPath(d, "UAC_L1/Value").toDouble();
-			data.iacL2 = getByPath(d, "IAC_L2/Value").toDouble();
-			data.uacL2 = getByPath(d, "UAC_L2/Value").toDouble();
-			data.iacL3 = getByPath(d, "IAC_L3/Value").toDouble();
-			data.uacL3 = getByPath(d, "UAC_L3/Value").toDouble();
+			data.acCurrentPhase1 = getByPath(d, "IAC_L1/Value").toDouble();
+			data.acVoltagePhase1 = getByPath(d, "UAC_L1/Value").toDouble();
+			data.acCurrentPhase2 = getByPath(d, "IAC_L2/Value").toDouble();
+			data.acVoltagePhase2 = getByPath(d, "UAC_L2/Value").toDouble();
+			data.acCurrentPhase3 = getByPath(d, "IAC_L3/Value").toDouble();
+			data.acVoltagePhase3 = getByPath(d, "UAC_L3/Value").toDouble();
 		}
 		emit threePhasesDataFound(data);
 	} else if (id == "getCumulationData") {
@@ -151,7 +150,7 @@ void FroniusSolarApi::onReply()
 		data.errorMessage = errorMessage;
 		if (error == SolarApiReply::NoError) {
 			QVariant d = getByPath(result, "Body/Data");
-			data.pac = getByPath(d, "PAC/Value").toInt();
+			data.acPower = getByPath(d, "PAC/Value").toInt();
 			data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
 			data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
 			data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
@@ -192,7 +191,8 @@ QVariantMap FroniusSolarApi::parseReply(QNetworkReply *reply)
 	return JSON::instance().parse(result).toMap();
 }
 
-QVariant FroniusSolarApi::getByPath(const QVariant &variant, QString path)
+QVariant FroniusSolarApi::getByPath(const QVariant &variant,
+									const QString &path)
 {
 	QVariant m = variant;
 	QStringList spl = path.split('/');

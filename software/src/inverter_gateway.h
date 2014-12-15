@@ -2,21 +2,18 @@
 #define INVERTER_GATEWAY_H
 
 #include <QObject>
+#include <QtNetwork/QHostAddress>
+#include "local_ip_address_generator.h"
 
-class FroniusSolarApi;
-class InverterInfo;
 class InverterUpdater;
-class LocalIpAddressGenerator;
-class QTimer;
-struct InverterInfoData;
+class Settings;
+struct InverterListData;
 
 class InverterGateway : public QObject
 {
 	Q_OBJECT
 public:
-	explicit InverterGateway(QObject *parent = 0);
-
-	~InverterGateway();
+	InverterGateway(Settings *settings, QObject *parent = 0);
 
 signals:
 	void inverterFound(InverterUpdater &iu);
@@ -24,7 +21,9 @@ signals:
 private slots:
 	void onStartDetection();
 
-	void onConverterInfoFound(const InverterInfoData &data);
+	void onConverterInfoFound(const InverterListData &data);
+
+	void onSettingsChanged(const QString &property);
 
 private:
 	InverterUpdater *findUpdater(const QString &hostName,
@@ -32,9 +31,8 @@ private:
 
 	InverterUpdater *findUpdater(const QString &hostName);
 
-	// FroniusSolarApi *mSolarApi;
 	QList<InverterUpdater *> mUpdaters;
-	LocalIpAddressGenerator *mAddressGenerator;
+	LocalIpAddressGenerator mAddressGenerator;
 };
 
 #endif // INVERTER_GATEWAY_H

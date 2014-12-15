@@ -14,7 +14,7 @@ public:
 	void start();
 
 private slots:
-	void converterInfoFound(const InverterInfoData &data);
+	void converterInfoFound(const InverterListData &data);
 
 	void commonDataFound(const CommonInverterData &data);
 

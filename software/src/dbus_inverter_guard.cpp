@@ -54,7 +54,17 @@ DBusInverterGuard::DBusInverterGuard(Inverter *inverter) :
 	connect(mpi, SIGNAL(propertyChanged(QString)), this, SLOT(onPropertyChanged(QString)));
 }
 
-void DBusInverterGuard::onPropertyChanged(QString property)
+DBusInverterGuard::~DBusInverterGuard()
+{
+	foreach (BusItemBridge b, mBusItems) {
+		// Delete the VBusItems, because their service is no longer desired.
+		delete b.item;
+		// Do not delete b.src, because we didn't create it, and it may be
+		// present more than once in mBusItems.
+	}
+}
+
+void DBusInverterGuard::onPropertyChanged(const QString &property)
 {
 	for (QList<BusItemBridge>::iterator it = mBusItems.begin();
 		 it != mBusItems.end();

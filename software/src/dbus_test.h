@@ -2,15 +2,11 @@
 #define DBUS_TEST2_H
 
 #include <QObject>
-#include <QVariantMap>
 
-class DBusInverterGuard;
-class Inverter;
-class QTimer;
-class QDBusMessage;
-class VBusItem;
+class DBusSettingsGuard;
 class InverterGateway;
 class InverterUpdater;
+class Settings;
 
 class DBusTest : public QObject
 {
@@ -24,7 +20,9 @@ private slots:
 	void onInverterInitialized();
 
 private:
+	Settings *mSettings;
 	InverterGateway *mGateway;
+	DBusSettingsGuard *mSettingsGuard;
 };
 
 #endif // DBUS_TEST2_H

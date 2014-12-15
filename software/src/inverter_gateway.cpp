@@ -1,55 +1,45 @@
+#include <cassert>
 #include <QTimer>
 #include "froniussolar_api.h"
 #include "inverter.h"
 #include "inverter_gateway.h"
 #include "inverter_updater.h"
-#include "local_ip_address_generator.h"
+#include "settings.h"
 
-/// @todo EV magic number
-static const QString HostName = "192.168.4.144";
 static const int Port = 8080;
 static const int MaxSimultaneousRequests = 10;
 
-InverterGateway::InverterGateway(QObject *parent) :
+InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
-	mAddressGenerator(0)
+	mAddressGenerator(settings->ipAddresses(), !settings->autoDetect())
 {
+	assert(settings != 0);
 	for (int i=0; i<MaxSimultaneousRequests; ++i) {
 		onStartDetection();
 	}
-}
-
-InverterGateway::~InverterGateway()
-{
-	delete mAddressGenerator;
+	connect(settings, SIGNAL(propertyChanged(QString)),
+			this, SLOT(onSettingsChanged(QString)));
 }
 
 void InverterGateway::onStartDetection()
 {
-	if (mAddressGenerator == 0) {
-		mAddressGenerator = new LocalIpAddressGenerator();
-	}
-	if (!mAddressGenerator->hasNext()) {
-		// Delete to generator. When this function is called again, a new
-		// generator will be created effectively restarting the IP address
-		// generation.
-		delete mAddressGenerator;
-		mAddressGenerator = 0;
+	if (!mAddressGenerator.hasNext()) {
+		mAddressGenerator.reset();
 		QTimer::singleShot(5000, this, SLOT(onStartDetection()));
 		return;
 	}
-	QString hostName = mAddressGenerator->next().toString();
+	QString hostName = mAddressGenerator.next().toString();
+	qDebug() << __FUNCTION__ << hostName;
 	FroniusSolarApi *api = new FroniusSolarApi(hostName, Port, this);
-	connect(
-		api, SIGNAL(converterInfoFound(InverterInfoData)),
-				this, SLOT(onConverterInfoFound(InverterInfoData)));
+	connect(api, SIGNAL(converterInfoFound(InverterListData)),
+			this, SLOT(onConverterInfoFound(InverterListData)));
 	api->getConverterInfoAsync();
 }
 
-void InverterGateway::onConverterInfoFound(const InverterInfoData &data)
+void InverterGateway::onConverterInfoFound(const InverterListData &data)
 {
 	FroniusSolarApi *api = static_cast<FroniusSolarApi *>(sender());
-	if (data.error == InverterInfoData::NoError)
+	if (data.error == InverterListData::NoError)
 	{
 		QString hostName = api->hostName();
 		int port = api->port();
@@ -71,6 +61,15 @@ void InverterGateway::onConverterInfoFound(const InverterInfoData &data)
 	}
 	onStartDetection();
 	api->deleteLater();
+}
+
+void InverterGateway::onSettingsChanged(const QString &property)
+{
+	Settings *settings = static_cast<Settings *>(sender());
+	if (property == "autoDetect")
+		mAddressGenerator.setPriorityOnly(!settings->autoDetect());
+	else if (property == "ipAddresses")
+		mAddressGenerator.setPriorityAddresses(settings->ipAddresses());
 }
 
 InverterUpdater *InverterGateway::findUpdater(const QString &hostName,

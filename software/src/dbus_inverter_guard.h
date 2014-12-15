@@ -16,8 +16,10 @@ class DBusInverterGuard : public QObject
 public:
 	explicit DBusInverterGuard(Inverter *inverter);
 
+	~DBusInverterGuard();
+
 private slots:
-	void onPropertyChanged(QString property);
+	void onPropertyChanged(const QString &property);
 
 private:
 	void addBusItems(QDBusConnection &connection, PowerInfo *pi, QString path);
