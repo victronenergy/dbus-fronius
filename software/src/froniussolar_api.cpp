@@ -1,4 +1,3 @@
-#include <cassert>
 #include <QUrl>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -70,7 +69,7 @@ void FroniusSolarApi::getThreePhasesInverterDataAsync(const QString &deviceId)
 void FroniusSolarApi::onReply()
 {
 	QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
-	assert(reply != 0);
+	Q_ASSERT(reply != 0);
 	mTimeoutTimer->stop();
 	mReply = 0;
 	SolarApiReply::Error error = SolarApiReply::NoError;
@@ -185,7 +184,7 @@ void FroniusSolarApi::sendGetRequest(QUrl url, QString id)
 
 QVariantMap FroniusSolarApi::parseReply(QNetworkReply *reply)
 {
-	assert(reply != 0);
+	Q_ASSERT(reply != 0);
 	QByteArray bytes = reply->readAll();
 	QString result(QString::fromLocal8Bit(bytes));
 	return JSON::instance().parse(result).toMap();

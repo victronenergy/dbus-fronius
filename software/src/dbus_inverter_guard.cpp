@@ -1,4 +1,3 @@
-#include <cassert>
 #include <QDBusConnection>
 #include <QDebug>
 #include <velib/qt/v_busitem.h>
@@ -12,7 +11,7 @@ DBusInverterGuard::DBusInverterGuard(Inverter *inverter) :
 	QObject(inverter),
 	mInverter(inverter)
 {
-	assert(inverter != 0);
+	Q_ASSERT(inverter != 0);
 
 	QString serviceName = QString("com.victronenergy.pvinverter.fronius_%1_%2").
 			arg(fixServiceNameFragment(inverter->hostName())).

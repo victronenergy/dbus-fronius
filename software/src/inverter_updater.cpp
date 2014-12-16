@@ -1,4 +1,3 @@
-#include <cassert>
 #include <QDebug>
 #include <QTimer>
 #include "froniussolar_api.h"
@@ -13,7 +12,7 @@ InverterUpdater::InverterUpdater(Inverter *inverter, QObject *parent):
 	mInitialized(false),
 	mRetryCount(0)
 {
-	assert(inverter != 0);
+	Q_ASSERT(inverter != 0);
 	connect(
 		mSolarApi, SIGNAL(commonDataFound(const CommonInverterData &)),
 		this, SLOT(onCommonDataFound(const CommonInverterData &)));
@@ -116,7 +115,6 @@ void InverterUpdater::scheduleRetrieval()
 {
 	static int cnt = 2000;
 	QTimer::singleShot(cnt, this, SLOT(onStartRetrieval()));
-	// cnt += 1000;
 }
 
 void InverterUpdater::setInitialized()

@@ -1,4 +1,3 @@
-#include <cassert>
 #include <QTimer>
 #include "froniussolar_api.h"
 #include "inverter.h"
@@ -13,7 +12,7 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
 	mSettings(settings)
 {
-	assert(settings != 0);
+	Q_ASSERT(settings != 0);
 	for (int i=0; i<MaxSimultaneousRequests; ++i) {
 		onStartDetection();
 	}
