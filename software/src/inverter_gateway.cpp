@@ -1,4 +1,5 @@
 #include <QTimer>
+#include <QsLog.h>
 #include "froniussolar_api.h"
 #include "inverter.h"
 #include "inverter_gateway.h"
@@ -18,6 +19,11 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	}
 	connect(settings, SIGNAL(propertyChanged(QString)),
 			this, SLOT(onSettingsChanged(QString)));
+}
+
+int InverterGateway::scanProgress() const
+{
+	return mAddressGenerator.progress();
 }
 
 void InverterGateway::onStartDetection()
@@ -42,7 +48,7 @@ void InverterGateway::onStartDetection()
 		QTimer::singleShot(5000, this, SLOT(onStartDetection()));
 		return;
 	}
-	qDebug() << __FUNCTION__ << hostName;
+	QLOG_TRACE() << "Scanning at" << hostName << ':' << Port;
 	FroniusSolarApi *api = new FroniusSolarApi(hostName, Port, this);
 	mApis.append(api);
 	connect(api, SIGNAL(converterInfoFound(InverterListData)),
@@ -57,7 +63,7 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 	{
 		QString hostName = api->hostName();
 		int port = api->port();
-		qDebug() << __FUNCTION__ << hostName << port;
+		QLOG_INFO() << "Inverter found at" << hostName << ':' << port;
 		QList<QHostAddress> knownIpAddresses = mSettings->knownIpAddresses();
 		QHostAddress addr(hostName);
 		if (!knownIpAddresses.contains(addr)) {
@@ -79,14 +85,14 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 			}
 		}
 	}
-	onStartDetection();
 	mApis.removeOne(api);
 	api->deleteLater();
+	emit propertyChanged("scanProgress");
+	onStartDetection();
 }
 
 void InverterGateway::onSettingsChanged(const QString &property)
 {
-	qDebug() << __FUNCTION__ << property;
 	if (property == "autoDetect" || property == "ipAddresses" ||
 			property == "knownIpAddresses") {
 		updateAddressGenerator();
@@ -125,10 +131,10 @@ void InverterGateway::updateAddressGenerator()
 	QList<QHostAddress> addresses = mSettings->ipAddresses();
 	foreach (QHostAddress a, mSettings->knownIpAddresses()) {
 		if (!addresses.contains(a)) {
-			qDebug() << __FUNCTION__ << a;
 			addresses.append(a);
 		}
 	}
 	mAddressGenerator.setPriorityAddresses(addresses);
 	mAddressGenerator.setPriorityOnly(!mSettings->autoDetect());
+	emit propertyChanged("scanProgress");
 }

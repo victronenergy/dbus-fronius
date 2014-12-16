@@ -3,17 +3,24 @@
 #include <velib/qt/v_busitem.h>
 #include "dbus_settings_guard.h"
 #include "settings.h"
+#include "inverter_gateway.h"
 
 Q_DECLARE_METATYPE(QList<QHostAddress>)
 Q_DECLARE_METATYPE(QHostAddress)
 
-DBusSettingsGuard::DBusSettingsGuard(Settings *settings, QObject *parent) :
+DBusSettingsGuard::DBusSettingsGuard(Settings *settings,
+	InverterGateway *gateway, QObject *parent) :
 	QObject(parent),
 	mSettings(settings)
 {
-	addBusItem("/Settings/Fronius/AutoDetect", "autoDetect");
-	addBusItem("/Settings/Fronius/IPAddresses", "ipAddresses");
-	addBusItem("/Settings/Fronius/KnownIPAddresses", "knownIpAddresses");
+	addBusItem(mSettings, "/Settings/Fronius/AutoDetect", "autoDetect");
+	addBusItem(mSettings, "/Settings/Fronius/IPAddresses", "ipAddresses");
+	addBusItem(mSettings, "/Settings/Fronius/KnownIPAddresses", "knownIpAddresses");
+	if (gateway != 0) {
+		addBusItem(gateway, "/Settings/Fronius/ScanProgress", "scanProgress");
+		connect(gateway, SIGNAL(propertyChanged(QString)),
+				this, SLOT(onPropertyChanged(QString)));
+	}
 	connect(settings, SIGNAL(propertyChanged(QString)),
 			this, SLOT(onPropertyChanged(QString)));
 }
@@ -23,7 +30,7 @@ void DBusSettingsGuard::onPropertyChanged(const QString &property)
 	qDebug() << __FUNCTION__ << property;
 	foreach (ItemPropertyBridge b, mVBusItems) {
 		if (b.property == property) {
-			QVariant value = mSettings->property(property.toAscii().data());
+			QVariant value = b.src->property(property.toAscii().data());
 			if (property == "ipAddresses" || property == "knownIpAddresses") {
 				// Convert QList<QHostAddress> to QStringList, because DBus
 				// support for custom types is sketchy. (How do you supply type
@@ -34,6 +41,7 @@ void DBusSettingsGuard::onPropertyChanged(const QString &property)
 				}
 				value = addresses;
 			}
+			qDebug() << b.property << value;
 			b.item->setValue(value);
 		}
 	}
@@ -62,7 +70,8 @@ void DBusSettingsGuard::onVBusItemChanged()
 	}
 }
 
-void DBusSettingsGuard::addBusItem(const QString &path, const QString &property)
+void DBusSettingsGuard::addBusItem(QObject *src, const QString &path,
+								   const QString &property)
 {
 	qDebug() << __FUNCTION__ << path << property;
 	QDBusConnection connection = QDBusConnection::sessionBus();
@@ -71,6 +80,7 @@ void DBusSettingsGuard::addBusItem(const QString &path, const QString &property)
 	connect(item, SIGNAL(valueChanged()), this, SLOT(onVBusItemChanged()));
 	ItemPropertyBridge b;
 	b.item = item;
+	b.src = src;
 	b.property = property;
 	mVBusItems.append(b);
 	// Force DBus request on the bus, so we will receive the current value.

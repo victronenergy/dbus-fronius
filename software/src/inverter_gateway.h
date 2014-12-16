@@ -13,12 +13,16 @@ struct InverterListData;
 class InverterGateway : public QObject
 {
 	Q_OBJECT
+	Q_PROPERTY(int scanProgress READ scanProgress)
 public:
 	InverterGateway(Settings *settings, QObject *parent = 0);
 
-	void updateAddressGenerator();
+	int scanProgress() const;
+
 signals:
 	void inverterFound(InverterUpdater &iu);
+
+	void propertyChanged(const QString &property);
 
 private slots:
 	void onStartDetection();
@@ -28,6 +32,8 @@ private slots:
 	void onSettingsChanged(const QString &property);
 
 private:
+	void updateAddressGenerator();
+
 	InverterUpdater *findUpdater(const QString &hostName,
 								 const QString &deviceId);
 

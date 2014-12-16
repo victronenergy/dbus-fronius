@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QMap>
 
+class InverterGateway;
 class Settings;
 class VBusItem;
 
@@ -11,7 +12,8 @@ class DBusSettingsGuard : public QObject
 {
 	Q_OBJECT
 public:
-	DBusSettingsGuard(Settings *settings, QObject *parent = 0);
+	DBusSettingsGuard(Settings *settings, InverterGateway *gateway,
+					  QObject *parent = 0);
 
 private slots:
 	void onPropertyChanged(const QString &property);
@@ -19,12 +21,13 @@ private slots:
 	void onVBusItemChanged();
 
 private:
-	void addBusItem(const QString &path, const QString &property);
+	void addBusItem(QObject *src, const QString &path, const QString &property);
 
 	Settings *mSettings;
 	struct ItemPropertyBridge
 	{
 		QString property;
+		QObject *src;
 		VBusItem *item;
 	};
 	QList<ItemPropertyBridge> mVBusItems;

@@ -11,7 +11,7 @@ DBusTest::DBusTest(QObject *parent) :
 	QObject(parent),
 	mSettings(new Settings(this)),
 	mGateway(new InverterGateway(mSettings, this)),
-	mSettingsGuard(new DBusSettingsGuard(mSettings, this))
+	mSettingsGuard(new DBusSettingsGuard(mSettings, mGateway, this))
 {
 	connect(
 		mGateway, SIGNAL(inverterFound(InverterUpdater&)),
@@ -32,6 +32,8 @@ void DBusTest::onInverterFound(InverterUpdater &iu)
 
 void DBusTest::onInverterInitialized()
 {
-	qDebug() << __FUNCTION__;
-	new DBusInverterGuard(static_cast<InverterUpdater *>(sender())->inverter());
+	Inverter *inverter = static_cast<InverterUpdater *>(sender())->inverter();
+	// DBusInverterGuard will set inverter as its parent, so we have no
+	// memory leak here.
+	new DBusInverterGuard(inverter);
 }

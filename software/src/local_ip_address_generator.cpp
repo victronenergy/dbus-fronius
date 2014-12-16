@@ -1,8 +1,10 @@
 #include <QNetworkInterface>
+#include <QsLog.h>
 #include "local_ip_address_generator.h"
 
 LocalIpAddressGenerator::LocalIpAddressGenerator():
 	mPriorityOnly(false),
+	mFirst(0),
 	mCurrent(0),
 	mLast(0),
 	mLocalHost(0),
@@ -14,6 +16,7 @@ LocalIpAddressGenerator::LocalIpAddressGenerator():
 LocalIpAddressGenerator::LocalIpAddressGenerator(
 		const QList<QHostAddress> &priorityAddresses, bool priorityOnly):
 	mPriorityOnly(priorityOnly),
+	mFirst(0),
 	mCurrent(0),
 	mLast(0),
 	mLocalHost(0),
@@ -45,6 +48,7 @@ bool LocalIpAddressGenerator::hasNext() const
 
 void LocalIpAddressGenerator::reset()
 {
+	mFirst = 0;
 	mCurrent = 0;
 	mLocalHost = 0;
 	mLast = 0;
@@ -65,10 +69,12 @@ void LocalIpAddressGenerator::reset()
 						address != QHostAddress::Any &&
 						address != QHostAddress::AnyIPv6 &&
 						address.protocol() == QAbstractSocket::IPv4Protocol) {
-					qDebug() << address << entry.netmask();
-					mLocalHost = address.toIPv4Address();
+					QLOG_INFO() << "IP Address:" << address
+								<< "Netmask:" << entry.netmask();
 					quint32 netMask = entry.netmask().toIPv4Address();
+					mLocalHost = address.toIPv4Address();
 					mCurrent = mLocalHost & netMask;
+					mFirst = mCurrent;
 					mLast = (mCurrent | ~netMask) - 1;
 					if (mLast == mLocalHost)
 						--mLast;
@@ -76,6 +82,27 @@ void LocalIpAddressGenerator::reset()
 			}
 		}
 	}
+}
+
+int LocalIpAddressGenerator::progress() const
+{
+	int total = 0;
+	int done = 0;
+	total += mPriorityAddresses.size();
+	done += mPriorityIndex;
+	if (!mPriorityOnly) {
+		/*!
+		 * @todo EV correct for the fact that we skip mLocalHost. This will
+		 * make the value slightly more accurate.
+		 */
+		total += mLast - mFirst;
+		done += mCurrent - mFirst;
+	}
+	if (total == 0) {
+		Q_ASSERT(done == 0);
+		return 0;
+	}
+	return (100 * done) / total;
 }
 
 bool LocalIpAddressGenerator::priorityOnly() const
@@ -104,5 +131,4 @@ void LocalIpAddressGenerator::setPriorityAddresses(
 			mPriorityIndex >= mPriorityAddresses.size();
 	mPriorityAddresses = addresses;
 	mPriorityIndex = atEnd ? mPriorityAddresses.size() : 0;
-	qDebug() << __FUNCTION__ << mPriorityIndex;
 }

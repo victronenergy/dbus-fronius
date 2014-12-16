@@ -36,18 +36,39 @@ public:
 	 */
 	bool hasNext() const;
 
+	/*!
+	 * \brief Resets the generator. The `next` function will return the first
+	 * IP address after calling this function.
+	 */
 	void reset();
 
+	/*!
+	 * \brief Returns the percentage of work done.
+	 * \return The progress percentage
+	 */
+	int progress() const;
+
+	/*!
+	 * \brief If true, the generator will only return value from the
+	 * list returned by `priorityAddresses()`.
+	 * \return
+	 */
 	bool priorityOnly() const;
 
 	void setPriorityOnly(bool p);
 
+	/*!
+	 * \brief Returns the list of addresses that will be returned before
+	 * the generator starts enumerating the IP addresses in the local network.
+	 * \return
+	 */
 	const QList<QHostAddress> &priorityAddresses() const;
 
 	void setPriorityAddresses(const QList<QHostAddress> &addresses);
 
 private:
 	bool mPriorityOnly;
+	quint32 mFirst;
 	quint32 mCurrent;
 	quint32 mLast;
 	quint32 mLocalHost;
