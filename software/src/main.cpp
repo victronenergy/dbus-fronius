@@ -1,14 +1,8 @@
 #include <QCoreApplication>
-#include <QDebug>
-#include <QDBusConnection>
 #include <QsLog.h>
-#include <velib/qt/v_busitem.h>
+#include <QStringList>
+#include <QThread>
 #include "dbus_test.h"
-#include "froniussolar_api_test.h"
-#include "dbus_inverter_guard.h"
-#include "dbus_settings_guard.h"
-#include "inverter_gateway.h"
-#include "local_ip_address_generator.h"
 #include "settings.h"
 #include "version.h"
 
@@ -29,22 +23,47 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 
+#if QT_NO_DEBUG
+	initLogger(QsLogging::ErrorLevel);
+#else
 	initLogger(QsLogging::TraceLevel);
+#endif
+
+	foreach (QString arg, a.arguments()) {
+		if (arg == "-h" || arg == "--help") {
+			qDebug() << a.arguments().first();
+			qDebug() << "\t-h, --help";
+			qDebug() << "\t Show this message.";
+			qDebug() << "\t-V, --version";
+			qDebug() << "\t Show the application version.";
+			qDebug() << "\t-v, --verbose";
+			qDebug() << "\t Increase verbosity. This option may be used more than once.";
+			return 0;
+		}
+		if (arg == "-V" || arg == "--version") {
+			qDebug() << VERSION << "("REVISION")";
+			return 0;
+		}
+		if (arg == "-v" || arg == "--verbose") {
+			QsLogging::Logger &logger = QsLogging::Logger::instance();
+			int logLevel = logger.loggingLevel();
+			if (logLevel > 0) {
+				logger.setLoggingLevel(static_cast<QsLogging::Level>(logLevel - 1));
+			}
+		}
+	}
 
 #if TARGET_ccgx
 	// Wait for local settings to become available on the DBus
-	QLOG_INFO() << "Wait for local setting on DBus... ";
+	QLOG_INFO() << "Wait for local setting on DBus...";
 	VBusItem settings("com.victronenergy.settings", "/Settings", DBUS_CONNECTION);
 	QVariant reply = settings.getValue();
-	while (reply.isValid() == false) {
+	while (!reply.isValid()) {
 		reply = settings.getValue();
-		usleep(2000000);
+		QThread.Sleep(2000);
 	}
 	QLOG_INFO() << "Local settings found!";
 #endif
-
-//	Settings settings;
-//	DBusSettingsGuard guard(&settings);
 
 	DBusTest test(&a);
 
