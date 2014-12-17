@@ -29,7 +29,7 @@ private slots:
 
 	void onConverterInfoFound(const InverterListData &data);
 
-	void onSettingsChanged(const QString &property);
+	void onSettingsChanged();
 
 private:
 	void updateAddressGenerator();

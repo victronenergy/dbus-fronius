@@ -8,8 +8,8 @@ class PowerInfo;
 class Inverter : public QObject
 {
 	Q_OBJECT
-	Q_PROPERTY(int isConnected READ isConnected WRITE setIsConnected)
-	Q_PROPERTY(bool supports3Phases READ supports3Phases WRITE setSupports3Phases)
+	Q_PROPERTY(int isConnected READ isConnected WRITE setIsConnected NOTIFY isConnectedChanged)
+	Q_PROPERTY(bool supports3Phases READ supports3Phases WRITE setSupports3Phases NOTIFY supports3PhasesChanged)
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString uniqueId READ uniqueId)
 	Q_PROPERTY(QString hostName READ hostName)
@@ -43,7 +43,9 @@ public:
 	PowerInfo *l3PowerInfo();
 
 signals:
-	void propertyChanged(const QString &property);
+	void isConnectedChanged();
+
+	void supports3PhasesChanged();
 
 private:
 	int mIsConnected;

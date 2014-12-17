@@ -1,4 +1,4 @@
-#include <QDebug>
+#include <QsLog.h>
 #include "dbus_test.h"
 #include "dbus_inverter_guard.h"
 #include "dbus_settings_guard.h"
@@ -20,10 +20,8 @@ DBusTest::DBusTest(QObject *parent) :
 
 void DBusTest::onInverterFound(InverterUpdater &iu)
 {
-	qDebug()
-		<< __FUNCTION__
-		<< iu.inverter()->hostName()
-		<< iu.inverter()->id();
+	QLOG_INFO() << "New inverter:" << iu.inverter()->hostName()
+				<< iu.inverter()->id();
 	// At this point, an inverter has been found, but it is not yet clear what
 	// its capacities are (eg. support for 3 phases). So we cannot create a
 	// DBus tree yet.

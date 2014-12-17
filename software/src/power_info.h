@@ -6,9 +6,9 @@
 class PowerInfo : public QObject
 {
 	Q_OBJECT
-	Q_PROPERTY(double current READ current WRITE setCurrent)
-	Q_PROPERTY(double voltage READ voltage WRITE setVoltage)
-	Q_PROPERTY(double power READ power WRITE setPower)
+	Q_PROPERTY(double current READ current WRITE setCurrent NOTIFY currentChanged)
+	Q_PROPERTY(double voltage READ voltage WRITE setVoltage NOTIFY voltageChanged)
+	Q_PROPERTY(double power READ power WRITE setPower NOTIFY powerChanged)
 public:
 	explicit PowerInfo(QObject *parent = 0);
 
@@ -25,7 +25,11 @@ public:
 	void setPower(double p);
 
 signals:
-	void propertyChanged(const QString &property);
+	void currentChanged();
+
+	void voltageChanged();
+
+	void powerChanged();
 
 private:
 	double mCurrent;

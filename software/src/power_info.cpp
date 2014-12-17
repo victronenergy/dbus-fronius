@@ -1,4 +1,3 @@
-#include <QDebug>
 #include "power_info.h"
 
 PowerInfo::PowerInfo(QObject *parent) :
@@ -19,7 +18,7 @@ void PowerInfo::setCurrent(double c)
 	if (c == mCurrent)
 		return;
 	mCurrent = c;
-	emit propertyChanged("current");
+	emit currentChanged();
 }
 
 double PowerInfo::voltage() const
@@ -32,7 +31,7 @@ void PowerInfo::setVoltage(double v)
 	if (v == mVoltage)
 		return;
 	mVoltage = v;
-	emit propertyChanged("voltage");
+	emit voltageChanged();
 }
 
 double PowerInfo::power() const
@@ -45,5 +44,5 @@ void PowerInfo::setPower(double p)
 	if (p == mPower)
 		return;
 	mPower = p;
-	emit propertyChanged("power");
+	emit powerChanged();
 }

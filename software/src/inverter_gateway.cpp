@@ -17,8 +17,12 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	for (int i=0; i<MaxSimultaneousRequests; ++i) {
 		onStartDetection();
 	}
-	connect(settings, SIGNAL(propertyChanged(QString)),
-			this, SLOT(onSettingsChanged(QString)));
+	connect(settings, SIGNAL(autoDetectChanged()),
+			this, SLOT(onSettingsChanged()));
+	connect(settings, SIGNAL(ipAddressesChanged()),
+			this, SLOT(onSettingsChanged()));
+	connect(settings, SIGNAL(knownIpAddressesChanged()),
+			this, SLOT(onSettingsChanged()));
 }
 
 int InverterGateway::scanProgress() const
@@ -29,6 +33,7 @@ int InverterGateway::scanProgress() const
 void InverterGateway::onStartDetection()
 {
 	QString hostName;
+	QLOG_TRACE() << __FUNCTION__;
 	if (!mAddressGenerator.hasNext()) {
 		updateAddressGenerator();
 		mAddressGenerator.reset();
@@ -45,6 +50,7 @@ void InverterGateway::onStartDetection()
 	}
 	if (hostName.isEmpty())
 	{
+		QLOG_TRACE() << "Gateway wait";
 		QTimer::singleShot(5000, this, SLOT(onStartDetection()));
 		return;
 	}
@@ -91,12 +97,9 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 	onStartDetection();
 }
 
-void InverterGateway::onSettingsChanged(const QString &property)
+void InverterGateway::onSettingsChanged()
 {
-	if (property == "autoDetect" || property == "ipAddresses" ||
-			property == "knownIpAddresses") {
-		updateAddressGenerator();
-	}
+	updateAddressGenerator();
 }
 
 InverterUpdater *InverterGateway::findUpdater(const QString &hostName,

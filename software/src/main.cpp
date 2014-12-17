@@ -17,6 +17,7 @@ void initLogger(QsLogging::Level logLevel)
 	QLOG_INFO() << "Built with Qt" << QT_VERSION_STR << "running on" << qVersion();
 	QLOG_INFO() << "Built on" << __DATE__ << "at" << __TIME__;
 	logger.setLoggingLevel(logLevel);
+	logger.setIncludeTimestamp(false);
 }
 
 int main(int argc, char *argv[])

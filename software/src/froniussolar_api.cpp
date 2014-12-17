@@ -1,7 +1,7 @@
 #include <QUrl>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QDebug>
+#include <QsLog.h>
 #include <QStringList>
 #include <QTimer>
 #include "froniussolar_api.h"
@@ -77,7 +77,7 @@ void FroniusSolarApi::onReply()
 	if (reply->error() != QNetworkReply::NoError) {
 		error = SolarApiReply::NetworkError;
 		errorMessage = reply->errorString();
-		qDebug() << "Network error:" << errorMessage << reply->url();
+		QLOG_INFO() << "Network error:" << errorMessage << reply->url();
 	}
 	QString id = reply->request().attribute(QNetworkRequest::User).toString();
 	QVariantMap result = parseReply(reply);
@@ -86,7 +86,7 @@ void FroniusSolarApi::onReply()
 	{
 		error = SolarApiReply::ApiError;
 		errorMessage = getByPath(result, "Head/Status/Reason").toString();
-		qDebug() << "API error:" << errorMessage;
+		QLOG_INFO() << "Fronius solar API error:" << errorMessage;
 	}
 	if (id == "getInverterInfo") {
 		InverterListData data;
@@ -161,7 +161,6 @@ void FroniusSolarApi::onReply()
 
 void FroniusSolarApi::OnTimeout()
 {
-	qDebug() << __FUNCTION__;
 	if (mReply != 0) {
 		mReply->abort();
 		mReply = 0;

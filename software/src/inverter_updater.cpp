@@ -1,4 +1,3 @@
-#include <QDebug>
 #include <QTimer>
 #include "froniussolar_api.h"
 #include "inverter_updater.h"
@@ -29,14 +28,12 @@ Inverter *InverterUpdater::inverter()
 
 void InverterUpdater::onStartRetrieval()
 {
-	// qDebug() << __FUNCTION__;
 	mRetryCount = 0;
 	mSolarApi->getCommonDataAsync(mInverter->id());
 }
 
 void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 {
-	// qDebug() << __FUNCTION__;
 	switch (data.error)
 	{
 	case SolarApiReply::NoError:
@@ -74,7 +71,6 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 
 void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data)
 {
-	// qDebug() << __FUNCTION__ << data.error << data.errorMessage;
 	switch (data.error)
 	{
 	case SolarApiReply::NoError:
@@ -119,7 +115,6 @@ void InverterUpdater::scheduleRetrieval()
 
 void InverterUpdater::setInitialized()
 {
-	// qDebug() << __FUNCTION__;
 	if (!mInitialized)
 	{
 		emit initialized();

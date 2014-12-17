@@ -27,7 +27,7 @@ void Inverter::setIsConnected(int v)
 	if (mIsConnected == v)
 		return;
 	mIsConnected = v;
-	emit propertyChanged("isConnected");
+	emit isConnectedChanged();
 }
 
 bool Inverter::supports3Phases() const
@@ -40,7 +40,7 @@ void Inverter::setSupports3Phases(bool p)
 	if (mSupports3Phases == p)
 		return;
 	mSupports3Phases = p;
-	emit propertyChanged("supports3Phases");
+	emit supports3PhasesChanged();
 }
 
 QString Inverter::id() const

@@ -8,9 +8,9 @@
 class Settings : public QObject
 {
 	Q_OBJECT
-	Q_PROPERTY(bool autoDetect READ autoDetect WRITE setAutoDetect)
-	Q_PROPERTY(QList<QHostAddress> ipAddresses READ ipAddresses WRITE setIpAddresses)
-	Q_PROPERTY(QList<QHostAddress> knownIpAddresses READ ipAddresses WRITE setKnownIpAddresses)
+	Q_PROPERTY(bool autoDetect READ autoDetect WRITE setAutoDetect NOTIFY autoDetectChanged)
+	Q_PROPERTY(QList<QHostAddress> ipAddresses READ ipAddresses WRITE setIpAddresses NOTIFY ipAddressesChanged)
+	Q_PROPERTY(QList<QHostAddress> knownIpAddresses READ ipAddresses WRITE setKnownIpAddresses NOTIFY knownIpAddressesChanged)
 public:
 	explicit Settings(QObject *parent = 0);
 
@@ -27,7 +27,11 @@ public:
 	void setKnownIpAddresses(const QList<QHostAddress> &addresses);
 
 signals:
-	void propertyChanged(const QString &property);
+	void autoDetectChanged();
+
+	void ipAddressesChanged();
+
+	void knownIpAddressesChanged();
 
 private:
 	bool mAutoDetect;

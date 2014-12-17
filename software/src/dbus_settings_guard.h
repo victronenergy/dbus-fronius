@@ -3,34 +3,22 @@
 
 #include <QObject>
 #include <QMap>
+#include "dbus_guard.h"
 
 class InverterGateway;
 class Settings;
-class VBusItem;
 
-class DBusSettingsGuard : public QObject
+class DBusSettingsGuard : public DBusGuard
 {
 	Q_OBJECT
 public:
 	DBusSettingsGuard(Settings *settings, InverterGateway *gateway,
 					  QObject *parent = 0);
 
-private slots:
-	void onPropertyChanged(const QString &property);
+protected:
+	virtual void toDBus(const QString &path, QVariant &value);
 
-	void onVBusItemChanged();
-
-private:
-	void addBusItem(QObject *src, const QString &path, const QString &property);
-
-	Settings *mSettings;
-	struct ItemPropertyBridge
-	{
-		QString property;
-		QObject *src;
-		VBusItem *item;
-	};
-	QList<ItemPropertyBridge> mVBusItems;
+	virtual void fromDBus(const QString &path, QVariant &v);
 };
 
 #endif // DBUS_SETTINGS_GUARD_H
