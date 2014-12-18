@@ -2,7 +2,6 @@
 #define DBUS_SETTINGS_GUARD_H
 
 #include <QObject>
-#include <QMap>
 #include "dbus_guard.h"
 
 class InverterGateway;

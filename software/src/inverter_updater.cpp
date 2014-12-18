@@ -4,6 +4,8 @@
 #include "inverter.h"
 #include "power_info.h"
 
+static const int UpdateInterval = 5000;
+
 InverterUpdater::InverterUpdater(Inverter *inverter, QObject *parent):
 	QObject(parent),
 	mInverter(inverter),
@@ -109,8 +111,7 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 
 void InverterUpdater::scheduleRetrieval()
 {
-	static int cnt = 2000;
-	QTimer::singleShot(cnt, this, SLOT(onStartRetrieval()));
+	QTimer::singleShot(UpdateInterval, this, SLOT(onStartRetrieval()));
 }
 
 void InverterUpdater::setInitialized()

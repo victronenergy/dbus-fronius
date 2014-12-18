@@ -32,10 +32,8 @@ void DBusGuard::onPropertyChanged()
 
 void DBusGuard::onVBusItemChanged()
 {
-	QLOG_TRACE() << __FUNCTION__;
 	foreach (BusItemBridge bib, mBusItems) {
 		if (bib.item == sender()) {
-			QLOG_TRACE() << bib.path;
 			QVariant value = bib.item->getValue();
 			fromDBus(bib.path, value);
 			bib.src->setProperty(bib.property.name(), value);
@@ -53,13 +51,13 @@ void DBusGuard::fromDBus(const QString &, QVariant &)
 }
 
 void DBusGuard::produce(QDBusConnection &connection, QObject *src,
-						   const char *property, const QString &path,
-						   const QString &unit)
+						const char *property, const QString &path,
+						const QString &unit, int precision)
 {
 	VBusItem *vbi = new VBusItem(this);
 	QVariant value = src->property(property);
 	connectItem(vbi, src, property, path);
-	vbi->produce(connection, path, "?", value, unit);
+	vbi->produce(connection, path, "?", value, unit, precision);
 	addVBusNodes(connection, path, vbi);
 }
 
@@ -118,7 +116,6 @@ void DBusGuard::connectItem(VBusItem *busItem, QObject *src,
 		}
 	}
 	mBusItems.push_back(bib);
-	QLOG_TRACE() << __FUNCTION__ << property << path;
 	connect(busItem, SIGNAL(valueChanged()), this, SLOT(onVBusItemChanged()));
 }
 

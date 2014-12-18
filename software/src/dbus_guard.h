@@ -24,7 +24,7 @@ protected:
 protected:
 	void produce(QDBusConnection &connection, QObject *src,
 				 const char *property, const QString &path,
-				 const QString &unit = QString());
+				 const QString &unit = QString(), int precision = -1);
 
 	void produce(QDBusConnection &connection, const QString &path,
 				 const QVariant &value, const QString &unit = QString());

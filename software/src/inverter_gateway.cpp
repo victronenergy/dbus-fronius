@@ -8,12 +8,14 @@
 
 static const int Port = 8080;
 static const int MaxSimultaneousRequests = 10;
+static const int ScanInterval = 30000;
 
 InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
 	mSettings(settings)
 {
 	Q_ASSERT(settings != 0);
+	updateAddressGenerator();
 	for (int i=0; i<MaxSimultaneousRequests; ++i) {
 		onStartDetection();
 	}
@@ -33,7 +35,6 @@ int InverterGateway::scanProgress() const
 void InverterGateway::onStartDetection()
 {
 	QString hostName;
-	QLOG_TRACE() << __FUNCTION__;
 	if (!mAddressGenerator.hasNext()) {
 		updateAddressGenerator();
 		mAddressGenerator.reset();
@@ -51,7 +52,7 @@ void InverterGateway::onStartDetection()
 	if (hostName.isEmpty())
 	{
 		QLOG_TRACE() << "Gateway wait";
-		QTimer::singleShot(5000, this, SLOT(onStartDetection()));
+		QTimer::singleShot(ScanInterval, this, SLOT(onStartDetection()));
 		return;
 	}
 	QLOG_TRACE() << "Scanning at" << hostName << ':' << Port;
@@ -131,6 +132,7 @@ InverterUpdater *InverterGateway::findUpdater(const QString &hostName)
 
 void InverterGateway::updateAddressGenerator()
 {
+	QLOG_TRACE() << __FUNCTION__ << mSettings->autoDetect() << mSettings->ipAddresses().size();
 	QList<QHostAddress> addresses = mSettings->ipAddresses();
 	foreach (QHostAddress a, mSettings->knownIpAddresses()) {
 		if (!addresses.contains(a)) {

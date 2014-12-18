@@ -1,3 +1,4 @@
+#include <QsLog.h>
 #include <velib/qt/v_busitem.h>
 #include "settings.h"
 

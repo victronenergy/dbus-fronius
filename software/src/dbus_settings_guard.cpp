@@ -1,12 +1,9 @@
-#include <QMetaType>
 #include <QsLog.h>
 #include <velib/qt/v_busitem.h>
+#include <velib/qt/v_busitems.h>
 #include "dbus_settings_guard.h"
 #include "settings.h"
 #include "inverter_gateway.h"
-
-Q_DECLARE_METATYPE(QList<QHostAddress>)
-Q_DECLARE_METATYPE(QHostAddress)
 
 static const QString Service = "com.victronenergy.settings";
 static const QString AutoDetectPath = "/Settings/Fronius/AutoDetect";
@@ -18,7 +15,7 @@ DBusSettingsGuard::DBusSettingsGuard(Settings *settings,
 	InverterGateway *gateway, QObject *parent) :
 	DBusGuard(parent)
 {
-	QDBusConnection connection = QDBusConnection::sessionBus();
+	QDBusConnection &connection = VBusItems::getConnection();
 	consume(connection, Service, settings, "autoDetect", AutoDetectPath);
 	consume(connection, Service, settings, "ipAddresses", IpAddressesPath);
 	consume(connection, Service, settings, "knownIpAddresses", KnownIpAddressesPath);
@@ -29,31 +26,32 @@ DBusSettingsGuard::DBusSettingsGuard(Settings *settings,
 
 void DBusSettingsGuard::toDBus(const QString &path, QVariant &value)
 {
-	QLOG_TRACE() << __FUNCTION__ << path << value;
 	if (path == IpAddressesPath || path == KnownIpAddressesPath) {
 		// Convert QList<QHostAddress> to QStringList, because DBus
 		// support for custom types is sketchy. (How do you supply type
 		// information?)
-		QStringList addresses;
+		QString addresses;
 		foreach (QHostAddress a, value.value<QList<QHostAddress> >()) {
+			if (!addresses.isEmpty())
+				addresses.append(',');
 			addresses.append(a.toString());
 		}
 		value = addresses;
 	}
-	QLOG_TRACE() << __FUNCTION__ << path << value;
 }
 
 void DBusSettingsGuard::fromDBus(const QString &path, QVariant &value)
 {
-	QLOG_TRACE() << __FUNCTION__ << path << value;
 	if (path == IpAddressesPath || path == KnownIpAddressesPath) {
 		// Convert from DBus type back to to QList<QHostAddress>.
 		// See onPropertyChanged.
 		QList<QHostAddress> addresses;
-		foreach (QString a, value.toStringList()) {
+		foreach (QString a, value.toString().split(',', QString::SkipEmptyParts)) {
 			addresses.append(QHostAddress(a));
 		}
 		value = QVariant::fromValue(addresses);
 	}
-	QLOG_TRACE() << __FUNCTION__ << path << value;
+//	if (path == AutoDetectPath) {
+//		value = QVariant(value.toInt() != 0);
+//	}
 }

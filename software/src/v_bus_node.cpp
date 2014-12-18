@@ -1,3 +1,4 @@
+#include <QDebug>
 #include <velib/qt/v_busitem.h>
 #include "v_bus_node.h"
 
@@ -29,7 +30,7 @@ void VBusNode::addChild(const QString &path, VBusItem *item)
 VBusItem *VBusNode::findItem(const QString &path) const
 {
 	int i = path.indexOf('/', 1);
-	QString id = path.mid(1, i);
+	QString id = path.mid(1, i - 1);
 	if (i == -1) {
 		QMap<QString, VBusItem *>::const_iterator it = mLeafs.find(id);
 		return it == mLeafs.end() ? 0 : it.value();

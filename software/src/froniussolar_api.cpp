@@ -74,19 +74,30 @@ void FroniusSolarApi::onReply()
 	mReply = 0;
 	SolarApiReply::Error error = SolarApiReply::NoError;
 	QString errorMessage;
+	QString id = reply->request().attribute(QNetworkRequest::User).toString();
+	QVariantMap result;
 	if (reply->error() != QNetworkReply::NoError) {
 		error = SolarApiReply::NetworkError;
 		errorMessage = reply->errorString();
 		QLOG_INFO() << "Network error:" << errorMessage << reply->url();
-	}
-	QString id = reply->request().attribute(QNetworkRequest::User).toString();
-	QVariantMap result = parseReply(reply);
-	int errorCode = getByPath(result, "Head/Status/Code").toInt();
-	if (errorCode != 0)
-	{
-		error = SolarApiReply::ApiError;
-		errorMessage = getByPath(result, "Head/Status/Reason").toString();
-		QLOG_INFO() << "Fronius solar API error:" << errorMessage;
+	} else {
+		result = parseReply(reply);
+		QVariantMap status = getByPath(result, "Head/Status").toMap();
+		if (!status.contains("Code")) {
+			error = SolarApiReply::NetworkError;
+			errorMessage = "Reply message has no status "
+						   "(we're probably talking to a device "
+						   "that does not support the Fronius Solar API)";
+			QLOG_INFO() << "Network error:" << errorMessage << reply->url();
+		} else {
+			int errorCode = status["Code"].toInt();
+			if (errorCode != 0)
+			{
+				error = SolarApiReply::ApiError;
+				errorMessage = status["Reason"].toString();
+				QLOG_INFO() << "Fronius solar API error:" << errorMessage;
+			}
+		}
 	}
 	if (id == "getInverterInfo") {
 		InverterListData data;
@@ -186,6 +197,7 @@ QVariantMap FroniusSolarApi::parseReply(QNetworkReply *reply)
 	Q_ASSERT(reply != 0);
 	QByteArray bytes = reply->readAll();
 	QString result(QString::fromLocal8Bit(bytes));
+	QLOG_TRACE() << result;
 	return JSON::instance().parse(result).toMap();
 }
 

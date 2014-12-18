@@ -2,13 +2,14 @@
 #include <QDBusConnection>
 #include <QDomDocument>
 #include <velib/qt/v_busitem.h>
+#include <velib/qt/v_busitems.h>
 #include "dbus_client.h"
 
 DBusClient::DBusClient(const QString &servicePrefix, QObject *parent):
 	QObject(parent),
 	mServicePrefix(servicePrefix)
 {
-	QDBusConnectionInterface *ci = QDBusConnection::sessionBus().interface();
+	QDBusConnectionInterface *ci = VBusItems::getConnection().interface();
 	connect(ci, SIGNAL(serviceRegistered(QString)),
 			this, SLOT(onServiceRegistered(QString)));
 	connect(ci, SIGNAL(serviceUnregistered(QString)),
@@ -67,7 +68,7 @@ void DBusClient::onValueChanged()
 
 void DBusClient::scanObjects(const QString &service, const QString &path)
 {
-	QDBusMessage reply = QDBusConnection::sessionBus().call(
+	QDBusMessage reply = VBusItems::getConnection().call(
 			QDBusMessage::createMethodCall(
 					service,
 					path,
