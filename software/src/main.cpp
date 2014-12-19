@@ -1,15 +1,11 @@
 #include <QCoreApplication>
 #include <QDBusConnection>
-#include <QDBusMessage>
 #include <QsLog.h>
 #include <QStringList>
-#include <QThread>
 #include <unistd.h>
-#include <velib/qt/v_busitem.h>
 #include <velib/qt/v_busitems.h>
-#include "dbus_test.h"
-#include "dbus_settings_guard.h"
-#include "settings.h"
+#include "dbus_fronius.h"
+#include "dbus_settings_bridge.h"
 #include "version.h"
 
 void initLogger(QsLogging::Level logLevel)
@@ -26,32 +22,9 @@ void initLogger(QsLogging::Level logLevel)
 	logger.setLoggingLevel(logLevel);
 }
 
-bool addSettings(const QString &group, const QString &name, QChar type,
-				 const QDBusVariant &defaultValue) {
-	QDBusConnection &connection = VBusItems::getConnection();
-	QDBusMessage m = QDBusMessage::createMethodCall(
-				"com.victronenergy.settings",
-				"/Settings",
-				"com.victronenergy.Settings",
-				"AddSetting")
-		<< group
-		<< name
-		<< QVariant::fromValue(defaultValue)
-		<< QString(type)
-		<< QVariant::fromValue(QDBusVariant(0))
-		<< QVariant::fromValue(QDBusVariant(0));
-	QDBusMessage reply = connection.call(m);
-	return reply.type() == QDBusMessage::ReplyMessage;
-}
-
 int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
-
-	// This enables us to retrieve values from QT properties via the
-	// QObject::property function.
-	qRegisterMetaType<QList<QHostAddress> >();
-	qRegisterMetaType<QHostAddress>();
 
 #if QT_NO_DEBUG
 	initLogger(QsLogging::ErrorLevel);
@@ -89,19 +62,16 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	QLOG_INFO() << "Wait for local setting on DBus...";
 	for (;;) {
-		if (addSettings("Fronius", "AutoDetect", 'i', QDBusVariant(1)))
+		if (DBusSettingsBridge::addDBusObjects())
 			break;
+		QLOG_INFO() << "Wait...";
 		usleep(2000000);
 	}
-
 	QLOG_INFO() << "Local settings found!";
 
-	addSettings("Fronius", "IPAddresses", 's', QDBusVariant(""));
-	addSettings("Fronius", "KnownIPAddresses", 's', QDBusVariant(""));
-	addSettings("Fronius", "ScanProgress", 'i', QDBusVariant(0));
-
-	DBusTest test(&a);
+	DBusFronius test(&a);
 
 	return a.exec();
 }

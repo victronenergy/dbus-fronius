@@ -3,16 +3,16 @@
 
 #include <QObject>
 
-class DBusSettingsGuard;
+class DBusSettingsBridge;
 class InverterGateway;
 class InverterUpdater;
 class Settings;
 
-class DBusTest : public QObject
+class DBusFronius : public QObject
 {
 	Q_OBJECT
 public:
-	DBusTest(QObject *parent = 0);
+	DBusFronius(QObject *parent = 0);
 
 private slots:
 	void onInverterFound(InverterUpdater &iu);
@@ -22,7 +22,7 @@ private slots:
 private:
 	Settings *mSettings;
 	InverterGateway *mGateway;
-	DBusSettingsGuard *mSettingsGuard;
+	DBusSettingsBridge *mSettingsBridge;
 };
 
 #endif // DBUS_TEST2_H

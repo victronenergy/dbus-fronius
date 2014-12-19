@@ -1,6 +1,6 @@
 # Application version and revision
 VERSION = 0.0.1
-REVISION = $$system(git --git-dir $$PWD/.git --work-tree $$PWD describe --always --dirty --tags)
+REVISION = $$system(git --git-dir $$PWD/../.git --work-tree $$PWD describe --always --dirty --tags)
 
 # Create a include file with VERION / REVISION
 version_rule.target = $$OUT_PWD/version.h
@@ -38,52 +38,43 @@ TEMPLATE = app
 
 include(src/json/json.pri)
 include(ext/qslog/QsLog.pri)
+include(ext/velib/qt.pri)
 
-INCLUDEPATH += ext/qslog ext/velib/inc ext/velib/lib/Qvelib
+INCLUDEPATH += \
+	ext/qslog \
+	ext/velib/inc \
+	ext/velib/lib/Qvelib
 
 SOURCES += \
-	ext/velib/src/qt/v_busitem.cpp \
-	ext/velib/src/qt/v_busitem_adaptor.cpp \
-	ext/velib/src/qt/v_busitem_proxy.cpp \
-	ext/velib/src/qt/v_busitems.cpp \
-	ext/velib/src/qt/v_busitem_private_prod.cpp \
-	ext/velib/src/qt/v_busitem_private_cons.cpp \
 	src/main.cpp \
 	src/froniussolar_api.cpp \
 	src/froniussolar_api_test.cpp \
 	src/inverter.cpp \
-	src/dbus_test.cpp \
-	src/dbus_inverter_guard.cpp \
-	src/dbus_settings_guard.cpp \
 	src/power_info.cpp \
 	src/inverter_updater.cpp \
 	src/inverter_gateway.cpp \
 	src/local_ip_address_generator.cpp \
 	src/settings.cpp \
 	src/v_bus_node.cpp \
-	src/dbus_guard.cpp
+	src/dbus_fronius.cpp \
+	src/dbus_bridge.cpp \
+	src/dbus_inverter_bridge.cpp \
+	src/dbus_settings_bridge.cpp
 
 HEADERS += \
-	ext/velib/inc/velib/qt/v_busitem.h \
-	ext/velib/inc/velib/qt/v_busitems.h \
-	ext/velib/src/qt/v_busitem_adaptor.h \
-	ext/velib/src/qt/v_busitem_private.h \
-	ext/velib/src/qt/v_busitem_proxy.h \
-	ext/velib/src/qt/v_busitem_private_prod.h \
-	ext/velib/src/qt/v_busitem_private_cons.h \
 	src/froniussolar_api.h \
 	src/froniussolar_api_test.h \
 	src/inverter.h \
-	src/dbus_test.h \
-	src/dbus_inverter_guard.h \
-	src/dbus_settings_guard.h \
 	src/power_info.h \
 	src/inverter_updater.h \
 	src/inverter_gateway.h \
 	src/local_ip_address_generator.h \
 	src/settings.h \
 	src/v_bus_node.h \
-	src/dbus_guard.h
+	src/dbus_fronius.h \
+	src/dbus_bridge.h \
+	src/dbus_inverter_bridge.h \
+	src/dbus_settings_bridge.h
 
-OTHER_FILES += \
-	log.txt
+# suppress the mangling of va_arg has changed for gcc 4.4
+QMAKE_CXXFLAGS += -Wno-psabi

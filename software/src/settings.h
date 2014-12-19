@@ -6,9 +6,6 @@
 #include <QList>
 #include <QMetaType>
 
-Q_DECLARE_METATYPE(QList<QHostAddress>)
-Q_DECLARE_METATYPE(QHostAddress)
-
 class Settings : public QObject
 {
 	Q_OBJECT

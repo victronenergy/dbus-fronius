@@ -5,13 +5,13 @@
 #include <QStringList>
 #include <velib/qt/v_busitems.h>
 #include <velib/vecan/products.h>
-#include "dbus_inverter_guard.h"
+#include "dbus_inverter_bridge.h"
 #include "inverter.h"
 #include "power_info.h"
 #include "version.h"
 
-DBusInverterGuard::DBusInverterGuard(Inverter *inverter) :
-	DBusGuard(inverter),
+DBusInverterBridge::DBusInverterBridge(Inverter *inverter, QObject *parent) :
+	DBusBridge(parent),
 	mInverter(inverter)
 {
 	Q_ASSERT(inverter != 0);
@@ -54,14 +54,14 @@ DBusInverterGuard::DBusInverterGuard(Inverter *inverter) :
 	}
 }
 
-void DBusInverterGuard::addBusItems(QDBusConnection &connection, PowerInfo *pi,
+void DBusInverterBridge::addBusItems(QDBusConnection &connection, PowerInfo *pi,
 									const QString &path)
 {
 	produce(connection, pi, "current", path + "/Current", "A", 1);
 	produce(connection, pi, "voltage", path + "/Voltage", "V", 0);
 }
 
-QString DBusInverterGuard::fixServiceNameFragment(const QString &s)
+QString DBusInverterBridge::fixServiceNameFragment(const QString &s)
 {
 	return ((QString)s).remove('.').remove('_');
 }

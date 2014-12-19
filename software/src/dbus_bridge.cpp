@@ -1,15 +1,55 @@
 #include <QsLog.h>
 #include <velib/qt/v_busitem.h>
-#include "dbus_guard.h"
+#include "dbus_bridge.h"
 #include "v_bus_node.h"
 
-DBusGuard::DBusGuard(QObject *parent) :
+DBusBridge::DBusBridge(QObject *parent) :
 	QObject(parent),
 	mServiceRoot(0)
 {
 }
 
-void DBusGuard::onPropertyChanged()
+void DBusBridge::produce(QDBusConnection &connection, QObject *src,
+						const char *property, const QString &path,
+						const QString &unit, int precision)
+{
+	VBusItem *vbi = new VBusItem(this);
+	QVariant value = src->property(property);
+	connectItem(vbi, src, property, path);
+	vbi->produce(connection, path, "?", value, unit, precision);
+	addVBusNodes(connection, path, vbi);
+}
+
+void DBusBridge::produce(QDBusConnection &connection,
+						 const QString &path,
+						 const QVariant &value,
+						 const QString &unit,
+						 int precision)
+{
+	VBusItem *vbi = new VBusItem(this);
+	connectItem(vbi, 0, 0, path);
+	vbi->produce(connection, path, "", value, unit, precision);
+	addVBusNodes(connection, path, vbi);
+}
+
+void DBusBridge::consume(QDBusConnection &connection, const QString &service,
+						QObject *src, const char *property, const QString &path)
+{
+	VBusItem *vbi = new VBusItem(this);
+	connectItem(vbi, src, property, path);
+	vbi->consume(connection, service, path);
+	vbi->getValue(); // force value retrieval
+}
+
+void DBusBridge::toDBus(const QString &, QVariant &)
+{
+}
+
+void DBusBridge::fromDBus(const QString &, QVariant &)
+{
+}
+
+void DBusBridge::onPropertyChanged()
 {
 	QObject *src = sender();
 	int signalIndex = senderSignalIndex();
@@ -30,7 +70,7 @@ void DBusGuard::onPropertyChanged()
 	}
 }
 
-void DBusGuard::onVBusItemChanged()
+void DBusBridge::onVBusItemChanged()
 {
 	foreach (BusItemBridge bib, mBusItems) {
 		if (bib.item == sender()) {
@@ -42,45 +82,7 @@ void DBusGuard::onVBusItemChanged()
 	}
 }
 
-void DBusGuard::toDBus(const QString &, QVariant &)
-{
-}
-
-void DBusGuard::fromDBus(const QString &, QVariant &)
-{
-}
-
-void DBusGuard::produce(QDBusConnection &connection, QObject *src,
-						const char *property, const QString &path,
-						const QString &unit, int precision)
-{
-	VBusItem *vbi = new VBusItem(this);
-	QVariant value = src->property(property);
-	connectItem(vbi, src, property, path);
-	vbi->produce(connection, path, "?", value, unit, precision);
-	addVBusNodes(connection, path, vbi);
-}
-
-void DBusGuard::produce(QDBusConnection &connection,
-						   const QString &path,
-						   const QVariant &value, const QString &unit)
-{
-	VBusItem *vbi = new VBusItem(this);
-	connectItem(vbi, 0, 0, path);
-	vbi->produce(connection, path, "", value, unit);
-	addVBusNodes(connection, path, vbi);
-}
-
-void DBusGuard::consume(QDBusConnection &connection, const QString &service,
-						QObject *src, const char *property, const QString &path)
-{
-	VBusItem *vbi = new VBusItem(this);
-	connectItem(vbi, src, property, path);
-	vbi->consume(connection, service, path);
-	vbi->getValue(); // force value retrieval
-}
-
-void DBusGuard::connectItem(VBusItem *busItem, QObject *src,
+void DBusBridge::connectItem(VBusItem *busItem, QObject *src,
 							const char *property, const QString &path)
 {
 	BusItemBridge bib;
@@ -90,18 +92,18 @@ void DBusGuard::connectItem(VBusItem *busItem, QObject *src,
 	if (src == 0) {
 		if (property != 0) {
 			QLOG_ERROR() << "Property specified (" << property
-						 << "), but source omitted in DBusGuard"
+						 << "), but source omitted in DBusBridge"
 						 << ". Path was" << path;
 		}
 	} else {
 		if (property == 0) {
-			QLOG_ERROR() << "Source specified, but property omitted in DBusGuard"
+			QLOG_ERROR() << "Source specified, but property omitted in DBusBridge"
 						 << ". Path was" << path;
 		} else {
 			const QMetaObject *mo = src->metaObject();
 			int i = mo->indexOfProperty(property);
 			if (i == -1) {
-				QLOG_ERROR() << "DBusGuard could not find property" << property
+				QLOG_ERROR() << "DBusBridge could not find property" << property
 							 << "Path was" << path;
 			} else {
 				QMetaProperty mp = mo->property(i);
@@ -119,7 +121,7 @@ void DBusGuard::connectItem(VBusItem *busItem, QObject *src,
 	connect(busItem, SIGNAL(valueChanged()), this, SLOT(onVBusItemChanged()));
 }
 
-void DBusGuard::addVBusNodes(QDBusConnection &connection, const QString &path,
+void DBusBridge::addVBusNodes(QDBusConnection &connection, const QString &path,
 							 VBusItem *vbi)
 {
 	if (mServiceRoot == 0)
