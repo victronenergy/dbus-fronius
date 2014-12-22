@@ -53,6 +53,24 @@ VBusNode *VBusNode::findNode(const QString &path) const
 	}
 }
 
+QString VBusNode::findPath(const VBusItem *item) const
+{
+	for (QMap<QString, VBusItem *>::const_iterator it = mLeafs.begin();
+		 it != mLeafs.end();
+		 ++it) {
+		if (it.value() == item)
+			return "/" + it.key();
+	}
+	for (QMap<QString, VBusNode *>::const_iterator it = mNodes.begin();
+		 it != mNodes.end();
+		 ++it) {
+		QString p = it.value()->findPath(item);
+		if (!p.isEmpty())
+			return "/" + it.key() + p;
+	}
+	return QString();
+}
+
 QDBusVariant VBusNode::GetValue()
 {
 	QVariantMap result;

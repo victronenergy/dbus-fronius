@@ -22,6 +22,8 @@ public:
 
 	VBusNode *findNode(const QString &path) const;
 
+	QString findPath(const VBusItem *item) const;
+
 public slots:
 	QDBusVariant GetValue();
 

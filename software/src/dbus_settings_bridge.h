@@ -13,7 +13,7 @@ class QDBusVariant;
 class Settings;
 
 /*!
- * \brief Setup synchronization between a `Settings` object and the DBus
+ * @brief Setup synchronization between a `Settings` object and the DBus
  * settings service.
  */
 class DBusSettingsBridge : public DBusBridge
@@ -23,6 +23,13 @@ public:
 	DBusSettingsBridge(Settings *settings, InverterGateway *gateway,
 					   QObject *parent = 0);
 
+	/*!
+	 * @brief Make sure the DBus objects are present.
+	 * This function will call the AddSetting method on the settings dbus
+	 * service for each settings object. *This function must be called before
+	 * any `DBusSettingsBridge` instance is created.*
+	 * @return true if successful.
+	 */
 	static bool addDBusObjects();
 
 protected:

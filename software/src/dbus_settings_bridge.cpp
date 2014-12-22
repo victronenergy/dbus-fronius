@@ -32,6 +32,7 @@ DBusSettingsBridge::DBusSettingsBridge(Settings *settings,
 bool DBusSettingsBridge::addDBusObjects()
 {
 	return
+		addDBusObjects("Fronius", "AutoDetect", 'i', QDBusVariant(0)) &&
 		addDBusObjects("Fronius", "IPAddresses", 's', QDBusVariant("")) &&
 		addDBusObjects("Fronius", "KnownIPAddresses", 's', QDBusVariant("")) &&
 		addDBusObjects("Fronius", "ScanProgress", 'i', QDBusVariant(0));
