@@ -17,6 +17,9 @@ QMAKE_DISTCLEAN += $$version_rule.target
 QMAKE_EXTRA_TARGETS += version_rule
 PRE_TARGETDEPS += $$OUT_PWD/version.h
 
+# suppress the mangling of va_arg has changed for gcc 4.4
+QMAKE_CXXFLAGS += -Wno-psabi
+
 # Add more folders to ship with the application here
 target.path = /opt/dbus_fronius
 INSTALLS += target
@@ -75,6 +78,3 @@ HEADERS += \
 	src/dbus_bridge.h \
 	src/dbus_inverter_bridge.h \
 	src/dbus_settings_bridge.h
-
-# suppress the mangling of va_arg has changed for gcc 4.4
-QMAKE_CXXFLAGS += -Wno-psabi

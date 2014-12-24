@@ -5,11 +5,11 @@
 
 class QVariant;
 
-class DbusSettingsBridgeTest : public QObject
+class DBusSettingsBridgeTest : public QObject
 {
 	Q_OBJECT
 public:
-	explicit DbusSettingsBridgeTest(QObject *parent = 0);
+	explicit DBusSettingsBridgeTest(QObject *parent = 0);
 
 private slots:
 	void init();
@@ -34,8 +34,6 @@ private:
 	void changeIPAddresses(const char *property, const char *path);
 
 	void changeIPAddressesRemote(const char *property, const char *path);
-
-	void processEvents(int sleep, int count);
 
 	void checkValue(const QVariant &actual, const QVariant &expected);
 };

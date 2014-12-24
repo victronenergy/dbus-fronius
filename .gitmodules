@@ -4,3 +4,7 @@
 [submodule "software/ext/qslog"]
 	path = software/ext/qslog
 	url = https://bitbucket.org/razvanpetru/qslog.git
+[submodule "software/ext/bottle"]
+	path = software/ext/bottle
+	url = https://github.com/bottlepy/bottle.git
+	branch = release-0.12

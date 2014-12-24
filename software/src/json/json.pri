@@ -1,4 +1,6 @@
-HEADERS += src/json/json.h
+INCLUDEPATH += $$PWD
 
-SOURCES += src/json/json.cpp
+HEADERS += $$PWD/json.h
+
+SOURCES += $$PWD/json.cpp
 

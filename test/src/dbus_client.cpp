@@ -26,6 +26,45 @@ DBusClient::DBusClient(const QString &servicePrefix, QObject *parent):
 	}
 }
 
+QVariant DBusClient::getValue(const QString &service, const QString &path) const
+{
+	for (QMultiMap<QString, VBusItem *>::const_iterator it = mItems.find(service);
+		 it != mItems.end() && it.key() == service;
+		 ++it)
+	{
+		if (it.value()->getBind() == service + path)
+			return it.value()->getValue();
+	}
+	return QVariant();
+}
+
+QString DBusClient::getText(const QString &service, const QString &path) const
+{
+	for (QMultiMap<QString, VBusItem *>::const_iterator it = mItems.find(service);
+		 it != mItems.end() && it.key() == service;
+		 ++it)
+	{
+		if (it.value()->getBind() == service + path)
+			return it.value()->getText();
+	}
+	return QString();
+}
+
+bool DBusClient::setValue(const QString &service, const QString &path,
+						  const QVariant &value)
+{
+	for (QMultiMap<QString, VBusItem *>::iterator it = mItems.find(service);
+		 it != mItems.end() && it.key() == service;
+		 ++it)
+	{
+		if (it.value()->getBind() == service + path) {
+			it.value()->setValue(value);
+			return true;
+		}
+	}
+	return false;
+}
+
 void DBusClient::onServiceRegistered(const QString &service)
 {
 	if (service.startsWith(mServicePrefix) && !mItems.contains(service)) {
@@ -66,19 +105,14 @@ void DBusClient::onValueChanged()
 	qDebug() << item->getBind() << item->getValue();
 }
 
-void DBusClient::scanObjects(const QString &service, const QString &path)
+void DBusClient::onIntrospectSuccess(const QDBusMessage &reply)
 {
-	QDBusMessage reply = VBusItems::getConnection().call(
-			QDBusMessage::createMethodCall(
-					service,
-					path,
-					"org.freedesktop.DBus.Introspectable",
-					"Introspect"));
 	QVariant v = reply.arguments().first();
 	QDomDocument doc;
 	doc.setContent(v.toString());
 	QDomElement root = doc.documentElement();
 	bool isLeaf = true;
+	QString path = mIntrospectPath;
 	for (QDomElement node = root.firstChildElement("node");
 		 !node.isNull();
 		 node = node.nextSiblingElement("node")) {
@@ -88,13 +122,37 @@ void DBusClient::scanObjects(const QString &service, const QString &path)
 		}
 		subPath += node.attribute("name");
 		isLeaf = false;
-		scanObjects(service, subPath);
+		mPendingPaths.append(subPath);
 	}
 	if (isLeaf) {
 		VBusItem *item = new VBusItem(this);
-		item->consume(service, path);
-		mItems.insert(service, item);
+		mItems.insert(mIntrospectService, item);
 		connect(item, SIGNAL(valueChanged()), this, SLOT(onValueChanged()));
-		qDebug() << path << item->getValue();
+		item->consume(mIntrospectService, path);
+		// Force value retrieval
+		item->getValue();
 	}
+	if (!mPendingPaths.isEmpty()) {
+		scanObjects(mIntrospectService, mPendingPaths.first());
+		mPendingPaths.removeFirst();
+	}
+}
+
+void DBusClient::onIntrospectFailure()
+{
+	qDebug() << "Error while scanning DBus";
+}
+
+void DBusClient::scanObjects(const QString &service, const QString &path)
+{
+	mIntrospectService = service;
+	mIntrospectPath = path;
+	QDBusMessage introspect	= QDBusMessage::createMethodCall(
+		service,
+		path,
+		"org.freedesktop.DBus.Introspectable",
+		"Introspect");
+	VBusItems::getConnection().callWithCallback(introspect, this,
+												SLOT(onIntrospectSuccess(QDBusMessage)),
+												SLOT(onIntrospectFailure()));
 }
