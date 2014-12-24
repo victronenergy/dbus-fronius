@@ -10,6 +10,7 @@
 class QNetworkAccessManager;
 class QNetworkReply;
 class QTimer;
+class QValueMap;
 
 /*!
  * @brief Base class for all data packages returned by FroniusSolarApi.
@@ -27,7 +28,7 @@ struct SolarApiReply
 	QString errorMessage;
 };
 
-struct InverterInfo : public SolarApiReply
+struct InverterInfo
 {
 	/*!
 	 * @brief The id of the inverter.
@@ -156,7 +157,7 @@ public:
 	/*!
 	 * @brief returns cumulated data from all connected inverters.
 	 */
-	void getCumulationDataAsync();
+	void getCumulationDataAsync(const QString &deviceId);
 
 	/*!
 	 * @brief retrieves common data from the specified inverter. Common data
@@ -178,6 +179,8 @@ public:
 	 * been handled, even if an error has occured.
 	 */
 	void getThreePhasesInverterDataAsync(const QString &deviceId);
+
+	void getSystemDataAsync();
 
 signals:
 	/*!
@@ -205,15 +208,28 @@ signals:
 	 */
 	void threePhasesDataFound(const ThreePhasesInverterData &data);
 
+	void systemDataFound(const CumulationInverterData &data);
+
 private slots:
 	void onReply();
 
 	void OnTimeout();
 
 private:
-	void sendGetRequest(QUrl url, QString id);
+	void sendGetRequest(QUrl url, const QString &id);
 
-	QVariantMap parseReply(QNetworkReply *reply);
+	void processConverterInfo(QNetworkReply *reply);
+
+	void processCumulationData(QNetworkReply *reply);
+
+	void processCommonData(QNetworkReply *reply);
+
+	void processThreePhasesData(QNetworkReply *reply);
+
+	void processSystemData(QNetworkReply *reply);
+
+	void processReply(QNetworkReply *reply, SolarApiReply &apiReply,
+					  QVariantMap &map);
 
 	/*!
 	 * @brief Retrieves a nested value from the specified map.

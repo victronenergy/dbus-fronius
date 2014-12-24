@@ -23,8 +23,6 @@ private:
 					 const QString &path);
 
 	static QString fixServiceNameFragment(const QString &s);
-
-	const Inverter *mInverter;
 };
 
 #endif // DBUS_INVERTER_BRIDGE_H

@@ -38,11 +38,13 @@ void FroniusSolarApi::getConverterInfoAsync()
 	sendGetRequest(url, "getInverterInfo");
 }
 
-void FroniusSolarApi::getCumulationDataAsync()
+void FroniusSolarApi::getCumulationDataAsync(const QString &deviceId)
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
-	url.addQueryItem("Scope", "System");
+	url.addQueryItem("Scope", "Device");
+	url.addQueryItem("DeviceId", deviceId);
+	url.addQueryItem("DataCollection", "CumulationInverterData");
 	sendGetRequest(url, "getCumulationData");
 }
 
@@ -66,106 +68,31 @@ void FroniusSolarApi::getThreePhasesInverterDataAsync(const QString &deviceId)
 	sendGetRequest(url, "getThreePhasesInverterData");
 }
 
+void FroniusSolarApi::getSystemDataAsync()
+{
+	QUrl url;
+	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
+	url.addQueryItem("Scope", "System");
+	sendGetRequest(url, "getSystemData");
+}
+
 void FroniusSolarApi::onReply()
 {
-	QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
-	Q_ASSERT(reply != 0);
 	mTimeoutTimer->stop();
 	mReply = 0;
-	SolarApiReply::Error error = SolarApiReply::NoError;
-	QString errorMessage;
+	QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
+	Q_ASSERT(reply != 0);
 	QString id = reply->request().attribute(QNetworkRequest::User).toString();
-	QVariantMap result;
-	if (reply->error() != QNetworkReply::NoError) {
-		error = SolarApiReply::NetworkError;
-		errorMessage = reply->errorString();
-		QLOG_INFO() << "Network error:" << errorMessage << reply->url();
-	} else {
-		result = parseReply(reply);
-		QVariantMap status = getByPath(result, "Head/Status").toMap();
-		if (!status.contains("Code")) {
-			error = SolarApiReply::NetworkError;
-			errorMessage = "Reply message has no status "
-						   "(we're probably talking to a device "
-						   "that does not support the Fronius Solar API)";
-			QLOG_INFO() << "Network error:" << errorMessage << reply->url();
-		} else {
-			int errorCode = status["Code"].toInt();
-			if (errorCode != 0)
-			{
-				error = SolarApiReply::ApiError;
-				errorMessage = status["Reason"].toString();
-				QLOG_INFO() << "Fronius solar API error:" << errorMessage;
-			}
-		}
-	}
 	if (id == "getInverterInfo") {
-		InverterListData data;
-		data.error = error;
-		data.errorMessage = errorMessage;
-		if (error == SolarApiReply::NoError) {
-			QVariantMap devices = getByPath(result, "Body/Data").toMap();
-			for (QVariantMap::Iterator it = devices.begin();
-				 it != devices.end();
-				 ++it) {
-				InverterInfo ii;
-				ii.id = it.key();
-				QVariantMap di = it.value().toMap();
-				ii.uniqueId = di["UniqueID"].toString();
-				ii.customName = di["CustomName"].toString();
-				ii.errorCode = di["ErrorCode"].toInt();
-				ii.statusCode = di["StatusCode"].toInt();
-				data.inverters.push_back(ii);
-			}
-		}
-		emit converterInfoFound(data);
+		processConverterInfo(reply);
 	} else if (id == "getCommonData") {
-		CommonInverterData data;
-		data.error = error;
-		data.errorMessage = errorMessage;
-		if (error == SolarApiReply::NoError) {
-			data.deviceId = getByPath(result, "Head/RequestArguments/DeviceId").
-					toString();
-			QVariant d = getByPath(result, "Body/Data");
-			data.acPower = getByPath(d, "PAC/Value").toInt();
-			data.acCurrent = getByPath(d, "IAC/Value").toDouble();
-			data.acVoltage = getByPath(d, "UAC/Value").toDouble();
-			data.acFrequency = getByPath(d, "FAC/Value").toDouble();
-			data.dcCurrent = getByPath(d, "IDC/Value").toDouble();
-			data.acVoltage = getByPath(d, "UAC/Value").toDouble();
-			data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
-			data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
-			data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
-		}
-		emit commonDataFound(data);
+		processCommonData(reply);
 	} else if (id == "getThreePhasesInverterData") {
-		ThreePhasesInverterData data;
-		data.error = error;
-		data.errorMessage = errorMessage;
-		if (error == SolarApiReply::NoError) {
-			data.deviceId = getByPath(result, "Head/RequestArguments/DeviceId").
-					toString();
-			QVariant d = getByPath(result, "Body/Data");
-			data.acCurrentPhase1 = getByPath(d, "IAC_L1/Value").toDouble();
-			data.acVoltagePhase1 = getByPath(d, "UAC_L1/Value").toDouble();
-			data.acCurrentPhase2 = getByPath(d, "IAC_L2/Value").toDouble();
-			data.acVoltagePhase2 = getByPath(d, "UAC_L2/Value").toDouble();
-			data.acCurrentPhase3 = getByPath(d, "IAC_L3/Value").toDouble();
-			data.acVoltagePhase3 = getByPath(d, "UAC_L3/Value").toDouble();
-		}
-		emit threePhasesDataFound(data);
+		processThreePhasesData(reply);
 	} else if (id == "getCumulationData") {
-		CumulationInverterData data;
-		data.error = error;
-		data.errorMessage = errorMessage;
-		if (error == SolarApiReply::NoError) {
-			QVariant d = getByPath(result, "Body/Data");
-			data.acPower = getByPath(d, "PAC/Value").toInt();
-			data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
-			data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
-			data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
-		}
-		emit cumulationDataFound(data);
+		processCumulationData(reply);
+	} else if (id == "getSystemData") {
+		processCumulationData(reply);
 	}
 	reply->deleteLater();
 }
@@ -178,7 +105,91 @@ void FroniusSolarApi::OnTimeout()
 	}
 }
 
-void FroniusSolarApi::sendGetRequest(QUrl url, QString id)
+void FroniusSolarApi::processConverterInfo(QNetworkReply *reply)
+{
+	InverterListData data;
+	QVariantMap map;
+	processReply(reply, data, map);
+	QVariantMap devices = getByPath(map, "Body/Data").toMap();
+	for (QVariantMap::Iterator it = devices.begin();
+		 it != devices.end();
+		 ++it) {
+		InverterInfo ii;
+		ii.id = it.key();
+		QVariantMap di = it.value().toMap();
+		ii.deviceType = di["DT"].toInt();
+		ii.uniqueId = di["UniqueID"].toString();
+		ii.customName = di["CustomName"].toString();
+		ii.errorCode = di["ErrorCode"].toInt();
+		ii.statusCode = di["StatusCode"].toInt();
+		data.inverters.push_back(ii);
+	}
+	emit converterInfoFound(data);
+}
+
+void FroniusSolarApi::processCumulationData(QNetworkReply *reply)
+{
+	CumulationInverterData data;
+	QVariantMap map;
+	processReply(reply, data, map);
+	QVariant d = getByPath(map, "Body/Data");
+	data.acPower = getByPath(d, "PAC/Value").toInt();
+	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
+	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
+	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
+	emit cumulationDataFound(data);
+}
+
+void FroniusSolarApi::processCommonData(QNetworkReply *reply)
+{
+	CommonInverterData data;
+	QVariantMap map;
+	processReply(reply, data, map);
+	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").toString();
+	QVariant d = getByPath(map, "Body/Data");
+	data.acPower = getByPath(d, "PAC/Value").toInt();
+	data.acCurrent = getByPath(d, "IAC/Value").toDouble();
+	data.acVoltage = getByPath(d, "UAC/Value").toDouble();
+	data.acFrequency = getByPath(d, "FAC/Value").toDouble();
+	data.dcCurrent = getByPath(d, "IDC/Value").toDouble();
+	data.dcVoltage = getByPath(d, "UDC/Value").toDouble();
+	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
+	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
+	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
+	emit commonDataFound(data);
+}
+
+void FroniusSolarApi::processThreePhasesData(QNetworkReply *reply)
+{
+	ThreePhasesInverterData data;
+	QVariantMap map;
+	processReply(reply, data, map);
+	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").
+					toString();
+	QVariant d = getByPath(map, "Body/Data");
+	data.acCurrentPhase1 = getByPath(d, "IAC_L1/Value").toDouble();
+	data.acVoltagePhase1 = getByPath(d, "UAC_L1/Value").toDouble();
+	data.acCurrentPhase2 = getByPath(d, "IAC_L2/Value").toDouble();
+	data.acVoltagePhase2 = getByPath(d, "UAC_L2/Value").toDouble();
+	data.acCurrentPhase3 = getByPath(d, "IAC_L3/Value").toDouble();
+	data.acVoltagePhase3 = getByPath(d, "UAC_L3/Value").toDouble();
+	emit threePhasesDataFound(data);
+}
+
+void FroniusSolarApi::processSystemData(QNetworkReply *reply)
+{
+	CumulationInverterData data;
+	QVariantMap map;
+	processReply(reply, data, map);
+	QVariant d = getByPath(map, "Body/Data");
+	data.acPower = getByPath(d, "PAC/Value").toInt();
+	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
+	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
+	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
+	emit systemDataFound(data);
+}
+
+void FroniusSolarApi::sendGetRequest(QUrl url, const QString &id)
 {
 	url.setScheme("http");
 	url.setPort(mPort);
@@ -192,13 +203,37 @@ void FroniusSolarApi::sendGetRequest(QUrl url, QString id)
 	mTimeoutTimer->start();
 }
 
-QVariantMap FroniusSolarApi::parseReply(QNetworkReply *reply)
+void FroniusSolarApi::processReply(QNetworkReply *reply, SolarApiReply &apiReply,
+								 QVariantMap &map)
 {
-	Q_ASSERT(reply != 0);
+	if (reply->error() != QNetworkReply::NoError) {
+		apiReply.error = SolarApiReply::NetworkError;
+		apiReply.errorMessage = reply->errorString();
+		QLOG_INFO() << "Network error:" << apiReply.errorMessage << reply->url();
+		return;
+	}
 	QByteArray bytes = reply->readAll();
 	QString result(QString::fromLocal8Bit(bytes));
 	QLOG_TRACE() << result;
-	return JSON::instance().parse(result).toMap();
+	map = JSON::instance().parse(result).toMap();
+	QVariantMap status = getByPath(map, "Head/Status").toMap();
+	if (!status.contains("Code")) {
+		apiReply.error = SolarApiReply::NetworkError;
+		apiReply.errorMessage = "Reply message has no status "
+								"(we're probably talking to a device "
+								"that does not support the Fronius Solar API)";
+		QLOG_INFO() << "Network error:" << apiReply.errorMessage << reply->url();
+		return;
+	}
+	int errorCode = status["Code"].toInt();
+	if (errorCode != 0)
+	{
+		apiReply.error = SolarApiReply::ApiError;
+		apiReply.errorMessage = status["Reason"].toString();
+		QLOG_INFO() << "Fronius solar API error:" << apiReply.errorMessage;
+		return;
+	}
+	apiReply.error = SolarApiReply::NoError;
 }
 
 QVariant FroniusSolarApi::getByPath(const QVariant &variant,

@@ -11,8 +11,7 @@
 #include "version.h"
 
 DBusInverterBridge::DBusInverterBridge(Inverter *inverter, QObject *parent) :
-	DBusBridge(parent),
-	mInverter(inverter)
+	DBusBridge(parent)
 {
 	Q_ASSERT(inverter != 0);
 
@@ -24,7 +23,7 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter, QObject *parent) :
 
 	PowerInfo *mpi = inverter->meanPowerInfo();
 
-	produce(connection, inverter, "isConnected",	"/Connected");
+	produce(connection, inverter, "isConnected", "/Connected");
 	produce(connection, mpi, "current", "/Ac/Current", "A", 1);
 	produce(connection, mpi, "voltage", "/Ac/Voltage", "V", 0);
 	produce(connection, mpi, "power", "/Ac/Power", "W", 0);
