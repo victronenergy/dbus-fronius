@@ -4,6 +4,7 @@
 #include <QDBusConnection>
 #include <QList>
 #include <QObject>
+#include <QPointer>
 
 class QString;
 class QDBusVariant;
@@ -37,7 +38,7 @@ private slots:
 
 private:
 	QDBusConnection mCnx;
-	VBusNode *mRoot;
+	QPointer<VBusNode> mRoot;
 	QList<QString> mChangedPaths;
 };
 

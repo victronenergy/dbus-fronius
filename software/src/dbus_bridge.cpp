@@ -4,8 +4,7 @@
 #include "v_bus_node.h"
 
 DBusBridge::DBusBridge(QObject *parent) :
-	QObject(parent),
-	mServiceRoot(0)
+	QObject(parent)
 {
 }
 
@@ -124,7 +123,7 @@ void DBusBridge::connectItem(VBusItem *busItem, QObject *src,
 void DBusBridge::addVBusNodes(QDBusConnection &connection, const QString &path,
 							 VBusItem *vbi)
 {
-	if (mServiceRoot == 0)
+	if (mServiceRoot.isNull())
 		mServiceRoot = new VBusNode(connection, "/", this);
 	mServiceRoot->addChild(path, vbi);
 }

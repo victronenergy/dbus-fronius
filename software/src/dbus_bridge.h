@@ -2,9 +2,10 @@
 #define DBUS_BRIDGE_H
 
 #include <QList>
-#include <QObject>
-#include <QString>
 #include <QMetaProperty>
+#include <QObject>
+#include <QPointer>
+#include <QString>
 
 class QDBusConnection;
 class VBusItem;
@@ -116,7 +117,7 @@ private:
 		QString path;
 	};
 	QList<BusItemBridge> mBusItems;
-	VBusNode *mServiceRoot;
+	QPointer<VBusNode> mServiceRoot;
 };
 
 #endif // DBUS_BRIDGE_H

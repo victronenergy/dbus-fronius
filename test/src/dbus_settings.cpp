@@ -8,8 +8,7 @@
 
 DBusSettings::DBusSettings(QObject *parent):
 	QObject(parent),
-	mCnx(VBusItems::getConnection()),
-	mRoot(0)
+	mCnx(VBusItems::getConnection())
 {
 	new DBusSettingsAdaptor(this);
 	mCnx.registerObject("/Settings", this);
@@ -19,7 +18,7 @@ DBusSettings::DBusSettings(QObject *parent):
 
 QVariant DBusSettings::getValue(const QString &path) const
 {
-	if (mRoot != 0) {
+	if (!mRoot.isNull()) {
 		VBusItem *item = mRoot->findItem(path);
 		if (item != 0)
 			return item->getValue();
@@ -29,12 +28,12 @@ QVariant DBusSettings::getValue(const QString &path) const
 
 bool DBusSettings::setValue(const QString &path, const QVariant &value)
 {
-	if (mRoot == 0)
-		return false;
-	VBusItem *item = mRoot->findItem(path);
-	if (item == 0)
-		return false;
-	return item->setValue(value) == 0;
+	if (!mRoot.isNull()) {
+		VBusItem *item = mRoot->findItem(path);
+		if (item != 0)
+			return item->setValue(value) == 0;
+	}
+	return false;
 }
 
 void DBusSettings::resetChangedPaths()
@@ -59,7 +58,7 @@ int DBusSettings::AddSetting(const QString &group, const QString &name,
 
 	VBusItem *vbi = new VBusItem(this);
 	QString path = QString("/Settings/%1/%2").arg(group, name);
-	if (mRoot == 0)
+	if (mRoot.isNull())
 		mRoot = new VBusNode(mCnx, "/", this);
 	if (mRoot->findItem(path) == 0) {
 		qDebug() << "New Path:" << path;

@@ -13,8 +13,7 @@ class VBusNode : public QDBusAbstractAdaptor
 	Q_OBJECT
 	Q_CLASSINFO("D-Bus Interface", "com.victronenergy.BusNode")
 public:
-	VBusNode(QDBusConnection &connection, const QString &path,
-			 QObject *parent);
+	VBusNode(QDBusConnection &connection, const QString &path, QObject *parent);
 
 	void addChild(const QString &path, VBusItem *item);
 
