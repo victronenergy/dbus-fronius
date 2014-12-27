@@ -51,7 +51,6 @@ INCLUDEPATH += \
 SOURCES += \
 	src/main.cpp \
 	src/froniussolar_api.cpp \
-	src/froniussolar_api_test.cpp \
 	src/inverter.cpp \
 	src/power_info.cpp \
 	src/inverter_updater.cpp \
@@ -66,7 +65,6 @@ SOURCES += \
 
 HEADERS += \
 	src/froniussolar_api.h \
-	src/froniussolar_api_test.h \
 	src/inverter.h \
 	src/power_info.h \
 	src/inverter_updater.h \
