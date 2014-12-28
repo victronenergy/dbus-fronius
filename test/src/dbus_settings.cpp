@@ -1,5 +1,5 @@
-#include <QDebug>
 #include <QDBusVariant>
+#include <QsLog.h>
 #include <velib/qt/v_busitem.h>
 #include <velib/qt/v_busitems.h>
 #include "dbus_settings.h"
@@ -13,7 +13,6 @@ DBusSettings::DBusSettings(QObject *parent):
 	new DBusSettingsAdaptor(this);
 	mCnx.registerObject("/Settings", this);
 	mCnx.registerService("com.victronenergy.settings");
-	qDebug() << __FUNCTION__ << mCnx.name() << mCnx.baseService();
 }
 
 QVariant DBusSettings::getValue(const QString &path) const
@@ -61,7 +60,7 @@ int DBusSettings::AddSetting(const QString &group, const QString &name,
 	if (mRoot.isNull())
 		mRoot = new VBusNode(mCnx, "/", this);
 	if (mRoot->findItem(path) == 0) {
-		qDebug() << "New Path:" << path;
+		QLOG_INFO() << "New Path:" << path;
 		mRoot->addChild(path, vbi);
 		emit ObjectPathsChanged();
 	}

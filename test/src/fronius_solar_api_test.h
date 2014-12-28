@@ -1,34 +1,21 @@
 #ifndef FRONIUSSOLARAPITEST_H
 #define FRONIUSSOLARAPITEST_H
 
+#include <gtest/gtest.h>
 #include <QObject>
 #include <QScopedPointer>
-#include <QTest>
 #include "froniussolar_api.h"
+#include "test_helper.h"
 
 class QProcess;
 
-class FroniusSolarApiTest : public QObject
+class FroniusSolarApiTestFixture : public QObject, public testing::Test
 {
 	Q_OBJECT
 public:
-	explicit FroniusSolarApiTest(QObject *parent = 0);
+	explicit FroniusSolarApiTestFixture(QObject *parent = 0);
 
-	virtual ~FroniusSolarApiTest();
-
-private slots:
-	void getConverterInfo();
-
-	void getCumulationData();
-
-	void getCommonData();
-
-	void getThreePhasesInverterData();
-
-	void getThreePhasesInverterDataSinglePhase();
-
-	void getSystemData();
-
+public slots:
 	void onConverterInfoFound(const InverterListData &data);
 
 	void onCumulationDataFound(const CumulationInverterData &data);
@@ -37,7 +24,24 @@ private slots:
 
 	void onThreePhasesDataFound(const ThreePhasesInverterData &data);
 
-private:
+protected:
+	virtual void SetUp() {}
+
+	virtual void TearDown() {}
+
+	/*! Per-test-case set-up.
+	 * Called before the first test in this test case.
+	 * Can be omitted if not needed.
+	 */
+	static void SetUpTestCase();
+
+	/*!
+	 * Per-test-case tear-down.
+	 * Called after the last test in this test case.
+	 * Can be omitted if not needed.
+	 */
+	static void TearDownTestCase();
+
 	/*!
 	 * Waits and processes events until `ptr` has been filled.
 	 * We use this funtion to wait for the result of webrequests created by
@@ -47,16 +51,18 @@ private:
 	void waitForCompletion(QScopedPointer<T> &ptr) {
 		ptr.reset();
 		while (ptr.isNull()) {
-			QTest::qWait(10);
+			qWait(10);
 		}
 	}
 
-	QProcess *mProcess;
+	FroniusSolarApi mApi;
 	QScopedPointer<InverterListData> mInverterListData;
 	QScopedPointer<CumulationInverterData> mCumulationData;
 	QScopedPointer<CommonInverterData> mCommonData;
 	QScopedPointer<ThreePhasesInverterData> m3PData;
-	FroniusSolarApi mApi;
+
+private:
+	static QProcess *mProcess;
 };
 
 #endif // FRONIUSSOLARAPITEST_H

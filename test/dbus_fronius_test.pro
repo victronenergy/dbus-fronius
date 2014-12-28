@@ -36,7 +36,7 @@ QT += core dbus network script xml
 QT -= gui
 
 TARGET = dbus_fronius_test
-CONFIG += console qtestlib
+CONFIG += console
 CONFIG -= app_bundle
 
 TEMPLATE = app
@@ -46,10 +46,13 @@ include(../software/ext/velib/qt.pri)
 include(../software/ext/qslog/QsLog.pri)
 
 SRCDIR = ../software/src
+EXTDIR = ../software/ext
 
 INCLUDEPATH += \
 	../software/ext/velib/inc \
 	../software/ext/velib/lib/Qvelib \
+	../software/ext/googletest/include \
+	../software/ext/googletest \
 	../software/src
 
 HEADERS += \
@@ -64,9 +67,8 @@ HEADERS += \
 	src/dbus_client.h \
 	src/dbus_settings_adaptor.h \
 	src/dbus_settings.h \
-	src/dbus_inverter_bridge_test.h \
-	src/dbus_settings_bridge_test.h \
-	src/fronius_solar_api_test.h
+	src/fronius_solar_api_test.h \
+	src/test_helper.h
 
 SOURCES += \
 	$$SRCDIR/dbus_bridge.cpp \
@@ -77,10 +79,12 @@ SOURCES += \
 	$$SRCDIR/power_info.cpp \
 	$$SRCDIR/settings.cpp \
 	$$SRCDIR/v_bus_node.cpp \
+	$$EXTDIR/googletest/src/gtest-all.cc \
 	src/dbus_client.cpp \
 	src/main.cpp \
 	src/dbus_settings_adaptor.cpp \
 	src/dbus_settings.cpp \
 	src/dbus_inverter_bridge_test.cpp \
 	src/dbus_settings_bridge_test.cpp \
-	src/fronius_solar_api_test.cpp
+	src/fronius_solar_api_test.cpp \
+	src/test_helper.cpp

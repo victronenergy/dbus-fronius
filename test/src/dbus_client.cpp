@@ -1,6 +1,7 @@
 #include <QDBusConnectionInterface>
 #include <QDBusConnection>
 #include <QDomDocument>
+#include <QsLog.h>
 #include <velib/qt/v_busitem.h>
 #include <velib/qt/v_busitems.h>
 #include "dbus_client.h"
@@ -68,7 +69,7 @@ bool DBusClient::setValue(const QString &service, const QString &path,
 void DBusClient::onServiceRegistered(const QString &service)
 {
 	if (service.startsWith(mServicePrefix) && !mItems.contains(service)) {
-		qDebug() << "New service:" << service;
+		QLOG_INFO() << "New service:" << service;
 		scanObjects(service, "/");
 	}
 }
@@ -76,7 +77,7 @@ void DBusClient::onServiceRegistered(const QString &service)
 void DBusClient::onServiceUnregistered(const QString &service)
 {
 	if (service.startsWith(mServicePrefix) && mItems.contains(service)) {
-		qDebug() << "Service removed:" << service;
+		QLOG_INFO() << "Service removed:" << service;
 		for (QMultiMap<QString, VBusItem *>::iterator it = mItems.find(service);
 			 it != mItems.end() && it.key() == service;
 			 ++it)
@@ -102,7 +103,7 @@ void DBusClient::onServiceOwnerChanged(const QString &name,
 void DBusClient::onValueChanged()
 {
 	VBusItem *item = static_cast<VBusItem *>(sender());
-	qDebug() << item->getBind() << item->getValue();
+	QLOG_INFO() << item->getBind() << item->getValue();
 }
 
 void DBusClient::onIntrospectSuccess(const QDBusMessage &reply)
@@ -140,7 +141,7 @@ void DBusClient::onIntrospectSuccess(const QDBusMessage &reply)
 
 void DBusClient::onIntrospectFailure()
 {
-	qDebug() << "Error while scanning DBus";
+	QLOG_ERROR() << "Error while scanning DBus";
 }
 
 void DBusClient::scanObjects(const QString &service, const QString &path)

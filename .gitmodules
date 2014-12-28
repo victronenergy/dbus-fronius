@@ -8,3 +8,7 @@
 	path = software/ext/bottle
 	url = https://github.com/bottlepy/bottle.git
 	branch = release-0.12
+[submodule "software/ext/googletest"]
+	path = software/ext/googletest
+	url = http://git.chromium.org/external/googletest.git
+	branch = master
