@@ -6,9 +6,9 @@
 #include "froniussolar_api.h"
 #include "fronius_solar_api_test.h"
 
-QProcess *FroniusSolarApiTestFixture::mProcess = 0;
+QProcess *FroniusSolarApiTest::mProcess = 0;
 
-FroniusSolarApiTestFixture::FroniusSolarApiTestFixture(QObject *parent) :
+FroniusSolarApiTest::FroniusSolarApiTest(QObject *parent) :
 	QObject(parent),
 	mApi("localhost", 8080)
 {
@@ -26,27 +26,27 @@ FroniusSolarApiTestFixture::FroniusSolarApiTestFixture(QObject *parent) :
 			this, SLOT(onCumulationDataFound(CumulationInverterData)));
 }
 
-void FroniusSolarApiTestFixture::onConverterInfoFound(const InverterListData &data)
+void FroniusSolarApiTest::onConverterInfoFound(const InverterListData &data)
 {
 	mInverterListData.reset(new InverterListData(data));
 }
 
-void FroniusSolarApiTestFixture::onCumulationDataFound(const CumulationInverterData &data)
+void FroniusSolarApiTest::onCumulationDataFound(const CumulationInverterData &data)
 {
 	mCumulationData.reset(new CumulationInverterData(data));
 }
 
-void FroniusSolarApiTestFixture::onCommonDataFound(const CommonInverterData &data)
+void FroniusSolarApiTest::onCommonDataFound(const CommonInverterData &data)
 {
 	mCommonData.reset(new CommonInverterData(data));
 }
 
-void FroniusSolarApiTestFixture::onThreePhasesDataFound(const ThreePhasesInverterData &data)
+void FroniusSolarApiTest::onThreePhasesDataFound(const ThreePhasesInverterData &data)
 {
 	m3PData.reset(new ThreePhasesInverterData(data));
 }
 
-void FroniusSolarApiTestFixture::SetUpTestCase()
+void FroniusSolarApiTest::SetUpTestCase()
 {
 	mProcess = new QProcess();
 	// We assume that the location of the current executable is located in
@@ -61,92 +61,96 @@ void FroniusSolarApiTestFixture::SetUpTestCase()
 
 	QStringList arguments;
 	arguments << p;
-	mProcess->start("python", arguments);
+	// If the ccgx sdk is installed, the python interpreter in the sdk will be
+	// used when starting python without using its full path. This version does
+	// not contain all modules needed by our simulation script, so we assume
+	// a full python install is present and installed in /usr/bin
+	mProcess->start("/usr/bin/python", arguments);
 	if (!mProcess->waitForStarted())
 		throw std::logic_error("Could not start python interpreter");
 	// Give the python interpreter some time to load the script.
-	qWait(400);
+	qWait(1000);
 }
 
-void FroniusSolarApiTestFixture::TearDownTestCase()
+void FroniusSolarApiTest::TearDownTestCase()
 {
 	mProcess->kill();
 	delete mProcess;
 	mProcess = 0;
 }
 
-TEST_F(FroniusSolarApiTestFixture, getConverterInfo)
+TEST_F(FroniusSolarApiTest, getConverterInfo)
 {
 	mApi.getConverterInfoAsync();
 	waitForCompletion(mInverterListData);
 
-	EXPECT_EQ(mInverterListData->error, SolarApiReply::NoError);
+	EXPECT_EQ(SolarApiReply::NoError, mInverterListData->error);
 	EXPECT_TRUE(mInverterListData->errorMessage.isEmpty());
 	EXPECT_TRUE(mInverterListData->inverters.size() > 0);
 	const InverterInfo &ii = mInverterListData->inverters.first();
-	EXPECT_EQ(ii.id, QString("1"));
-	EXPECT_EQ(ii.uniqueId, QString("1234"));
-	EXPECT_EQ(ii.customName, QString("SouthWest"));
-	EXPECT_EQ(ii.deviceType, 192);
+	EXPECT_EQ(QString("1"), ii.id);
+	EXPECT_EQ(QString("1234"), ii.uniqueId);
+	EXPECT_EQ(QString("SouthWest"), ii.customName);
+	EXPECT_EQ(192, ii.deviceType);
 	/// @todo EV Bad test: even if the reply does not contain an error code,
 	/// ii.errorCode will be 0 (default value).
-	EXPECT_EQ(ii.errorCode, 0);
-	EXPECT_EQ(ii.statusCode, 7);
+	EXPECT_EQ(0, ii.errorCode);
+	EXPECT_EQ(7, ii.statusCode);
 }
 
-TEST_F(FroniusSolarApiTestFixture, getCumulationData)
+TEST_F(FroniusSolarApiTest, getCumulationData)
 {
 	mApi.getCumulationDataAsync("2");
 	waitForCompletion(mCumulationData);
 
-	EXPECT_EQ(mCumulationData->error, SolarApiReply::NoError);
+	EXPECT_EQ(SolarApiReply::NoError, mCumulationData->error);
 	EXPECT_TRUE(mCumulationData->errorMessage.isEmpty());
-	EXPECT_EQ(mCumulationData->acPower, 3373.0);
-	EXPECT_EQ(mCumulationData->dayEnergy, 8000.0);
-	EXPECT_EQ(mCumulationData->yearEnergy, 44000.0);
-	EXPECT_EQ(mCumulationData->totalEnergy, 45000.0);
+	EXPECT_EQ(3373.0, mCumulationData->acPower);
+	EXPECT_EQ(8000.0, mCumulationData->dayEnergy);
+	EXPECT_EQ(44000.0, mCumulationData->yearEnergy);
+	EXPECT_EQ(45000.0, mCumulationData->totalEnergy);
 }
 
-TEST_F(FroniusSolarApiTestFixture, getCommonData)
+TEST_F(FroniusSolarApiTest, getCommonData)
 {
 	mApi.getCommonDataAsync("2");
 	waitForCompletion(mCommonData);
 
-	EXPECT_EQ(mCommonData->error, SolarApiReply::NoError);
+	EXPECT_EQ(SolarApiReply::NoError, mCommonData->error);
 	EXPECT_TRUE(mCommonData->errorMessage.isEmpty());
-	EXPECT_EQ(mCommonData->acFrequency, 50.0);
-	EXPECT_EQ(mCommonData->dayEnergy, 8000.0);
-	EXPECT_EQ(mCommonData->yearEnergy, 44000.0);
-	EXPECT_EQ(mCommonData->totalEnergy, 45000.0);
+	EXPECT_EQ(50.0, mCommonData->acFrequency);
+	EXPECT_EQ(8000.0, mCommonData->dayEnergy);
+	EXPECT_EQ(44000.0, mCommonData->yearEnergy);
+	EXPECT_EQ(45000.0, mCommonData->totalEnergy);
 }
 
-TEST_F(FroniusSolarApiTestFixture, getThreePhasesInverterData)
+TEST_F(FroniusSolarApiTest, getThreePhasesInverterData)
 {
 	mApi.getThreePhasesInverterDataAsync("1");
 	waitForCompletion(m3PData);
 
-	EXPECT_EQ(m3PData->error, SolarApiReply::NoError);
+	EXPECT_EQ(SolarApiReply::NoError, m3PData->error);
 	EXPECT_TRUE(m3PData->errorMessage.isEmpty());
 }
 
-TEST_F(FroniusSolarApiTestFixture, getThreePhasesInverterDataSinglePhase)
+TEST_F(FroniusSolarApiTest, getThreePhasesInverterDataSinglePhase)
 {
 	mApi.getThreePhasesInverterDataAsync("2");
 	waitForCompletion(m3PData);
 
-	EXPECT_EQ(m3PData->error, SolarApiReply::ApiError);
+	EXPECT_EQ(SolarApiReply::ApiError, m3PData->error);
 	EXPECT_FALSE(m3PData->errorMessage.isEmpty());
 }
 
-TEST_F(FroniusSolarApiTestFixture, getSystemData)
+TEST_F(FroniusSolarApiTest, getSystemData)
 {
 	mApi.getSystemDataAsync();
 	waitForCompletion(mCumulationData);
 
-	EXPECT_EQ(mCumulationData->error, SolarApiReply::NoError);
+	EXPECT_EQ(SolarApiReply::NoError, mCumulationData->error);
 	EXPECT_TRUE(mCumulationData->errorMessage.isEmpty());
-	EXPECT_EQ(mCumulationData->acPower, 3373.0);
-	EXPECT_EQ(mCumulationData->dayEnergy, 8000.0);
-	EXPECT_EQ(mCumulationData->yearEnergy, 44000.0);
-	EXPECT_EQ(mCumulationData->totalEnergy, 45000.0);
+	EXPECT_EQ(3373.0, mCumulationData->acPower);
+	EXPECT_EQ(8000.0, mCumulationData->dayEnergy);
+	EXPECT_EQ(44000.0, mCumulationData->yearEnergy);
+	EXPECT_EQ(45000.0, mCumulationData->totalEnergy);
 }

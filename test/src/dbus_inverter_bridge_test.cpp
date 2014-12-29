@@ -23,28 +23,27 @@ TEST(DBusInverterBridgeTest, constructor)
 	qWait(300);
 
 	EXPECT_EQ(dbusClient.getValue(serviceName, "/Connected").toInt(), 0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Mgmt/ProcessName").toString(),
-			 QString(QCoreApplication::arguments()[0]));
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Mgmt/ProcessVersion").toString(),
-			 QString(VERSION));
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Mgmt/Connection").toString(),
-			 QString("10.0.1.4 - 3"));
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Position").toString(),
-			 QString("3"));
+
+	EXPECT_EQ(QCoreApplication::arguments()[0],
+			  dbusClient.getValue(serviceName, "/Mgmt/ProcessName").toString());
+	EXPECT_EQ(QString(VERSION),
+			  dbusClient.getValue(serviceName, "/Mgmt/ProcessVersion").toString());
+	EXPECT_EQ(QString("10.0.1.4 - 3"),
+			  dbusClient.getValue(serviceName, "/Mgmt/Connection").toString());
+	EXPECT_EQ(QString("3"),
+			  dbusClient.getValue(serviceName, "/Position").toString());
 	// Note: we don't take the product ID from VE_PROD_ID_PV_INVERTER_FRONIUS,
 	// because we want this test to fail if someone changes the define.
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/ProductId").toString(),
-			 QString::number(0xA142));
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/ProductName").toString(),
-			 QString("Fronius PV inverter"));
+	EXPECT_EQ(QString::number(0xA142),
+			  dbusClient.getValue(serviceName, "/ProductId").toString());
+	EXPECT_EQ(QString("Fronius PV inverter"),
+			  dbusClient.getValue(serviceName, "/ProductName").toString());
 
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/Current").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/Voltage").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/Power").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L1/Current"), QVariant());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/Current").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/Voltage").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/Power").toDouble());
+
+	EXPECT_FALSE(dbusClient.getValue(serviceName, "/Ac/L1/Current").isValid());
 }
 
 TEST(DBusInverterBridgeTest, constructor3Phased)
@@ -58,30 +57,18 @@ TEST(DBusInverterBridgeTest, constructor3Phased)
 	DBusClient dbusClient(serviceName);
 	qWait(300);
 
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/Power").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/Current").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/Voltage").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L1/Power").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L1/Current").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L1/Voltage").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L2/Power").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L2/Current").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L2/Voltage").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L3/Power").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L3/Current").toDouble(),
-			 0.0);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Ac/L3/Voltage").toDouble(),
-			 0.0);
+	EXPECT_EQ(0.0 ,dbusClient.getValue(serviceName, "/Ac/Power").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/Current").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/Voltage").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/L1/Power").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/L1/Current").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/L1/Voltage").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/L2/Power").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/L2/Current").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/L2/Voltage").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/L3/Power").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/L3/Current").toDouble());
+	EXPECT_EQ(0.0, dbusClient.getValue(serviceName, "/Ac/L3/Voltage").toDouble());
 }
 
 TEST(DBusInverterBridgeTest, isConnected)
@@ -94,10 +81,10 @@ TEST(DBusInverterBridgeTest, isConnected)
 	qWait(300);
 
 	EXPECT_FALSE(inverter.isConnected());
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Connected").toInt(), 0);
+	EXPECT_EQ(0, dbusClient.getValue(serviceName, "/Connected").toInt());
 	inverter.setIsConnected(true);
 	qWait(100);
-	EXPECT_EQ(dbusClient.getValue(serviceName, "/Connected").toInt(), 1);
+	EXPECT_EQ(1, dbusClient.getValue(serviceName, "/Connected").toInt());
 }
 
 TEST(DBusInverterBridgeTest, acCurrent)
@@ -132,10 +119,10 @@ static void checkValue(Inverter *inverter, PowerInfo *pi, const QString &path,
 	DBusClient dbusClient(serviceName);
 	qWait(300);
 
-	EXPECT_EQ(dbusClient.getValue(serviceName, path).toDouble(), v0);
+	EXPECT_EQ(v0, dbusClient.getValue(serviceName, path).toDouble());
 	pi->setProperty(property, v1);
 	qWait(100);
-	EXPECT_EQ(dbusClient.getValue(serviceName, path).toDouble(), v1);
+	EXPECT_EQ(v1, dbusClient.getValue(serviceName, path).toDouble());
 
-	EXPECT_EQ(dbusClient.getText(serviceName, path), text);
+	EXPECT_EQ(text, dbusClient.getText(serviceName, path));
 }

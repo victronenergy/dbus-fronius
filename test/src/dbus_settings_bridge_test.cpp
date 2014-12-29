@@ -6,17 +6,17 @@
 
 static void changeIPAddresses(const char *property, const char *path);
 static void changeIPAddressesRemote(const char *property, const char *path);
-static void checkValue(const QVariant &actual, const QVariant &expected);
+static void checkValue(const QVariant &expected, const QVariant &actual);
 
 TEST(DBusSettingsBridgeTest, addObjects)
 {
 	DBusSettings settingsClient;
-	checkValue(settingsClient.getValue("/Settings/Fronius/AutoDetect"), QVariant());
+	checkValue(QVariant(), settingsClient.getValue("/Settings/Fronius/AutoDetect"));
 	DBusSettingsBridge::addDBusObjects();
-	checkValue(settingsClient.getValue("/Settings/Fronius/AutoDetect"), QVariant(false));
-	checkValue(settingsClient.getValue("/Settings/Fronius/IPAddresses"), QVariant(""));
-	checkValue(settingsClient.getValue("/Settings/Fronius/KnownIPAddresses"), QVariant(""));
-	checkValue(settingsClient.getValue("/Settings/Fronius/ScanProgress"), QVariant(0));
+	checkValue(QVariant(false), settingsClient.getValue("/Settings/Fronius/AutoDetect"));
+	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/IPAddresses"));
+	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/KnownIPAddresses"));
+	checkValue(QVariant(0), settingsClient.getValue("/Settings/Fronius/ScanProgress"));
 }
 
 TEST(DBusSettingsBridgeTest, changeAutoDetect)
@@ -27,7 +27,7 @@ TEST(DBusSettingsBridgeTest, changeAutoDetect)
 	DBusSettingsBridge bridge(&settings, 0);
 	// Wait for DBusSettingsBridge to fill settings object with default values
 	// specified by DBusSettingsBridge::addDBusObjects
-	qWait(100);
+	qWait(300);
 	// Check default value from DBus
 	EXPECT_FALSE(settings.autoDetect());
 	settingsClient.resetChangedPaths();
@@ -39,8 +39,8 @@ TEST(DBusSettingsBridgeTest, changeAutoDetect)
 	EXPECT_TRUE(autoDetect.toBool());
 	// Check DBus signal
 	const QList<QString> &cp = settingsClient.changedPaths();
-	EXPECT_EQ(cp.size(), 1);
-	EXPECT_EQ(cp.first(), QString("/Settings/Fronius/AutoDetect"));
+	EXPECT_EQ(1, cp.size());
+	EXPECT_EQ(QString("/Settings/Fronius/AutoDetect"), cp.first());
 }
 
 TEST(DBusSettingsBridgeTest, changeAutoDetectRemote)
@@ -51,7 +51,7 @@ TEST(DBusSettingsBridgeTest, changeAutoDetectRemote)
 	DBusSettingsBridge bridge(&settings, 0);
 	// Wait for DBusSettingsBridge to fill settings object with default values
 	// specified by DBusSettingsBridge::addDBusObjects
-	qWait(100);
+	qWait(300);
 	EXPECT_FALSE(settings.autoDetect());
 	// Set new value on DBus
 	settingsClient.setValue("/Settings/Fronius/AutoDetect", true);
@@ -88,7 +88,7 @@ static void changeIPAddresses(const char *property, const char *path)
 	DBusSettingsBridge bridge(&settings, 0);
 	// Wait for DBusSettingsBridge to fill settings object with default values
 	// specified by DBusSettingsBridge::addDBusObjects
-	qWait(100);
+	qWait(300);
 	// Check default value from DBus
 	EXPECT_TRUE(settings.property(property).value<QList<QHostAddress> >().isEmpty());
 	settingsClient.resetChangedPaths();
@@ -99,11 +99,11 @@ static void changeIPAddresses(const char *property, const char *path)
 	qWait(100);
 	// Check new value
 	QVariant qv = settingsClient.getValue(path);
-	EXPECT_EQ(qv.toString(), QString("192.168.1.3,192.168.1.7"));
+	EXPECT_EQ(QString("192.168.1.3,192.168.1.7"), qv.toString());
 	// Check DBus signal
 	const QList<QString> &cp = settingsClient.changedPaths();
-	EXPECT_EQ(cp.size(), 1);
-	EXPECT_EQ(cp.first(), QString(path));
+	EXPECT_EQ(1, cp.size());
+	EXPECT_EQ(QString(path), cp.first());
 }
 
 static void changeIPAddressesRemote(const char *property, const char *path)
@@ -114,7 +114,7 @@ static void changeIPAddressesRemote(const char *property, const char *path)
 	DBusSettingsBridge bridge(&settings, 0);
 	// Wait for DBusSettingsBridge to fill settings object with default values
 	// specified by DBusSettingsBridge::addDBusObjects
-	qWait(100);
+	qWait(300);
 	EXPECT_TRUE(settings.property(property).value<QList<QHostAddress> >().isEmpty());
 	// Set new value on DBus
 	settingsClient.setValue(path, "192.168.1.3,192.168.1.7");
@@ -126,11 +126,11 @@ static void changeIPAddressesRemote(const char *property, const char *path)
 	expected.append(QHostAddress("192.168.1.3"));
 	expected.append(QHostAddress("192.168.1.7"));
 	// Check DBus signal
-	EXPECT_EQ(addr, expected);
+	EXPECT_EQ(expected, addr);
 }
 
-static void checkValue(const QVariant &actual, const QVariant &expected)
+static void checkValue(const QVariant &expected, const QVariant &actual)
 {
-	EXPECT_EQ(actual.isValid(), expected.isValid());
-	EXPECT_EQ(actual, expected);
+	EXPECT_EQ(expected.isValid(), actual.isValid());
+	EXPECT_EQ(expected, actual);
 }

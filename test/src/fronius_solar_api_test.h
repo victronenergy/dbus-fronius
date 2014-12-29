@@ -9,11 +9,18 @@
 
 class QProcess;
 
-class FroniusSolarApiTestFixture : public QObject, public testing::Test
+/*!
+ * \brief Tests the FroniusSolarApi class.
+ * This test uses the fronius_simulator python app as web server. This app uses
+ * the cgi module, which is not present on the color control. This means that
+ * this test can only be run on a desktop machine.
+ * If all tests fail, there's a good change the app did not start at all.
+ */
+class FroniusSolarApiTest : public QObject, public testing::Test
 {
 	Q_OBJECT
 public:
-	explicit FroniusSolarApiTestFixture(QObject *parent = 0);
+	explicit FroniusSolarApiTest(QObject *parent = 0);
 
 public slots:
 	void onConverterInfoFound(const InverterListData &data);
