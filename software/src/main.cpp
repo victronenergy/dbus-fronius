@@ -12,7 +12,7 @@ void initLogger(QsLogging::Level logLevel)
 {
 	QsLogging::Logger &logger = QsLogging::Logger::instance();
 	QsLogging::DestinationPtr debugDestination(
-			QsLogging::DestinationFactory::MakeDebugOutputDestination() );
+			QsLogging::DestinationFactory::MakeDebugOutputDestination());
 	logger.addDestination(debugDestination);
 	logger.setIncludeTimestamp(false);
 
@@ -36,26 +36,33 @@ int main(int argc, char *argv[])
 	VBusItems::setConnectionType(QDBusConnection::SystemBus);
 #endif
 
+	bool findVerbosity = false;
 	foreach (QString arg, a.arguments()) {
+		if (findVerbosity) {
+			QsLogging::Logger &logger = QsLogging::Logger::instance();
+			int logLevel = arg.toInt();
+			if (logLevel < 0)
+				logLevel = 0;
+			if (logLevel >= QsLogging::FatalLevel)
+				logLevel = static_cast<int>(QsLogging::FatalLevel);
+			logger.setLoggingLevel(static_cast<QsLogging::Level>(logLevel));
+			findVerbosity = false;
+		}
 		if (arg == "-h" || arg == "--help") {
 			qDebug() << a.arguments().first();
 			qDebug() << "\t-h, --help";
 			qDebug() << "\t Show this message.";
 			qDebug() << "\t-V, --version";
 			qDebug() << "\t Show the application version.";
-			qDebug() << "\t-v, --verbose";
-			qDebug() << "\t Increase verbosity. This option may be used more than once.";
+			qDebug() << "\t-d level, --debug level";
+			qDebug() << "\t Set log level";
 			return 0;
 		}
 		if (arg == "-V" || arg == "--version") {
 			qDebug() << VERSION << "("REVISION")";
 			return 0;
-		} else if (arg == "-v" || arg == "--verbose") {
-			QsLogging::Logger &logger = QsLogging::Logger::instance();
-			int logLevel = logger.loggingLevel();
-			if (logLevel > 0) {
-				logger.setLoggingLevel(static_cast<QsLogging::Level>(logLevel - 1));
-			}
+		} else if (arg == "-d" || arg == "--debug") {
+			findVerbosity = true;
 		} else if (arg == "-t" || arg == "--timestamp") {
 			QsLogging::Logger &logger = QsLogging::Logger::instance();
 			logger.setIncludeTimestamp(true);

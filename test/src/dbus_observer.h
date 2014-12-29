@@ -2,16 +2,16 @@
 #define DBUS_CLIENT_H
 
 #include <QObject>
-#include <QMap>
+#include <QList>
+#include <QString>
 
-class QDBusMessage;
-class VBusItem;
+class DBusServiceObserver;
 
-class DBusClient : QObject
+class DBusObserver : QObject
 {
 	Q_OBJECT
 public:
-	DBusClient(const QString &servicePrefix, QObject *parent = 0);
+	DBusObserver(const QString &servicePrefix, QObject *parent = 0);
 
 	QVariant getValue(const QString &service, const QString &path) const;
 
@@ -28,21 +28,13 @@ private slots:
 	void onServiceOwnerChanged(const QString &name, const QString &oldOwner,
 							   const QString &newOwner);
 
-	void onValueChanged();
-
-	void onIntrospectSuccess(const QDBusMessage &reply);
-
-	void onIntrospectFailure();
-
 private:
 	void scanObjects(const QString &service, const QString &path);
 
-	QMultiMap<QString, VBusItem *> mItems;
-	QString mServicePrefix;
+	DBusServiceObserver *findObserver(const QString &service) const;
 
-	QList<QString> mPendingPaths;
-	QString mIntrospectPath;
-	QString mIntrospectService;
+	QList<DBusServiceObserver *> mObservers;
+	QString mServicePrefix;
 };
 
 #endif // DBUS_CLIENT_H

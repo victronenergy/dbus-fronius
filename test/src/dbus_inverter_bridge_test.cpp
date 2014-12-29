@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <QCoreApplication>
 #include <QStringList>
-#include "dbus_client.h"
+#include "dbus_observer.h"
 #include "dbus_inverter_bridge.h"
 #include "inverter.h"
 #include "power_info.h"
@@ -19,7 +19,7 @@ TEST(DBusInverterBridgeTest, constructor)
 
 	QString serviceName("com.victronenergy.pvinverter.fronius_10014_3");
 
-	DBusClient dbusClient(serviceName);
+	DBusObserver dbusClient(serviceName);
 	qWait(300);
 
 	EXPECT_EQ(dbusClient.getValue(serviceName, "/Connected").toInt(), 0);
@@ -54,7 +54,7 @@ TEST(DBusInverterBridgeTest, constructor3Phased)
 
 	QString serviceName("com.victronenergy.pvinverter.fronius_10014_3");
 
-	DBusClient dbusClient(serviceName);
+	DBusObserver dbusClient(serviceName);
 	qWait(300);
 
 	EXPECT_EQ(0.0 ,dbusClient.getValue(serviceName, "/Ac/Power").toDouble());
@@ -77,7 +77,7 @@ TEST(DBusInverterBridgeTest, isConnected)
 	DBusInverterBridge bridge(&inverter);
 
 	QString serviceName("com.victronenergy.pvinverter.fronius_10014_3");
-	DBusClient dbusClient(serviceName);
+	DBusObserver dbusClient(serviceName);
 	qWait(300);
 
 	EXPECT_FALSE(inverter.isConnected());
@@ -116,7 +116,7 @@ static void checkValue(Inverter *inverter, PowerInfo *pi, const QString &path,
 	DBusInverterBridge bridge(inverter);
 
 	QString serviceName("com.victronenergy.pvinverter.fronius_10014_3");
-	DBusClient dbusClient(serviceName);
+	DBusObserver dbusClient(serviceName);
 	qWait(300);
 
 	EXPECT_EQ(v0, dbusClient.getValue(serviceName, path).toDouble());

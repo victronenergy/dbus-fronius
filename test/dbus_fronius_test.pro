@@ -64,7 +64,8 @@ HEADERS += \
 	$$SRCDIR/power_info.h \
 	$$SRCDIR/settings.h \
 	$$SRCDIR/v_bus_node.h \
-	src/dbus_client.h \
+	src/dbus_observer.h \
+	src/dbus_service_observer.h \
 	src/dbus_settings_adaptor.h \
 	src/dbus_settings.h \
 	src/fronius_solar_api_test.h \
@@ -80,8 +81,9 @@ SOURCES += \
 	$$SRCDIR/settings.cpp \
 	$$SRCDIR/v_bus_node.cpp \
 	$$EXTDIR/googletest/src/gtest-all.cc \
-	src/dbus_client.cpp \
 	src/main.cpp \
+	src/dbus_observer.cpp \
+	src/dbus_service_observer.cpp \
 	src/dbus_settings_adaptor.cpp \
 	src/dbus_settings.cpp \
 	src/dbus_inverter_bridge_test.cpp \

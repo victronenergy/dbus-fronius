@@ -1,0 +1,26 @@
+digraph {
+	label="IP address detection";
+
+	start[shape="box", style=rounded];
+	wait_settings[shape="box", label="Wait for DBus settings"];
+	has_known_ip[shape="diamond" label="Has manual/\nknown IP?"];
+	auto_scan[shape="box", label="Scan all IP Addresses\nin local network"];
+	known_ip_scan[shape="box", label="Scan manual and\nknown IPs"];
+	ip_found[shape="diamond" label="All manual/known\nIPs found?"];
+	store_known_ip[shape="box", label="Any IPs found stored\nas known IPs."];
+	end[shape="box", style=rounded];
+	input_autodetect[shape="parallelogram", label="User enables\nauto detect."];
+	input_addreses[shape="parallelogram", label="User adds new \nIP address."];
+
+	start -> wait_settings;
+	wait_settings -> has_known_ip;
+	has_known_ip -> known_ip_scan [label="yes"];
+	has_known_ip -> auto_scan [label="no"];
+	known_ip_scan -> ip_found;
+	ip_found -> end [label="yes"];
+	ip_found -> auto_scan [label="no"];
+	auto_scan -> store_known_ip;
+	store_known_ip -> end;
+	input_autodetect -> auto_scan;
+	input_addreses -> known_ip_scan;
+}
