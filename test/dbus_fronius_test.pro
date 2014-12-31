@@ -69,7 +69,9 @@ HEADERS += \
 	src/dbus_settings_adaptor.h \
 	src/dbus_settings.h \
 	src/fronius_solar_api_test.h \
-	src/test_helper.h
+	src/test_helper.h \
+	src/dbus_inverter_bridge_test.h \
+	src/dbus_settings_bridge_test.h
 
 SOURCES += \
 	$$SRCDIR/dbus_bridge.cpp \
@@ -90,3 +92,7 @@ SOURCES += \
 	src/dbus_settings_bridge_test.cpp \
 	src/fronius_solar_api_test.cpp \
 	src/test_helper.cpp
+
+OTHER_FILES += \
+	src/fronius_sim/app.py \
+	src/fronius_sim/fronius_sim.py

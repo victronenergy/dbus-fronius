@@ -86,7 +86,7 @@ TEST_F(FroniusSolarApiTest, getConverterInfo)
 
 	EXPECT_EQ(SolarApiReply::NoError, mInverterListData->error);
 	EXPECT_TRUE(mInverterListData->errorMessage.isEmpty());
-	EXPECT_TRUE(mInverterListData->inverters.size() > 0);
+	ASSERT_TRUE(mInverterListData->inverters.size() > 0);
 	const InverterInfo &ii = mInverterListData->inverters.first();
 	EXPECT_EQ(QString("1"), ii.id);
 	EXPECT_EQ(QString("1234"), ii.uniqueId);

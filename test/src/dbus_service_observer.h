@@ -10,6 +10,7 @@ class VBusItem;
 class DBusServiceObserver : public QObject
 {
 	Q_OBJECT
+	Q_PROPERTY(bool initialized READ initialized NOTIFY initializedChanged)
 public:
 	explicit DBusServiceObserver(const QString &service, QObject *parent = 0);
 
@@ -21,6 +22,11 @@ public:
 
 	bool setValue(const QString &path, const QVariant &value);
 
+	bool initialized() const;
+
+signals:
+	void initializedChanged();
+
 private slots:
 	void onIntrospectSuccess(const QDBusMessage &reply);
 
@@ -31,12 +37,21 @@ private slots:
 private:
 	void scanObjects(const QString &path);
 
+	void checkInitialized();
+
+	void scanNext();
+
 	VBusItem *findItem(const QString &path) const;
 
 	QString mService;
-	QList<VBusItem *> mItems;
+	struct ItemWrapper {
+		VBusItem *item;
+		bool initialized;
+	};
+	QList<ItemWrapper> mItems;
 	QList<QString> mPendingPaths;
 	QString mIntrospectPath;
+	bool mInitialized;
 };
 
 #endif // DBUSSERVICEOBSERVER_H

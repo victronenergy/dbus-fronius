@@ -32,10 +32,6 @@ public slots:
 	void onThreePhasesDataFound(const ThreePhasesInverterData &data);
 
 protected:
-	virtual void SetUp() {}
-
-	virtual void TearDown() {}
-
 	/*! Per-test-case set-up.
 	 * Called before the first test in this test case.
 	 * Can be omitted if not needed.

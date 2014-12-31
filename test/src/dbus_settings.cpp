@@ -15,6 +15,11 @@ DBusSettings::DBusSettings(QObject *parent):
 	mCnx.registerService("com.victronenergy.settings");
 }
 
+DBusSettings::~DBusSettings()
+{
+	mCnx.unregisterService("com.victronenergy.settings");
+}
+
 QVariant DBusSettings::getValue(const QString &path) const
 {
 	if (!mRoot.isNull()) {

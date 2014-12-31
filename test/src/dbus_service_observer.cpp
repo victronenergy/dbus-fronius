@@ -8,7 +8,8 @@
 DBusServiceObserver::DBusServiceObserver(const QString &service,
 										 QObject *parent) :
 	QObject(parent),
-	mService(service)
+	mService(service),
+	mInitialized(false)
 {
 	scanObjects("/");
 }
@@ -36,6 +37,11 @@ bool DBusServiceObserver::setValue(const QString &path, const QVariant &value)
 	return item != 0 && item->setValue(value) == 0;
 }
 
+bool DBusServiceObserver::initialized() const
+{
+	return mInitialized;
+}
+
 void DBusServiceObserver::onIntrospectSuccess(const QDBusMessage &reply)
 {
 	QVariant v = reply.arguments().first();
@@ -57,17 +63,16 @@ void DBusServiceObserver::onIntrospectSuccess(const QDBusMessage &reply)
 	}
 	if (isLeaf) {
 		QLOG_TRACE() << "New item: " << path;
-		VBusItem *item = new VBusItem(this);
-		mItems.append(item);
-		connect(item, SIGNAL(valueChanged()), this, SLOT(onValueChanged()));
-		item->consume(mService, path);
+		ItemWrapper w;
+		w.item = new VBusItem(this);
+		w.initialized = false;
+		mItems.append(w);
+		connect(w.item, SIGNAL(valueChanged()), this, SLOT(onValueChanged()));
+		w.item->consume(mService, path);
 		// Force value retrieval
-		item->getValue();
+		w.item->getValue();
 	}
-	if (!mPendingPaths.isEmpty()) {
-		scanObjects(mPendingPaths.first());
-		mPendingPaths.removeFirst();
-	}
+	scanNext();
 }
 
 void DBusServiceObserver::onIntrospectFailure(const QDBusError &error,
@@ -76,12 +81,23 @@ void DBusServiceObserver::onIntrospectFailure(const QDBusError &error,
 	QLOG_ERROR() << "Error while scanning DBus"
 				 << error.message()
 				 << reply.errorMessage();
+	scanNext();
 }
 
 void DBusServiceObserver::onValueChanged()
 {
 	VBusItem *item = static_cast<VBusItem *>(sender());
 	QLOG_INFO() << item->getBind() << item->getValue();
+	for (QList<ItemWrapper>::iterator it = mItems.begin(); it != mItems.end(); ++it) {
+		if (it->item == item) {
+			if (!it->initialized)
+			{
+				it->initialized = true;
+				checkInitialized();
+			}
+			break;
+		}
+	}
 }
 
 void DBusServiceObserver::scanObjects(const QString &path)
@@ -98,12 +114,35 @@ void DBusServiceObserver::scanObjects(const QString &path)
 						 SLOT(onIntrospectFailure(QDBusError, QDBusMessage)));
 }
 
+void DBusServiceObserver::checkInitialized()
+{
+	if (mInitialized || !mIntrospectPath.isEmpty())
+		return;
+	foreach (ItemWrapper w, mItems) {
+		if (!w.initialized)
+			return;
+	}
+	mInitialized = true;
+	emit initializedChanged();
+}
+
+void DBusServiceObserver::scanNext()
+{
+	if (mPendingPaths.isEmpty()) {
+		mIntrospectPath.clear();
+		checkInitialized();
+	} else {
+		scanObjects(mPendingPaths.first());
+		mPendingPaths.removeFirst();
+	}
+}
+
 VBusItem *DBusServiceObserver::findItem(const QString &path) const
 {
 	QString url = mService + path;
-	foreach (VBusItem *item, mItems) {
-		if (item->getBind() == url)
-			return item;
+	foreach (ItemWrapper w, mItems) {
+		if (w.item->getBind() == url)
+			return w.item;
 	}
 	return 0;
 }

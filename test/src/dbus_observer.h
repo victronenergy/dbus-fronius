@@ -20,6 +20,8 @@ public:
 	bool setValue(const QString &service, const QString &path,
 				  const QVariant &value);
 
+	bool isInitialized(const QString &service) const;
+
 private slots:
 	void onServiceRegistered(const QString &service);
 

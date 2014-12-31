@@ -17,6 +17,8 @@ class DBusSettings : public QObject
 public:
 	DBusSettings(QObject *parent = 0);
 
+	~DBusSettings();
+
 	QVariant getValue(const QString &path) const;
 
 	bool setValue(const QString &path, const QVariant &value);

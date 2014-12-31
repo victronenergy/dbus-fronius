@@ -45,6 +45,12 @@ bool DBusObserver::setValue(const QString &service, const QString &path,
 	return observer != 0 && observer->setValue(path, value);
 }
 
+bool DBusObserver::isInitialized(const QString &service) const
+{
+	DBusServiceObserver *observer = findObserver(service);
+	return observer != 0 && observer->initialized();
+}
+
 void DBusObserver::onServiceRegistered(const QString &service)
 {
 	if (!service.startsWith(mServicePrefix))

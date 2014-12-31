@@ -18,7 +18,7 @@ class PowerInfo:
 
 
 class FroniusSim:
-	def __init__(self, id, unique_id, has_3phases=True):
+	def __init__(self, id, unique_id, custom_name='', has_3phases=True):
 		self.main = PowerInfo()
 		self.has_3phases = has_3phases
 		if has_3phases:
@@ -27,3 +27,4 @@ class FroniusSim:
 			self.l3 = PowerInfo()
 		self.id = id
 		self.unique_id = unique_id
+		self.custom_name = custom_name
