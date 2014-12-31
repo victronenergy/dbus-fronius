@@ -13,19 +13,20 @@ DBusFronius::DBusFronius(QObject *parent) :
 	mGateway(new InverterGateway(mSettings, this)),
 	mSettingsBridge(new DBusSettingsBridge(mSettings, mGateway, this))
 {
-	connect(
-		mGateway, SIGNAL(inverterFound(InverterUpdater&)),
-		this, SLOT(onInverterFound(InverterUpdater&)));
+	connect(mGateway, SIGNAL(inverterFound(InverterUpdater *)),
+			this, SLOT(onInverterFound(InverterUpdater *)));
+	connect(mSettingsBridge, SIGNAL(initialized()),
+			this, SLOT(onSettingsInitialized()));
 }
 
-void DBusFronius::onInverterFound(InverterUpdater &iu)
+void DBusFronius::onInverterFound(InverterUpdater *iu)
 {
-	QLOG_INFO() << "New inverter:" << iu.inverter()->hostName()
-				<< iu.inverter()->id();
+	QLOG_INFO() << "New inverter:" << iu->inverter()->hostName()
+				<< iu->inverter()->id();
 	// At this point, an inverter has been found, but it is not yet clear what
 	// its capacities are (eg. support for 3 phases). So we cannot create a
 	// DBus tree yet.
-	connect(&iu, SIGNAL(initialized()), this, SLOT(onInverterInitialized()));
+	connect(iu, SIGNAL(initialized()), this, SLOT(onInverterInitialized()));
 }
 
 void DBusFronius::onInverterInitialized()
@@ -34,4 +35,9 @@ void DBusFronius::onInverterInitialized()
 	// DBusInverterBridge will set inverter as its parent, so we have no
 	// memory leak here.
 	new DBusInverterBridge(inverter, this);
+}
+
+void DBusFronius::onSettingsInitialized()
+{
+	mGateway->startDetection();
 }

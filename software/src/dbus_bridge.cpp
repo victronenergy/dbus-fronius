@@ -71,13 +71,30 @@ void DBusBridge::onPropertyChanged()
 
 void DBusBridge::onVBusItemChanged()
 {
-	foreach (BusItemBridge bib, mBusItems) {
-		if (bib.item == sender()) {
-			QVariant value = bib.item->getValue();
-			fromDBus(bib.path, value);
-			bib.src->setProperty(bib.property.name(), value);
+	bool checkInit = false;
+	for (QList<BusItemBridge>::iterator it = mBusItems.begin();
+		 it != mBusItems.end();
+		 ++it) {
+		if (it->item == sender()) {
+			QVariant value = it->item->getValue();
+			fromDBus(it->path, value);
+			it->src->setProperty(it->property.name(), value);
+			if (!it->initialized) {
+				it->initialized = true;
+				checkInit = true;
+			}
 			break;
 		}
+	}
+	if (checkInit) {
+		foreach (BusItemBridge bib, mBusItems) {
+			if (!bib.initialized) {
+				checkInit = false;
+				break;
+			}
+		}
+		if (checkInit)
+			emit initialized();
 	}
 }
 
@@ -88,6 +105,7 @@ void DBusBridge::connectItem(VBusItem *busItem, QObject *src,
 	bib.item = busItem;
 	bib.src = src;
 	bib.path = path;
+	bib.initialized = false;
 	if (src == 0) {
 		if (property != 0) {
 			QLOG_ERROR() << "Property specified (" << property

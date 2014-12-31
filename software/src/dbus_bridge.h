@@ -74,6 +74,9 @@ public:
 	void consume(QDBusConnection &connection, const QString &service,
 				 QObject *src, const char *property, const QString &path);
 
+signals:
+	void initialized();
+
 protected:
 	/*!
 	 * \brief Allows conversion of values sent to DBus.
@@ -115,6 +118,7 @@ private:
 		QObject *src;
 		QMetaProperty property;
 		QString path;
+		bool initialized;
 	};
 	QList<BusItemBridge> mBusItems;
 	QPointer<VBusNode> mServiceRoot;

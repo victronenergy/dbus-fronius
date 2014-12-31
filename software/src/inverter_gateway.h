@@ -34,20 +34,24 @@ public:
 
 	int scanProgress() const;
 
+	void startDetection();
+
 signals:
-	void inverterFound(InverterUpdater &iu);
+	void inverterFound(InverterUpdater *iu);
 
 	void scanProgressChanged();
 
 private slots:
 	void onConverterInfoFound(const InverterListData &data);
 
+	void onAutoDetectChanged();
+
 	void onSettingsChanged();
 
 private:
 	void updateAddressGenerator();
 
-	void startDetection();
+	void updateDetection();
 
 	InverterUpdater *findUpdater(const QString &hostName,
 								 const QString &deviceId);
