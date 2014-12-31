@@ -35,7 +35,7 @@ bool DBusSettingsBridge::addDBusObjects()
 		addDBusObjects("Fronius", "AutoDetect", 'i', QDBusVariant(0)) &&
 		addDBusObjects("Fronius", "IPAddresses", 's', QDBusVariant("")) &&
 		addDBusObjects("Fronius", "KnownIPAddresses", 's', QDBusVariant("")) &&
-		addDBusObjects("Fronius", "ScanProgress", 'i', QDBusVariant(0));
+		addDBusObjects("Fronius", "ScanProgress", 's', QDBusVariant(""));
 }
 
 void DBusSettingsBridge::toDBus(const QString &path, QVariant &value)
@@ -51,6 +51,10 @@ void DBusSettingsBridge::toDBus(const QString &path, QVariant &value)
 			addresses.append(a.toString());
 		}
 		value = addresses;
+	} else if (path == ScanProgressPath) {
+		// This is a but ugly: settings
+		int progress = value.toInt();
+		value = QVariant(QString("%1%").arg(progress));
 	}
 }
 

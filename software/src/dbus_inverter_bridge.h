@@ -18,6 +18,11 @@ class DBusInverterBridge : public DBusBridge
 public:
 	explicit DBusInverterBridge(Inverter *inverter, QObject *parent = 0);
 
+protected:
+	virtual void toDBus(const QString &path, QVariant &value);
+
+	virtual void fromDBus(const QString &path, QVariant &value);
+
 private:
 	void addBusItems(QDBusConnection &connection, PowerInfo *pi,
 					 const QString &path);

@@ -2,7 +2,7 @@
 #include "power_info.h"
 
 Inverter::Inverter(const QString &hostName, int port, const QString &id,
-				   const QString &uniqueId, QObject *parent) :
+				   const QString &uniqueId, const QString &customName, QObject *parent) :
 	QObject(parent),
 	mIsConnected(0),
 	mSupports3Phases(false),
@@ -10,6 +10,7 @@ Inverter::Inverter(const QString &hostName, int port, const QString &id,
 	mPort(port),
 	mId(id),
 	mUniqueId(uniqueId),
+	mCustomName(customName),
 	mMeanPowerInfo(new PowerInfo(this)),
 	mL1PowerInfo(new PowerInfo(this)),
 	mL2PowerInfo(new PowerInfo(this)),
@@ -17,12 +18,12 @@ Inverter::Inverter(const QString &hostName, int port, const QString &id,
 {
 }
 
-int Inverter::isConnected() const
+bool Inverter::isConnected() const
 {
 	return mIsConnected;
 }
 
-void Inverter::setIsConnected(int v)
+void Inverter::setIsConnected(bool v)
 {
 	if (mIsConnected == v)
 		return;
@@ -51,6 +52,11 @@ QString Inverter::id() const
 QString Inverter::uniqueId() const
 {
 	return mUniqueId;
+}
+
+QString Inverter::customName() const
+{
+	return mCustomName;
 }
 
 QString Inverter::hostName() const
