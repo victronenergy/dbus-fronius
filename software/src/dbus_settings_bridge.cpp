@@ -7,6 +7,7 @@
 
 static const QString Service = "com.victronenergy.settings";
 static const QString AutoDetectPath = "/Settings/Fronius/AutoDetect";
+static const QString PortNumberPath = "/Settings/Fronius/PortNumber";
 static const QString IpAddressesPath = "/Settings/Fronius/IPAddresses";
 static const QString KnownIpAddressesPath = "/Settings/Fronius/KnownIPAddresses";
 static const QString ScanProgressPath = "/Settings/Fronius/ScanProgress";
@@ -22,6 +23,7 @@ DBusSettingsBridge::DBusSettingsBridge(Settings *settings,
 
 	QDBusConnection &connection = VBusItems::getConnection();
 	consume(connection, Service, settings, "autoDetect", AutoDetectPath);
+	consume(connection, Service, settings, "portNumber", PortNumberPath);
 	consume(connection, Service, settings, "ipAddresses", IpAddressesPath);
 	consume(connection, Service, settings, "knownIpAddresses", KnownIpAddressesPath);
 	if (gateway != 0) {
@@ -33,6 +35,7 @@ bool DBusSettingsBridge::addDBusObjects()
 {
 	return
 		addDBusObjects("Fronius", "AutoDetect", 'i', QDBusVariant(0)) &&
+		addDBusObjects("Fronius", "PortNumber", 'i', QDBusVariant(80)) &&
 		addDBusObjects("Fronius", "IPAddresses", 's', QDBusVariant("")) &&
 		addDBusObjects("Fronius", "KnownIPAddresses", 's', QDBusVariant("")) &&
 		addDBusObjects("Fronius", "ScanProgress", 's', QDBusVariant(""));

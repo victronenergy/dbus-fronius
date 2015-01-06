@@ -10,6 +10,7 @@ class Settings : public QObject
 {
 	Q_OBJECT
 	Q_PROPERTY(bool autoDetect READ autoDetect WRITE setAutoDetect NOTIFY autoDetectChanged)
+	Q_PROPERTY(int portNumber READ portNumber WRITE setPortNumber NOTIFY portNumberChanged)
 	Q_PROPERTY(QList<QHostAddress> ipAddresses READ ipAddresses WRITE setIpAddresses NOTIFY ipAddressesChanged)
 	Q_PROPERTY(QList<QHostAddress> knownIpAddresses READ knownIpAddresses WRITE setKnownIpAddresses NOTIFY knownIpAddressesChanged)
 public:
@@ -18,6 +19,10 @@ public:
 	bool autoDetect() const;
 
 	void setAutoDetect(bool a);
+
+	int portNumber() const;
+
+	void setPortNumber(int p);
 
 	const QList<QHostAddress> &ipAddresses() const;
 
@@ -30,12 +35,15 @@ public:
 signals:
 	void autoDetectChanged();
 
+	void portNumberChanged();
+
 	void ipAddressesChanged();
 
 	void knownIpAddressesChanged();
 
 private:
 	bool mAutoDetect;
+	int mPortNumber;
 	QList<QHostAddress> mIpAddresses;
 	QList<QHostAddress> mKnownIpAddresses;
 };

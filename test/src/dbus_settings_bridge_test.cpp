@@ -17,6 +17,7 @@ TEST(DBusSettingsBridgeTest2, addObjects)
 	checkValue(QVariant(), settingsClient.getValue("/Settings/Fronius/AutoDetect"));
 	DBusSettingsBridge::addDBusObjects();
 	checkValue(QVariant(false), settingsClient.getValue("/Settings/Fronius/AutoDetect"));
+	checkValue(QVariant(80), settingsClient.getValue("/Settings/Fronius/PortNumber"));
 	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/IPAddresses"));
 	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/KnownIPAddresses"));
 	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/ScanProgress"));
@@ -47,6 +48,32 @@ TEST_F(DBusSettingsBridgeTest, changeAutoDetectRemote)
 	// Allow value form DBus to trickle to our settings object
 	qWait(100);
 	EXPECT_TRUE(mSettings->autoDetect());
+}
+
+TEST_F(DBusSettingsBridgeTest, portNumber)
+{
+	// Check default value from DBus
+	EXPECT_EQ(80, mSettings->portNumber());
+	mSettingsClient->resetChangedPaths();
+	mSettings->setPortNumber(8080);
+	qWait(100);
+	// Check new value
+	QVariant portNumber = mSettingsClient->getValue("/Settings/Fronius/PortNumber");
+	EXPECT_EQ(QVariant(8080), portNumber);
+	// Check DBus signal
+	const QList<QString> &cp = mSettingsClient->changedPaths();
+	ASSERT_EQ(1, cp.size());
+	EXPECT_EQ(QString("/Settings/Fronius/PortNumber"), cp.first());
+}
+
+TEST_F(DBusSettingsBridgeTest, portNumberRemote)
+{
+	EXPECT_EQ(80, mSettings->portNumber());
+	// Set new value on DBus
+	mSettingsClient->setValue("/Settings/Fronius/PortNumber", 8051);
+	// Allow value form DBus to trickle to our settings object
+	qWait(100);
+	EXPECT_EQ(8051, mSettings->portNumber());
 }
 
 TEST_F(DBusSettingsBridgeTest, changeIPAddresses)

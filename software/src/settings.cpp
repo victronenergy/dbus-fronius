@@ -4,7 +4,8 @@
 
 Settings::Settings(QObject *parent) :
 	QObject(parent),
-	mAutoDetect(true)
+	mAutoDetect(true),
+	mPortNumber(80)
 {
 }
 
@@ -19,6 +20,19 @@ void Settings::setAutoDetect(bool a)
 		return;
 	mAutoDetect = a;
 	emit autoDetectChanged();
+}
+
+int Settings::portNumber() const
+{
+	return mPortNumber;
+}
+
+void Settings::setPortNumber(int p)
+{
+	if (mPortNumber == p)
+		return;
+	mPortNumber = p;
+	emit portNumberChanged();
 }
 
 const QList<QHostAddress> &Settings::ipAddresses() const

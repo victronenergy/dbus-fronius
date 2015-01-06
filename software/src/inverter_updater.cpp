@@ -30,7 +30,6 @@ Inverter *InverterUpdater::inverter()
 
 void InverterUpdater::onStartRetrieval()
 {
-	mRetryCount = 0;
 	mSolarApi->getCommonDataAsync(mInverter->id());
 }
 
@@ -58,14 +57,15 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		++mRetryCount;
 		if (mRetryCount == 5)
 		{
-			mInverter->setIsConnected(0);
+			mInverter->setIsConnected(false);
+			mRetryCount = 0;
 		}
 		scheduleRetrieval();
 		break;
 	case SolarApiReply::ApiError:
 		// Inverter does not support common data retrieval?
 		///	@todo EV call setInitialized?
-		mInverter->setIsConnected(0);
+		mInverter->setIsConnected(false);
 		mInverter->setSupports3Phases(false);
 		break;
 	}
@@ -88,8 +88,9 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 		PowerInfo *l3 = mInverter->l3PowerInfo();
 		l3->setCurrent(data.acCurrentPhase3);
 		l3->setVoltage(data.acVoltagePhase3);
-		mInverter->setIsConnected(1);
+		mInverter->setIsConnected(true);
 		mInverter->setSupports3Phases(true);
+		mRetryCount = 0;
 		setInitialized();
 	}
 		break;
@@ -97,12 +98,13 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 		++mRetryCount;
 		if (mRetryCount == 5)
 		{
-			mInverter->setIsConnected(0);
+			mInverter->setIsConnected(false);
+			mRetryCount = 0;
 		}
 		break;
 	case SolarApiReply::ApiError:
 		// Inverter does not support 3 phases?
-		mInverter->setIsConnected(1);
+		mInverter->setIsConnected(true);
 		setInitialized();
 		break;
 	}
