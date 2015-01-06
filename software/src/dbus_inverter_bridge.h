@@ -18,6 +18,8 @@ class DBusInverterBridge : public DBusBridge
 public:
 	explicit DBusInverterBridge(Inverter *inverter, QObject *parent = 0);
 
+	virtual ~DBusInverterBridge();
+
 protected:
 	virtual void toDBus(const QString &path, QVariant &value);
 
@@ -28,6 +30,8 @@ private:
 					 const QString &path);
 
 	static QString fixServiceNameFragment(const QString &s);
+
+	QString mServiceName;
 };
 
 #endif // DBUS_INVERTER_BRIDGE_H

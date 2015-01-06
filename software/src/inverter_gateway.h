@@ -48,6 +48,8 @@ private slots:
 
 	void onSettingsChanged();
 
+	void onIsConnectedChanged();
+
 private:
 	void updateAddressGenerator();
 

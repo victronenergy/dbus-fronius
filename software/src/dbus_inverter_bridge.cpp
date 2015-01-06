@@ -14,6 +14,7 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter, QObject *parent) :
 	DBusBridge(parent)
 {
 	Q_ASSERT(inverter != 0);
+	connect(inverter, SIGNAL(destroyed()), this, SLOT(deleteLater()));
 
 	QStringList spl = inverter->hostName().split('.');
 	QString addr;
@@ -21,11 +22,11 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter, QObject *parent) :
 		addr.append(QString("%1").arg(spl[i], 3, QChar('0')));
 	}
 
-	QString serviceName = QString("com.victronenergy.pvinverter.fronius_%1_%2").
+	mServiceName = QString("com.victronenergy.pvinverter.fronius_%1_%2").
 			arg(addr).
 			arg(fixServiceNameFragment(inverter->id()));
 
-	QDBusConnection connection = VBusItems::getConnection(serviceName);
+	QDBusConnection connection = VBusItems::getConnection(mServiceName);
 
 	PowerInfo *mpi = inverter->meanPowerInfo();
 
@@ -58,9 +59,19 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter, QObject *parent) :
 	produce(connection, "/ProductName", productName);
 	produce(connection, "/Serial", inverter->uniqueId());
 
-	QLOG_INFO() << "Registering service" << serviceName;
-	if (!connection.registerService(serviceName)) {
+	QLOG_INFO() << "Registering service" << mServiceName;
+	if (!connection.registerService(mServiceName)) {
 		QLOG_FATAL() << "RegisterService failed";
+	}
+}
+
+DBusInverterBridge::~DBusInverterBridge()
+{
+	QLOG_TRACE() << __FUNCTION__;
+	QDBusConnection connection = VBusItems::getConnection(mServiceName);
+	QLOG_INFO() << "Unregistering service" << mServiceName;
+	if (!connection.unregisterService(mServiceName)) {
+		QLOG_FATAL() << "UnregisterService failed";
 	}
 }
 

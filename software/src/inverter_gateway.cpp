@@ -6,8 +6,6 @@
 #include "inverter_updater.h"
 #include "settings.h"
 
-/// @todo EV check out correct port name (80?)
-static const int Port = 8080;
 static const int MaxSimultaneousRequests = 10;
 
 InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
@@ -66,6 +64,8 @@ void InverterGateway::updateDetection()
 				}
 			}
 			if (count < addresses.size() || mUpdaters.size() == 0) {
+				/// @todo EV We may get here when auto detect is disabled manually
+				/// *before* any inverter have been found.
 				// Some devices were missing or no devices were found at all.
 				// Start auto scan.
 				QLOG_INFO() << "Not all devices found, starting auto IP scan";
@@ -88,8 +88,9 @@ void InverterGateway::updateDetection()
 		scanProgressChanged();
 		return;
 	}
-	QLOG_TRACE() << "Scanning at" << hostName << ':' << Port;
-	FroniusSolarApi *api = new FroniusSolarApi(hostName, Port, this);
+	int portNumber = mSettings->portNumber();
+	QLOG_TRACE() << "Scanning at" << hostName << ':' << portNumber;
+	FroniusSolarApi *api = new FroniusSolarApi(hostName, portNumber, this);
 	mApis.append(api);
 	connect(api, SIGNAL(converterInfoFound(InverterListData)),
 			this, SLOT(onConverterInfoFound(InverterListData)));
@@ -119,6 +120,8 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 				Inverter *inverter = new Inverter(hostName, port, it->id,
 												  it->uniqueId, it->customName,
 												  this);
+				// connect(inverter, SIGNAL(isConnectedChanged()),
+				// 		this, SLOT(onIsConnectedChanged()));
 				InverterUpdater *updater = new InverterUpdater(inverter, this);
 				mUpdaters.push_back(updater);
 				emit inverterFound(updater);
@@ -142,6 +145,29 @@ void InverterGateway::onSettingsChanged()
 {
 	if (mSettingsBusy)
 		return;
+	mSettingsBusy = true;
+	mSettings->setAutoDetect(true);
+	mSettingsBusy = false;
+	updateAddressGenerator();
+}
+
+void InverterGateway::onIsConnectedChanged()
+{
+	Inverter *inverter = static_cast<Inverter *>(sender());
+	if (inverter->isConnected())
+		return;
+	QLOG_INFO() << "Lost connection with: " << inverter->hostName() << " - "
+				<< inverter->id();
+	// Do not call delete here, because this slot is connected to an inverter
+	// slot, so one of its methods is still running.
+	inverter->deleteLater();
+	foreach (InverterUpdater *ui, mUpdaters) {
+		if (ui->inverter() == inverter) {
+			ui->deleteLater();
+			mUpdaters.removeOne(ui);
+			break;
+		}
+	}
 	mSettingsBusy = true;
 	mSettings->setAutoDetect(true);
 	mSettingsBusy = false;
