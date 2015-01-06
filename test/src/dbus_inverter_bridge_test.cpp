@@ -14,26 +14,26 @@ TEST_F(DBusInverterBridgeTest, constructor)
 {
 	SetUpBridge();
 
-	EXPECT_EQ(QVariant(0), mDBusClient->getValue(mServiceName, "/Connected"));
+	checkValue(QVariant(0), mDBusClient->getValue(mServiceName, "/Connected"));
 
-	EXPECT_EQ(QCoreApplication::arguments()[0],
+	checkValue(QCoreApplication::arguments()[0],
 			  mDBusClient->getValue(mServiceName, "/Mgmt/ProcessName").toString());
-	EXPECT_EQ(QString(VERSION),
+	checkValue(QString(VERSION),
 			  mDBusClient->getValue(mServiceName, "/Mgmt/ProcessVersion").toString());
-	EXPECT_EQ(QString("10.0.1.4 - 3"),
+	checkValue(QString("10.0.1.4 - 3"),
 			  mDBusClient->getValue(mServiceName, "/Mgmt/Connection").toString());
-	EXPECT_EQ(QString("3"),
+	checkValue(QString("3"),
 			  mDBusClient->getValue(mServiceName, "/Position").toString());
 	// Note: we don't take the product ID from VE_PROD_ID_PV_INVERTER_FRONIUS,
 	// because we want this test to fail if someone changes the define.
-	EXPECT_EQ(QString::number(0xA142),
+	checkValue(QString::number(0xA142),
 			  mDBusClient->getValue(mServiceName, "/ProductId").toString());
-	EXPECT_EQ(QString("Fronius PV inverter - cn"),
+	checkValue(QString("Fronius PV inverter - cn"),
 			  mDBusClient->getValue(mServiceName, "/ProductName").toString());
 
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Current"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Power"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Current"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Power"));
 
 	EXPECT_FALSE(mDBusClient->getValue(mServiceName, "/Ac/L1/Current").isValid());
 }
@@ -43,15 +43,15 @@ TEST_F(DBusInverterBridgeTest, constructor3Phased)
 	mInverter->setSupports3Phases(true);
 	SetUpBridge();
 
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Power"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Current"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L1/Current"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L1/Voltage"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Current"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Voltage"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L3/Current"));
-	EXPECT_EQ(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L3/Voltage"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Power"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Current"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L1/Current"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L1/Voltage"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Current"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Voltage"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L3/Current"));
+	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L3/Voltage"));
 }
 
 TEST_F(DBusInverterBridgeTest, isConnected)
@@ -59,10 +59,10 @@ TEST_F(DBusInverterBridgeTest, isConnected)
 	SetUpBridge();
 
 	EXPECT_FALSE(mInverter->isConnected());
-	EXPECT_EQ(QVariant(0), mDBusClient->getValue(mServiceName, "/Connected"));
+	checkValue(QVariant(0), mDBusClient->getValue(mServiceName, "/Connected"));
 	mInverter->setIsConnected(true);
 	qWait(100);
-	EXPECT_EQ(QVariant(1), mDBusClient->getValue(mServiceName, "/Connected"));
+	checkValue(QVariant(1), mDBusClient->getValue(mServiceName, "/Connected"));
 }
 
 TEST_F(DBusInverterBridgeTest, acCurrent)
@@ -120,10 +120,17 @@ void DBusInverterBridgeTest::checkValue(PowerInfo *pi, const QString &path,
 {
 	pi->setProperty(property, v0);
 	qWait(100);
-	EXPECT_EQ(QVariant(v0), mDBusClient->getValue(mServiceName, path));
+	checkValue(QVariant(v0), mDBusClient->getValue(mServiceName, path));
 
 	pi->setProperty(property, v1);
 	qWait(100);
-	EXPECT_EQ(QVariant(v1), mDBusClient->getValue(mServiceName, path));
+	checkValue(QVariant(v1), mDBusClient->getValue(mServiceName, path));
 	EXPECT_EQ(text, mDBusClient->getText(mServiceName, path));
+}
+
+void DBusInverterBridgeTest::checkValue(const QVariant &expected,
+										const QVariant &actual)
+{
+	EXPECT_EQ(expected.type(), actual.type());
+	EXPECT_EQ(expected, actual);
 }

@@ -49,8 +49,10 @@ public:
 	/*!
 	 * \brief Pushes a constant value to the DBus, and registers the object.
 	 * `value` will be pushed (SetValue) to the DBus object specified by
-	 * `connection` and `path`. The value will not be adjusted later on, event
-	 * if it is changed on the DBus.
+	 * `connection` and `path`. The value will not be adjusted later on, even
+	 * if it is changed on the DBus. Since the caller of this function has
+	 * full control of the variant passed to this function, it will not be
+	 * passed through the toDBus function.
 	 * The DBus object will also be registered by this function.
 	 * \param connection
 	 * \param path

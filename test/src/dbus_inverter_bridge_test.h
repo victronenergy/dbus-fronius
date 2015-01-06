@@ -8,6 +8,7 @@ class DBusInverterBridge;
 class DBusObserver;
 class Inverter;
 class PowerInfo;
+class QVariant;
 
 class DBusInverterBridgeTest : public testing::Test
 {
@@ -24,6 +25,8 @@ protected:
 	void checkValue(PowerInfo *pi, const QString &path,
 					double v0, double v1, const QString &text,
 					const char *property);
+
+	void checkValue(const QVariant &expected, const QVariant &actual);
 
 	const QString mServiceName;
 	QScopedPointer<Inverter> mInverter;

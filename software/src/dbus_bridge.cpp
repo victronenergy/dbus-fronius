@@ -14,6 +14,7 @@ void DBusBridge::produce(QDBusConnection &connection, QObject *src,
 {
 	VBusItem *vbi = new VBusItem(this);
 	QVariant value = src->property(property);
+	toDBus(path, value);
 	connectItem(vbi, src, property, path);
 	vbi->produce(connection, path, "?", value, unit, precision);
 	addVBusNodes(connection, path, vbi);
@@ -109,13 +110,14 @@ void DBusBridge::connectItem(VBusItem *busItem, QObject *src,
 	if (src == 0) {
 		if (property != 0) {
 			QLOG_ERROR() << "Property specified (" << property
-						 << "), but source omitted in DBusBridge"
-						 << ". Path was" << path;
+						 << "), but source omitted in DBusBridge. Path was"
+						 << path;
 		}
 	} else {
 		if (property == 0) {
-			QLOG_ERROR() << "Source specified, but property omitted in DBusBridge"
-						 << ". Path was" << path;
+			QLOG_ERROR() << "Source specified, but property omitted in"
+						 << "DBusBridge. Path was"
+						 << path;
 		} else {
 			const QMetaObject *mo = src->metaObject();
 			int i = mo->indexOfProperty(property);
