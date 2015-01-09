@@ -24,12 +24,14 @@ QMAKE_CXXFLAGS += -Wno-psabi
 target.path = /opt/dbus_fronius
 INSTALLS += target
 
-machine=$$(MACHINE)
-contains(machine,ccgx) {
+prefix = $$[QT_INSTALL_PREFIX]
+contains(prefix, ".*bpp3.*") {
+	message(Target is ccgx)
 	DEFINES += TARGET_ccgx
 }
 
-# Note: we need the script module to parse JSON fragments
+# Note: we need the script module to parse JSON fragments as part of the
+# fronius solar API.
 QT += core network dbus script
 QT -= gui
 
@@ -61,7 +63,9 @@ SOURCES += \
 	src/dbus_fronius.cpp \
 	src/dbus_bridge.cpp \
 	src/dbus_inverter_bridge.cpp \
-	src/dbus_settings_bridge.cpp
+	src/dbus_settings_bridge.cpp \
+	src/inverter_settings.cpp \
+	src/dbus_inverter_settings_bridge.cpp
 
 HEADERS += \
 	src/froniussolar_api.h \
@@ -75,4 +79,6 @@ HEADERS += \
 	src/dbus_fronius.h \
 	src/dbus_bridge.h \
 	src/dbus_inverter_bridge.h \
-	src/dbus_settings_bridge.h
+	src/dbus_settings_bridge.h \
+	src/inverter_settings.h \
+	src/dbus_inverter_settings_bridge.h

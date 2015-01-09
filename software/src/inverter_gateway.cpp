@@ -3,6 +3,7 @@
 #include "froniussolar_api.h"
 #include "inverter.h"
 #include "inverter_gateway.h"
+#include "inverter_settings.h"
 #include "inverter_updater.h"
 #include "settings.h"
 
@@ -122,7 +123,15 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 												  this);
 				// connect(inverter, SIGNAL(isConnectedChanged()),
 				// 		this, SLOT(onIsConnectedChanged()));
-				InverterUpdater *updater = new InverterUpdater(inverter, this);
+				InverterSettings *is =
+						mSettings->findInverterSettings(inverter->uniqueId());
+				if (is == 0) {
+					is = new InverterSettings(inverter->uniqueId(), this);
+					QList<InverterSettings *> settings = mSettings->inverterSettings();
+					settings.append(is);
+					mSettings->setInverterSettings(settings);
+				}
+				InverterUpdater *updater = new InverterUpdater(inverter, is, this);
 				mUpdaters.push_back(updater);
 				emit inverterFound(updater);
 			}

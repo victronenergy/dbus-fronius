@@ -1,10 +1,13 @@
+#include <limits>
 #include "power_info.h"
+
+static const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 PowerInfo::PowerInfo(QObject *parent) :
 	QObject(parent),
-	mCurrent(0),
-	mVoltage(0),
-	mPower(0)
+	mCurrent(NaN),
+	mVoltage(NaN),
+	mPower(NaN)
 {
 }
 
@@ -45,4 +48,11 @@ void PowerInfo::setPower(double p)
 		return;
 	mPower = p;
 	emit powerChanged();
+}
+
+void PowerInfo::resetValues()
+{
+	setCurrent(NaN);
+	setPower(NaN);
+	setVoltage(NaN);
 }

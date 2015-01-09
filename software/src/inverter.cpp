@@ -88,3 +88,11 @@ PowerInfo *Inverter::l3PowerInfo()
 {
 	return mL3PowerInfo;
 }
+
+void Inverter::resetValues()
+{
+	mMeanPowerInfo->resetValues();
+	mL1PowerInfo->resetValues();
+	mL2PowerInfo->resetValues();
+	mL3PowerInfo->resetValues();
+}

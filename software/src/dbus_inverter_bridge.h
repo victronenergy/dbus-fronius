@@ -5,7 +5,7 @@
 #include "dbus_bridge.h"
 
 class Inverter;
-class InverterGateway;
+class InverterSettings;
 class PowerInfo;
 
 /*!
@@ -16,7 +16,8 @@ class DBusInverterBridge : public DBusBridge
 {
 	Q_OBJECT
 public:
-	explicit DBusInverterBridge(Inverter *inverter, QObject *parent = 0);
+	explicit DBusInverterBridge(Inverter *inverter, InverterSettings *settings,
+								QObject *parent = 0);
 
 	virtual ~DBusInverterBridge();
 

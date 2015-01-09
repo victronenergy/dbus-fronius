@@ -6,12 +6,20 @@
 #include "dbus_inverter_bridge.h"
 #include "dbus_inverter_bridge_test.h"
 #include "inverter.h"
+#include "inverter_settings.h"
 #include "power_info.h"
 #include "test_helper.h"
 #include "version.h"
 
 TEST_F(DBusInverterBridgeTest, constructor)
 {
+	mInverter->meanPowerInfo()->setCurrent(1.4);
+	mInverter->meanPowerInfo()->setPower(137);
+	mInverter->meanPowerInfo()->setVoltage(342);
+	mInverter->l2PowerInfo()->setCurrent(1.7);
+	mInverter->l2PowerInfo()->setPower(138);
+	mInverter->l2PowerInfo()->setVoltage(344);
+
 	SetUpBridge();
 
 	checkValue(QVariant(0), mDBusClient->getValue(mServiceName, "/Connected"));
@@ -22,7 +30,7 @@ TEST_F(DBusInverterBridgeTest, constructor)
 			  mDBusClient->getValue(mServiceName, "/Mgmt/ProcessVersion").toString());
 	checkValue(QString("10.0.1.4 - 3"),
 			  mDBusClient->getValue(mServiceName, "/Mgmt/Connection").toString());
-	checkValue(QString("3"),
+	checkValue(QString("2"),
 			  mDBusClient->getValue(mServiceName, "/Position").toString());
 	// Note: we don't take the product ID from VE_PROD_ID_PV_INVERTER_FRONIUS,
 	// because we want this test to fail if someone changes the define.
@@ -31,27 +39,15 @@ TEST_F(DBusInverterBridgeTest, constructor)
 	checkValue(QString("Fronius PV inverter - cn"),
 			  mDBusClient->getValue(mServiceName, "/ProductName").toString());
 
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Current"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Power"));
+	checkValue(QVariant(1.4), mDBusClient->getValue(mServiceName, "/Ac/Current"));
+	checkValue(QVariant(342.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
+	checkValue(QVariant(137.0), mDBusClient->getValue(mServiceName, "/Ac/Power"));
 
-	EXPECT_FALSE(mDBusClient->getValue(mServiceName, "/Ac/L1/Current").isValid());
-}
+	checkValue(QVariant(QStringList()), mDBusClient->getValue(mServiceName, "/Ac/L1/Power"));
 
-TEST_F(DBusInverterBridgeTest, constructor3Phased)
-{
-	mInverter->setSupports3Phases(true);
-	SetUpBridge();
-
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Power"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Current"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L1/Current"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L1/Voltage"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Current"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Voltage"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L3/Current"));
-	checkValue(QVariant(0.0), mDBusClient->getValue(mServiceName, "/Ac/L3/Voltage"));
+	checkValue(QVariant(1.7), mDBusClient->getValue(mServiceName, "/Ac/L2/Current"));
+	checkValue(QVariant(344.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Voltage"));
+	checkValue(QVariant(138.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Power"));
 }
 
 TEST_F(DBusInverterBridgeTest, isConnected)
@@ -94,6 +90,9 @@ DBusInverterBridgeTest::DBusInverterBridgeTest():
 void DBusInverterBridgeTest::SetUp()
 {
 	mInverter.reset(new Inverter("10.0.1.4", 80, "3", "756", "cn"));
+	mSettings.reset(new InverterSettings(mInverter->uniqueId()));
+	mSettings->setPosition(InverterSettings::Input2);
+	mSettings->setPhase(InverterSettings::L2);
 }
 
 void DBusInverterBridgeTest::TearDown()
@@ -101,11 +100,12 @@ void DBusInverterBridgeTest::TearDown()
 	mDBusClient.reset();
 	mBridge.reset();
 	mInverter.reset();
+	mSettings.reset();
 }
 
 void DBusInverterBridgeTest::SetUpBridge()
 {
-	mBridge.reset(new DBusInverterBridge(mInverter.data()));
+	mBridge.reset(new DBusInverterBridge(mInverter.data(), mSettings.data()));
 	mDBusClient.reset(new DBusObserver(mServiceName));
 	while (!mDBusClient->isInitialized(mServiceName)) {
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 10);

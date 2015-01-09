@@ -60,3 +60,23 @@ void Settings::setKnownIpAddresses(const QList<QHostAddress> &addresses)
 	mKnownIpAddresses = addresses;
 	emit knownIpAddressesChanged();
 }
+
+const QList<InverterSettings *> &Settings::inverterSettings() const
+{
+	return mInverterSettings;
+}
+
+void Settings::setInverterSettings(const QList<InverterSettings *> &settings)
+{
+	mInverterSettings = settings;
+	emit inverterSettingsChanged();
+}
+
+InverterSettings *Settings::findInverterSettings(const QString &uniqueId)
+{
+	foreach (InverterSettings *i, mInverterSettings) {
+		if (i->uniqueId() == uniqueId)
+			return i;
+	}
+	return 0;
+}

@@ -2,6 +2,7 @@
 #include "dbus_settings.h"
 #include "dbus_settings_bridge.h"
 #include "dbus_settings_bridge_test.h"
+#include "json/json.h"
 #include "settings.h"
 #include "test_helper.h"
 
@@ -21,6 +22,7 @@ TEST(DBusSettingsBridgeTest2, addObjects)
 	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/IPAddresses"));
 	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/KnownIPAddresses"));
 	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/ScanProgress"));
+	checkValue(QVariant("[]"), settingsClient.getValue("/Settings/Fronius/Inverters"));
 }
 
 TEST_F(DBusSettingsBridgeTest, changeAutoDetect)
@@ -94,6 +96,44 @@ TEST_F(DBusSettingsBridgeTest, changeKnownIPAddresses)
 TEST_F(DBusSettingsBridgeTest, changeKnownIPAddressesRemote)
 {
 	changeIPAddressesRemote("knownIpAddresses", "/Settings/Fronius/KnownIPAddresses");
+}
+
+TEST_F(DBusSettingsBridgeTest, changeInverterSettings)
+{
+	EXPECT_TRUE(mSettings->inverterSettings().isEmpty());
+	InverterSettings *is = new InverterSettings("475a");
+	is->setPhase(InverterSettings::AllPhases);
+	is->setPosition(InverterSettings::Input2);
+	QList<InverterSettings *> s = mSettings->inverterSettings();
+	s.append(is);
+	mSettings->setInverterSettings(s);
+	qWait(100);
+	QString json = mSettingsClient->getValue("/Settings/Fronius/Inverters").toString();
+	QList<QVariant> lv = JSON::instance().parse(json).toList();
+	ASSERT_EQ(1, lv.size());
+	QVariantMap m = lv.first().toMap();
+	EXPECT_EQ("475a", m["UniqueId"]);
+	EXPECT_EQ(InverterSettings::AllPhases, m["Phase"]);
+	EXPECT_EQ(InverterSettings::Input2, m["Position"]);
+}
+
+TEST_F(DBusSettingsBridgeTest, changeInverterSettingsRemote)
+{
+	EXPECT_TRUE(mSettings->inverterSettings().isEmpty());
+	// Set new value on DBus
+	mSettingsClient->setValue("/Settings/Fronius/Inverters",
+							  "[{ \"UniqueId\" : \"1234\", \"Phase\" : 2, \"Position\" : 1 },"
+							  " { \"UniqueId\" : \"4321\", \"Phase\" : 0, \"Position\" : 2  }]");
+	// Allow value form DBus to trickle to our settings object
+	qWait(100);
+	QList<InverterSettings *> li = mSettings->inverterSettings();
+	ASSERT_EQ(2, li.size());
+	EXPECT_EQ("1234", li[0]->uniqueId());
+	EXPECT_EQ(InverterSettings::L2, li[0]->phase());
+	EXPECT_EQ(InverterSettings::Output, li[0]->position());
+	EXPECT_EQ("4321", li[1]->uniqueId());
+	EXPECT_EQ(InverterSettings::AllPhases, li[1]->phase());
+	EXPECT_EQ(InverterSettings::Input2, li[1]->position());
 }
 
 void DBusSettingsBridgeTest::SetUp()

@@ -1,5 +1,6 @@
 #include <QsLog.h>
 #include <velib/qt/v_busitem.h>
+#include <velib/qt/v_busitems.h>
 #include "dbus_bridge.h"
 #include "v_bus_node.h"
 
@@ -9,8 +10,8 @@ DBusBridge::DBusBridge(QObject *parent) :
 }
 
 void DBusBridge::produce(QDBusConnection &connection, QObject *src,
-						const char *property, const QString &path,
-						const QString &unit, int precision)
+						 const char *property, const QString &path,
+						 const QString &unit, int precision)
 {
 	VBusItem *vbi = new VBusItem(this);
 	QVariant value = src->property(property);
@@ -33,7 +34,7 @@ void DBusBridge::produce(QDBusConnection &connection,
 }
 
 void DBusBridge::consume(QDBusConnection &connection, const QString &service,
-						QObject *src, const char *property, const QString &path)
+						 QObject *src, const char *property, const QString &path)
 {
 	VBusItem *vbi = new VBusItem(this);
 	connectItem(vbi, src, property, path);
@@ -49,6 +50,25 @@ void DBusBridge::fromDBus(const QString &, QVariant &)
 {
 }
 
+bool DBusBridge::addDBusObject(const QString &group, const QString &name,
+								QChar type, const QDBusVariant &defaultValue)
+{
+	QDBusConnection &connection = VBusItems::getConnection();
+	QDBusMessage m = QDBusMessage::createMethodCall(
+						 "com.victronenergy.settings",
+						 "/Settings",
+						 "com.victronenergy.Settings",
+						 "AddSetting")
+					 << group
+					 << name
+					 << QVariant::fromValue(defaultValue)
+					 << QString(type)
+					 << QVariant::fromValue(QDBusVariant(0))
+					 << QVariant::fromValue(QDBusVariant(0));
+	QDBusMessage reply = connection.call(m);
+	return reply.type() == QDBusMessage::ReplyMessage;
+}
+
 void DBusBridge::onPropertyChanged()
 {
 	QObject *src = sender();
@@ -59,7 +79,7 @@ void DBusBridge::onPropertyChanged()
 		if (mp.hasNotifySignal() && mp.notifySignalIndex() == signalIndex) {
 			foreach (BusItemBridge bib, mBusItems) {
 				if (bib.src == src &&
-						strcmp(bib.property.name(), mp.name()) == 0) {
+					strcmp(bib.property.name(), mp.name()) == 0) {
 					QVariant value = src->property(mp.name());
 					toDBus(bib.path, value);
 					bib.item->setValue(value);
@@ -100,7 +120,7 @@ void DBusBridge::onVBusItemChanged()
 }
 
 void DBusBridge::connectItem(VBusItem *busItem, QObject *src,
-							const char *property, const QString &path)
+							 const char *property, const QString &path)
 {
 	BusItemBridge bib;
 	bib.item = busItem;
@@ -128,8 +148,8 @@ void DBusBridge::connectItem(VBusItem *busItem, QObject *src,
 				QMetaProperty mp = mo->property(i);
 				if (mp.hasNotifySignal()) {
 					QMetaMethod signal = mp.notifySignal();
-					QMetaMethod slot = metaObject()->method(
-								metaObject()->indexOfSlot("onPropertyChanged()"));
+					int index = metaObject()->indexOfSlot("onPropertyChanged()");
+					QMetaMethod slot = metaObject()->method(index);
 					connect(src, signal, this, slot);
 				}
 				bib.property = mp;
@@ -141,7 +161,7 @@ void DBusBridge::connectItem(VBusItem *busItem, QObject *src,
 }
 
 void DBusBridge::addVBusNodes(QDBusConnection &connection, const QString &path,
-							 VBusItem *vbi)
+							  VBusItem *vbi)
 {
 	if (mServiceRoot.isNull())
 		mServiceRoot = new VBusNode(connection, "/", this);

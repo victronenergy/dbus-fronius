@@ -8,6 +8,7 @@
 #include <QString>
 
 class QDBusConnection;
+class QDBusVariant;
 class VBusItem;
 class VBusNode;
 
@@ -101,6 +102,9 @@ protected:
 	 * \param v The value received from the DBus.
 	 */
 	virtual void fromDBus(const QString &path, QVariant &v);
+
+	static bool addDBusObject(const QString &group, const QString &name,
+							   QChar type, const QDBusVariant &defaultValue);
 
 private slots:
 	void onPropertyChanged();

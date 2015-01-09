@@ -5,18 +5,21 @@
 
 class FroniusSolarApi;
 class Inverter;
+class InverterSettings;
 class QTimer;
 struct CommonInverterData;
-struct SolarApiReply;
 struct ThreePhasesInverterData;
 
 class InverterUpdater : public QObject
 {
 	Q_OBJECT
 public:
-	InverterUpdater(Inverter *inverter, QObject *parent = 0);
+	InverterUpdater(Inverter *inverter, InverterSettings *settings,
+					QObject *parent = 0);
 
 	Inverter *inverter();
+
+	InverterSettings *settings();
 
 signals:
 	void initialized();
@@ -28,12 +31,15 @@ private slots:
 
 	void onThreePhasesDataFound(const ThreePhasesInverterData &data);
 
+	void onPhaseChanged();
+
 private:
 	void scheduleRetrieval();
 
 	void setInitialized();
 
 	Inverter *mInverter;
+	InverterSettings *mSettings;
 	FroniusSolarApi *mSolarApi;
 	bool mInitialized;
 	int mRetryCount;

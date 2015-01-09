@@ -7,12 +7,13 @@
 #include "froniussolar_api.h"
 #include "json/json.h"
 
-QNetworkAccessManager *FroniusSolarApi::mNam;
+QNetworkAccessManager *FroniusSolarApi::mNam = 0;
 
 FroniusSolarApi::FroniusSolarApi(QString hostName, int port, QObject *parent) :
 	QObject(parent),
 	mHostName(hostName),
 	mPort(port),
+	mReply(0),
 	mTimeoutTimer(new QTimer(this))
 {
 	if (mNam == 0)

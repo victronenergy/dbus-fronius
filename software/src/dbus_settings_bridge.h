@@ -5,12 +5,14 @@
 #include <QHostAddress>
 #include "dbus_bridge.h"
 
-Q_DECLARE_METATYPE(QList<QHostAddress>)
-Q_DECLARE_METATYPE(QHostAddress)
-
 class InverterGateway;
+class InverterSettings;
 class QDBusVariant;
 class Settings;
+
+Q_DECLARE_METATYPE(QList<QHostAddress>)
+Q_DECLARE_METATYPE(QHostAddress)
+Q_DECLARE_METATYPE(QList<InverterSettings *>)
 
 /*!
  * @brief Setup synchronization between a `Settings` object and the DBus
@@ -38,8 +40,7 @@ protected:
 	virtual void fromDBus(const QString &path, QVariant &v);
 
 private:
-	static bool addDBusObjects(const QString &group, const QString &name,
-							   QChar type, const QDBusVariant &defaultValue);
+	Settings *mSettings;
 };
 
 #endif // DBUS_SETTINGS_BRIDGE_H

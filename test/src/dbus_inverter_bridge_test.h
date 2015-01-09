@@ -7,6 +7,7 @@
 class DBusInverterBridge;
 class DBusObserver;
 class Inverter;
+class InverterSettings;
 class PowerInfo;
 class QVariant;
 
@@ -30,6 +31,7 @@ protected:
 
 	const QString mServiceName;
 	QScopedPointer<Inverter> mInverter;
+	QScopedPointer<InverterSettings> mSettings;
 	QScopedPointer<DBusInverterBridge> mBridge;
 	QScopedPointer<DBusObserver> mDBusClient;
 };

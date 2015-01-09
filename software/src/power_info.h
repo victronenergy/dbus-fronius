@@ -24,6 +24,11 @@ public:
 
 	void setPower(double p);
 
+	/*!
+	 * @brief Reset all measured values to NaN
+	 */
+	void resetValues();
+
 signals:
 	void currentChanged();
 

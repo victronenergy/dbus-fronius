@@ -46,6 +46,11 @@ public:
 
 	PowerInfo *l3PowerInfo();
 
+	/*!
+	 * @brief Reset all measured values to NaN
+	 */
+	void resetValues();
+
 signals:
 	void isConnectedChanged();
 
