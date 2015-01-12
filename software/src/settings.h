@@ -5,7 +5,6 @@
 #include <QHostAddress>
 #include <QList>
 #include <QMetaType>
-#include "inverter_settings.h"
 
 class Settings : public QObject
 {
@@ -14,7 +13,6 @@ class Settings : public QObject
 	Q_PROPERTY(int portNumber READ portNumber WRITE setPortNumber NOTIFY portNumberChanged)
 	Q_PROPERTY(QList<QHostAddress> ipAddresses READ ipAddresses WRITE setIpAddresses NOTIFY ipAddressesChanged)
 	Q_PROPERTY(QList<QHostAddress> knownIpAddresses READ knownIpAddresses WRITE setKnownIpAddresses NOTIFY knownIpAddressesChanged)
-	Q_PROPERTY(QList<InverterSettings *> inverterSettings READ inverterSettings WRITE setInverterSettings NOTIFY inverterSettingsChanged)
 public:
 	explicit Settings(QObject *parent = 0);
 
@@ -34,12 +32,6 @@ public:
 
 	void setKnownIpAddresses(const QList<QHostAddress> &addresses);
 
-	const QList<InverterSettings *> &inverterSettings() const;
-
-	void setInverterSettings(const QList<InverterSettings *> &settings);
-
-	InverterSettings *findInverterSettings(const QString &uniqueId);
-
 signals:
 	void autoDetectChanged();
 
@@ -49,14 +41,11 @@ signals:
 
 	void knownIpAddressesChanged();
 
-	void inverterSettingsChanged();
-
 private:
 	bool mAutoDetect;
 	int mPortNumber;
 	QList<QHostAddress> mIpAddresses;
 	QList<QHostAddress> mKnownIpAddresses;
-	QList<InverterSettings *> mInverterSettings;
 };
 
 #endif // SETTINGS_H

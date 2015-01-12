@@ -123,15 +123,10 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 												  this);
 				// connect(inverter, SIGNAL(isConnectedChanged()),
 				// 		this, SLOT(onIsConnectedChanged()));
-				InverterSettings *is =
-						mSettings->findInverterSettings(inverter->uniqueId());
-				if (is == 0) {
-					is = new InverterSettings(inverter->uniqueId(), this);
-					QList<InverterSettings *> settings = mSettings->inverterSettings();
-					settings.append(is);
-					mSettings->setInverterSettings(settings);
-				}
-				InverterUpdater *updater = new InverterUpdater(inverter, is, this);
+				InverterSettings *settings =
+						new InverterSettings(inverter->uniqueId(), inverter);
+				InverterUpdater *updater =
+						new InverterUpdater(inverter, settings, inverter);
 				mUpdaters.push_back(updater);
 				emit inverterFound(updater);
 			}

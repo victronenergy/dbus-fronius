@@ -1,4 +1,3 @@
-#include "QsLog.h"
 #include "inverter_settings.h"
 
 InverterSettings::InverterSettings(const QString &uniqueId, QObject *parent) :
@@ -6,10 +5,6 @@ InverterSettings::InverterSettings(const QString &uniqueId, QObject *parent) :
 	mUniqueId(uniqueId),
 	mPhase(L1),
 	mPosition(Input1)
-{
-}
-
-InverterSettings::~InverterSettings()
 {
 }
 

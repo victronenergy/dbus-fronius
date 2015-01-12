@@ -12,7 +12,6 @@ class Settings;
 
 Q_DECLARE_METATYPE(QList<QHostAddress>)
 Q_DECLARE_METATYPE(QHostAddress)
-Q_DECLARE_METATYPE(QList<InverterSettings *>)
 
 /*!
  * @brief Setup synchronization between a `Settings` object and the DBus

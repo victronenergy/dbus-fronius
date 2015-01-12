@@ -5,6 +5,7 @@
 #include "dbus_settings_bridge.h"
 #include "inverter.h"
 #include "inverter_gateway.h"
+#include "inverter_settings.h"
 #include "inverter_updater.h"
 #include "settings.h"
 
@@ -18,8 +19,8 @@ DBusFronius::DBusFronius(QObject *parent) :
 	// QObject::property function.
 	qRegisterMetaType<QList<QHostAddress> >();
 	qRegisterMetaType<QHostAddress>();
-	qRegisterMetaType<QList<InverterSettings *> >();
 	qRegisterMetaType<InverterSettings::Position>("Position");
+	qRegisterMetaType<InverterSettings::Phase>("Phase");
 
 	connect(mGateway, SIGNAL(inverterFound(InverterUpdater *)),
 			this, SLOT(onInverterFound(InverterUpdater *)));
@@ -40,10 +41,12 @@ void DBusFronius::onInverterFound(InverterUpdater *iu)
 void DBusFronius::onInverterInitialized()
 {
 	InverterUpdater *ui = static_cast<InverterUpdater *>(sender());
+	Inverter *inverter = ui->inverter();
+	InverterSettings *settings = ui->settings();
 	// DBusInverterBridge will set inverter as its parent, so we have no
 	// memory leak here.
-	new DBusInverterBridge(ui->inverter(), ui->settings(), ui->inverter());
-	new DBusInverterSettingsBridge(ui->settings(), ui->settings());
+	new DBusInverterBridge(inverter, settings, inverter);
+	new DBusInverterSettingsBridge(settings, settings);
 }
 
 void DBusFronius::onSettingsInitialized()

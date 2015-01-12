@@ -8,8 +8,10 @@ class InverterSettings : public QObject
 {
 	Q_OBJECT
 	Q_PROPERTY(QString uniqueId READ uniqueId)
-	Q_PROPERTY(Phase phase READ phase WRITE setPhase NOTIFY phaseChanged)
-	Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged)
+	// Without the namespace prefixes below, we cannot use the setProperty
+	// function to set change the properties.
+	Q_PROPERTY(InverterSettings::Phase phase READ phase WRITE setPhase NOTIFY phaseChanged)
+	Q_PROPERTY(InverterSettings::Position position READ position WRITE setPosition NOTIFY positionChanged)
 public:
 	enum Phase {
 		/*!
@@ -28,8 +30,6 @@ public:
 	};
 
 	explicit InverterSettings(const QString &uniqueId, QObject *parent = 0);
-
-	~InverterSettings();
 
 	QString uniqueId() const;
 

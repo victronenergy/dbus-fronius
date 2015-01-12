@@ -13,8 +13,10 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 {
 	QDBusConnection &connection = VBusItems::getConnection();
 	QString group = "Inverters/" + settings->uniqueId();
-	addDBusObject("Fronius", group + "/Position", 'i', QDBusVariant(0));
-	addDBusObject("Fronius", group + "/Phase", 'i', QDBusVariant(0));
+	addDBusObject("Fronius", group + "/Position", 'i',
+				  QDBusVariant(static_cast<int>(settings->position())));
+	addDBusObject("Fronius", group + "/Phase", 'i',
+				  QDBusVariant(static_cast<int>(settings->phase())));
 
 	QString path = BasePath + group;
 	consume(connection, Service, settings, "phase", path + "/Phase");
