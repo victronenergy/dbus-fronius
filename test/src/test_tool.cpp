@@ -16,6 +16,9 @@ int main(int argc, char *argv[])
 
 	DBusObserver observer("com.victronenergy.pvinverter");
 	DBusSettings settings;
+	settings.setAutoSave(true);
+	settings.setTrackChanges(false);
+	settings.loadSettings();
 
 	return a.exec();
 }

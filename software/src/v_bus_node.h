@@ -23,6 +23,8 @@ public:
 
 	QString findPath(const VBusItem *item) const;
 
+	QStringList enumeratePaths() const;
+
 public slots:
 	QDBusVariant GetValue();
 

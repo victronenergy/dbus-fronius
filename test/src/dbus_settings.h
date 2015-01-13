@@ -6,8 +6,9 @@
 #include <QObject>
 #include <QPointer>
 
-class QString;
 class QDBusVariant;
+class QString;
+class QTimer;
 class VBusNode;
 class VBusItem;
 
@@ -19,6 +20,18 @@ public:
 
 	~DBusSettings();
 
+	void loadSettings();
+
+	void storeSettings();
+
+	bool trackChanges() const;
+
+	void setTrackChanges(bool b);
+
+	bool autoSave() const;
+
+	void setAutoSave(bool s);
+
 	QVariant getValue(const QString &path) const;
 
 	bool setValue(const QString &path, const QVariant &value);
@@ -26,6 +39,8 @@ public:
 	void resetChangedPaths();
 
 	const QList<QString> &changedPaths() const;
+
+	void addSetting(const QString &path, const QDBusVariant &defaultValue);
 
 public slots:
 	int AddSetting(const QString &group, const QString &name,
@@ -38,10 +53,17 @@ signals:
 private slots:
 	void onVBusItemChanged();
 
+	void onTimer();
+
 private:
+	void scheduleSave();
+
 	QDBusConnection mCnx;
 	QPointer<VBusNode> mRoot;
 	QList<QString> mChangedPaths;
+	QString mSettingsPath;
+	bool mTrackChanges;
+	QTimer *mTimer;
 };
 
 #endif // DBUS_SETTINGS_H

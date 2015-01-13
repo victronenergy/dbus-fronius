@@ -71,6 +71,25 @@ QString VBusNode::findPath(const VBusItem *item) const
 	return QString();
 }
 
+QStringList VBusNode::enumeratePaths() const
+{
+	QStringList result;
+	for (QMap<QString, VBusItem *>::const_iterator it = mLeafs.begin();
+		 it != mLeafs.end();
+		 ++it) {
+		result.append("/" + it.key());
+	}
+	for (QMap<QString, VBusNode *>::const_iterator it = mNodes.begin();
+		 it != mNodes.end();
+		 ++it) {
+		QStringList subList = it.value()->enumeratePaths();
+		foreach (QString s, subList) {
+			result.append("/" + it.key() + s);
+		}
+	}
+	return result;
+}
+
 QDBusVariant VBusNode::GetValue()
 {
 	QVariantMap result;
