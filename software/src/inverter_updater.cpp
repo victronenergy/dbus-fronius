@@ -1,4 +1,3 @@
-#include <limits>
 #include <QsLog.h>
 #include <QTimer>
 #include "froniussolar_api.h"
@@ -121,20 +120,37 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 	{
 	case SolarApiReply::NoError:
 	{
+		/* The com.victron.system module expects power values for each phase,
+		 * but the Fronius inverter does not supply them. So we take to total
+		 * power - part of the CommonInverterData - and distribute it over
+		 * the phases. Voltage * Current is used as weight here.
+		 *
+		 * Note that if there's no current/power at all the computed power
+		 * values may be NaN, and in exceptional circumstances infinity. We
+		 * leave the values as computed, so we can send invalid values to the
+		 * DBus later.
+		 */
+
+		double vi1 = data.acVoltagePhase1 * data.acCurrentPhase1;
+		double vi2 = data.acVoltagePhase2 * data.acCurrentPhase2;
+		double vi3 = data.acVoltagePhase3 * data.acCurrentPhase3;
+		double totalVi = vi1 + vi2 + vi3;
+		double powerCorrection = mInverter->meanPowerInfo()->power() / totalVi;
+
 		PowerInfo *l1 = mInverter->l1PowerInfo();
 		l1->setCurrent(data.acCurrentPhase1);
 		l1->setVoltage(data.acVoltagePhase1);
-		l1->setPower(std::numeric_limits<double>::quiet_NaN());
+		l1->setPower(vi1 * powerCorrection);
 
 		PowerInfo *l2 = mInverter->l2PowerInfo();
 		l2->setCurrent(data.acCurrentPhase2);
 		l2->setVoltage(data.acVoltagePhase2);
-		l2->setPower(std::numeric_limits<double>::quiet_NaN());
+		l2->setPower(vi2 * powerCorrection);
 
 		PowerInfo *l3 = mInverter->l3PowerInfo();
 		l3->setCurrent(data.acCurrentPhase3);
 		l3->setVoltage(data.acVoltagePhase3);
-		l3->setPower(std::numeric_limits<double>::quiet_NaN());
+		l3->setPower(vi3 * powerCorrection);
 
 		mInverter->setIsConnected(true);
 		/// @todo EV remote the Supports3Phases property because it duplicates
