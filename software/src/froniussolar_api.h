@@ -115,6 +115,8 @@ struct CommonInverterData : public SolarApiReply
 	 * @brief Energy generated overall
 	 */
 	double totalEnergy;
+	int statusCode;
+	int errorCode;
 };
 
 struct ThreePhasesInverterData : public SolarApiReply

@@ -9,6 +9,7 @@ class Inverter : public QObject
 {
 	Q_OBJECT
 	Q_PROPERTY(bool isConnected READ isConnected WRITE setIsConnected NOTIFY isConnectedChanged)
+	Q_PROPERTY(QString status READ status WRITE setStatus NOTIFY statusChanged)
 	Q_PROPERTY(bool supports3Phases READ supports3Phases WRITE setSupports3Phases NOTIFY supports3PhasesChanged)
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString uniqueId READ uniqueId)
@@ -23,6 +24,10 @@ public:
 	bool isConnected() const;
 
 	void setIsConnected(bool v);
+
+	QString status() const;
+
+	void setStatus(const QString &c);
 
 	bool supports3Phases() const;
 
@@ -56,9 +61,12 @@ signals:
 
 	void supports3PhasesChanged();
 
+	void statusChanged();
+
 private:
 	bool mIsConnected;
 	bool mSupports3Phases;
+	QString mStatus;
 	QString mHostName;
 	int mPort;
 	QString mId;

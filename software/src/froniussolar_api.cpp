@@ -157,6 +157,8 @@ void FroniusSolarApi::processCommonData(QNetworkReply *reply)
 	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
 	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
 	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
+	data.statusCode = getByPath(d, "DeviceStatus/StatusCode").toInt();
+	data.errorCode = getByPath(d, "DeviceStatus/ErrorCode").toInt();
 	emit commonDataFound(data);
 }
 

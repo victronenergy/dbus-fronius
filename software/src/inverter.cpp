@@ -31,6 +31,19 @@ void Inverter::setIsConnected(bool v)
 	emit isConnectedChanged();
 }
 
+QString Inverter::status() const
+{
+	return mStatus;
+}
+
+void Inverter::setStatus(const QString &c)
+{
+	if (mStatus == c)
+		return;
+	mStatus = c;
+	emit statusChanged();
+}
+
 bool Inverter::supports3Phases() const
 {
 	return mSupports3Phases;

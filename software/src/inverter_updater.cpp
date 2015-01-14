@@ -88,6 +88,32 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 			mInverter->setIsConnected(true);
 			scheduleRetrieval();
 		}
+		QString msg;
+		if (data.statusCode >= 0 && data.statusCode <= 6) {
+			msg = tr("Startup");
+		} else {
+			switch (data.statusCode) {
+			case 7:
+				msg = tr("Running");
+				break;
+			case 8:
+				msg	= tr("Standby");
+				break;
+			case 9:
+				msg = tr("Boot loading");
+				break;
+			case 10:
+				msg = tr("Error");
+				break;
+			default:
+				msg	= tr("Unknown");
+				break;
+			}
+		}
+		mInverter->setStatus(QString("%1 (%2/%3)").
+			  arg(msg).
+			  arg(data.statusCode).
+			  arg(data.errorCode));
 	}
 		break;
 	case SolarApiReply::NetworkError:
