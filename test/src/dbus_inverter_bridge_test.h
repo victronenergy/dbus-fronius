@@ -17,6 +17,8 @@ public:
 	DBusInverterBridgeTest();
 
 protected:
+	static void SetUpTestCase();
+
 	virtual void SetUp();
 
 	virtual void TearDown();

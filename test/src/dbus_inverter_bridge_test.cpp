@@ -25,19 +25,21 @@ TEST_F(DBusInverterBridgeTest, constructor)
 	checkValue(QVariant(0), mDBusClient->getValue(mServiceName, "/Connected"));
 
 	checkValue(QCoreApplication::arguments()[0],
-			  mDBusClient->getValue(mServiceName, "/Mgmt/ProcessName").toString());
+			   mDBusClient->getValue(mServiceName, "/Mgmt/ProcessName"));
 	checkValue(QString(VERSION),
-			  mDBusClient->getValue(mServiceName, "/Mgmt/ProcessVersion").toString());
+			   mDBusClient->getValue(mServiceName, "/Mgmt/ProcessVersion"));
 	checkValue(QString("10.0.1.4 - 3"),
-			  mDBusClient->getValue(mServiceName, "/Mgmt/Connection").toString());
-	checkValue(QString("2"),
-			  mDBusClient->getValue(mServiceName, "/Position").toString());
+			   mDBusClient->getValue(mServiceName, "/Mgmt/Connection"));
+	checkValue(QVariant(2),
+			   mDBusClient->getValue(mServiceName, "/Position"));
 	// Note: we don't take the product ID from VE_PROD_ID_PV_INVERTER_FRONIUS,
 	// because we want this test to fail if someone changes the define.
 	checkValue(QString::number(0xA142),
-			  mDBusClient->getValue(mServiceName, "/ProductId").toString());
+			   mDBusClient->getValue(mServiceName, "/ProductId").toString());
 	checkValue(QString("Fronius PV inverter - cn"),
-			  mDBusClient->getValue(mServiceName, "/ProductName").toString());
+			   mDBusClient->getValue(mServiceName, "/ProductName"));
+	checkValue(QVariant(22),
+			   mDBusClient->getValue(mServiceName, "/DeviceInstance"));
 
 	checkValue(QVariant(1.4), mDBusClient->getValue(mServiceName, "/Ac/Current"));
 	checkValue(QVariant(342.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
@@ -59,6 +61,26 @@ TEST_F(DBusInverterBridgeTest, isConnected)
 	mInverter->setIsConnected(true);
 	qWait(100);
 	checkValue(QVariant(1), mDBusClient->getValue(mServiceName, "/Connected"));
+}
+
+TEST_F(DBusInverterBridgeTest, position)
+{
+	SetUpBridge();
+
+	checkValue(QVariant(2), mDBusClient->getValue(mServiceName, "/Position"));
+	mSettings->setPosition(InverterSettings::Output);
+	qWait(100);
+	checkValue(QVariant(1), mDBusClient->getValue(mServiceName, "/Position"));
+}
+
+TEST_F(DBusInverterBridgeTest, deviceInstance)
+{
+	SetUpBridge();
+
+	checkValue(QVariant(22), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
+	mSettings->setPosition(InverterSettings::Output);
+	qWait(100);
+	checkValue(QVariant(21), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
 }
 
 TEST_F(DBusInverterBridgeTest, acCurrent)
@@ -85,6 +107,12 @@ TEST_F(DBusInverterBridgeTest, acPower)
 DBusInverterBridgeTest::DBusInverterBridgeTest():
 	mServiceName("com.victronenergy.pvinverter.fronius_010000001004_3")
 {
+}
+
+void DBusInverterBridgeTest::SetUpTestCase()
+{
+	qRegisterMetaType<InverterSettings::Position>("Position");
+	qRegisterMetaType<InverterSettings::Phase>("Phase");
 }
 
 void DBusInverterBridgeTest::SetUp()

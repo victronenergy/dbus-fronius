@@ -40,7 +40,7 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	addBusItems(connection, inverter->l3PowerInfo(), "/Ac/L3");
 
 	produce(connection, settings, "position", "/Position");
-	produce(connection, settings, "position", "/DeviceInstance");
+	produce(connection, settings, "deviceInstance", "/DeviceInstance");
 
 	QString connectionString = QString("%1 - %2").
 			arg(inverter->hostName()).
@@ -80,11 +80,9 @@ void DBusInverterBridge::toDBus(const QString &path, QVariant &value)
 {
 	if (path == "/Connected")
 		value = QVariant(value.toBool() ? 1 : 0);
-	else if (path == "/DeviceInstance")
-		value = QVariant(value.toInt() + 20);
 	else if (path == "/Position")
 		value = QVariant(static_cast<int>(value.value<InverterSettings::Position>()));
-	if (value.type() == QVariant::Double && std::isnan(value.toDouble()))
+	if (value.type() == QVariant::Double && !std::isfinite(value.toDouble()))
 		value = qVariantFromValue(QStringList());
 }
 
@@ -92,8 +90,6 @@ void DBusInverterBridge::fromDBus(const QString &path, QVariant &value)
 {
 	if (path == "/Connected")
 		value = QVariant(value.toInt() != 0);
-	else if (path == "/DeviceInstance")
-		value = QVariant(value.toInt() - 20);
 	else if (path == "/Position")
 		value = QVariant(static_cast<InverterSettings::Position>(value.toInt()));
 }
