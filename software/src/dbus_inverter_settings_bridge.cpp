@@ -12,31 +12,40 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 	DBusBridge(parent)
 {
 	QDBusConnection &connection = VBusItems::getConnection();
-	QString group = "Inverters/" + settings->uniqueId();
+	// Unique ID of a fronius inverter is currently a number. Using numbers as
+	// name of a DBus object causes trouble: the local settings application
+	// saves the settings as xml and uses object names as element names.
+	// Unfortunately, the name of an xml element cannot start with a number.
+	QString group = "Inverters/I" + settings->uniqueId();
 	addDBusObject("Fronius", group + "/Position", 'i',
 				  QDBusVariant(static_cast<int>(settings->position())));
 	addDBusObject("Fronius", group + "/Phase", 'i',
 				  QDBusVariant(static_cast<int>(settings->phase())));
+	addDBusObject("Fronius", group + "/CustomName", 's',
+				  QDBusVariant(settings->customName()));
 
 	QString path = BasePath + group;
 	consume(connection, Service, settings, "phase", path + "/Phase");
 	consume(connection, Service, settings, "position", path + "/Position");
+	consume(connection, Service, settings, "customName", path + "/CustomName");
 }
 
-void DBusInverterSettingsBridge::toDBus(const QString &path, QVariant &v)
+bool DBusInverterSettingsBridge::toDBus(const QString &path, QVariant &v)
 {
 	if (path.endsWith("/Phase")) {
 		v = QVariant(static_cast<int>(v.value<InverterSettings::Phase>()));
 	} else if (path.endsWith("/Position")) {
 		v = QVariant(static_cast<int>(v.value<InverterSettings::Position>()));
 	}
+	return true;
 }
 
-void DBusInverterSettingsBridge::fromDBus(const QString &path, QVariant &v)
+bool DBusInverterSettingsBridge::fromDBus(const QString &path, QVariant &v)
 {
 	if (path.endsWith("/Phase")) {
 		v = qVariantFromValue(static_cast<InverterSettings::Phase>(v.toInt()));
 	} else if (path.endsWith("/Position")) {
 		v = qVariantFromValue(static_cast<InverterSettings::Position>(v.toInt()));
 	}
+	return true;
 }

@@ -8,10 +8,12 @@ class InverterSettings : public QObject
 {
 	Q_OBJECT
 	Q_PROPERTY(QString uniqueId READ uniqueId)
+	Q_PROPERTY(QString customName READ customName WRITE setCustomName NOTIFY customNameChanged)
 	// Without the namespace prefixes below, we cannot use the setProperty
 	// function to set change the properties.
 	Q_PROPERTY(InverterSettings::Phase phase READ phase WRITE setPhase NOTIFY phaseChanged)
 	Q_PROPERTY(InverterSettings::Position position READ position WRITE setPosition NOTIFY positionChanged)
+	Q_PROPERTY(int deviceInstance READ deviceInstance NOTIFY deviceInstanceChanged)
 public:
 	enum Phase {
 		/*!
@@ -41,13 +43,24 @@ public:
 
 	void setPosition(Position position);
 
+	int deviceInstance() const;
+
+	QString customName() const;
+
+	void setCustomName(const QString &n);
+
 signals:
 	void phaseChanged();
 
 	void positionChanged();
 
+	void deviceInstanceChanged();
+
+	void customNameChanged();
+
 private:
 	QString mUniqueId;
+	QString mCustomName;
 	Phase mPhase;
 	Position mPosition;
 };

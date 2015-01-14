@@ -89,8 +89,10 @@ protected:
 	 * \param path The path to the DBus object.
 	 * \param v The value to be sent. On input this will be the value taken
 	 * from the QT property.
+	 * \retval If the implementation returns false, the value will not be sent
+	 * to the DBus.
 	 */
-	virtual void toDBus(const QString &path, QVariant &v);
+	virtual bool toDBus(const QString &path, QVariant &v);
 
 	/*!
 	 * \brief Allows conversion of values received from DBus.
@@ -100,8 +102,10 @@ protected:
 	 * The default implementation of this function is empty.
 	 * \param path The path to the DBus object.
 	 * \param v The value received from the DBus.
+	 * \retval If the implementation returns false, the value from the DBus will
+	 * not be written to the associated property.
 	 */
-	virtual void fromDBus(const QString &path, QVariant &v);
+	virtual bool fromDBus(const QString &path, QVariant &v);
 
 	static bool addDBusObject(const QString &group, const QString &name,
 							   QChar type, const QDBusVariant &defaultValue);

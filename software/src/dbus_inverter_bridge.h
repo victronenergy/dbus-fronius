@@ -1,6 +1,7 @@
 #ifndef DBUS_INVERTER_BRIDGE_H
 #define DBUS_INVERTER_BRIDGE_H
 
+#include <QPointer>
 #include <QString>
 #include "dbus_bridge.h"
 
@@ -22,9 +23,9 @@ public:
 	virtual ~DBusInverterBridge();
 
 protected:
-	virtual void toDBus(const QString &path, QVariant &value);
+	virtual bool toDBus(const QString &path, QVariant &value);
 
-	virtual void fromDBus(const QString &path, QVariant &value);
+	virtual bool fromDBus(const QString &path, QVariant &value);
 
 private:
 	void addBusItems(QDBusConnection &connection, PowerInfo *pi,
@@ -33,6 +34,7 @@ private:
 	static QString fixServiceNameFragment(const QString &s);
 
 	QString mServiceName;
+	QPointer<Inverter> mInverter;
 };
 
 #endif // DBUS_INVERTER_BRIDGE_H

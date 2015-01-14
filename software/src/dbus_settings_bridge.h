@@ -34,9 +34,9 @@ public:
 	static bool addDBusObjects();
 
 protected:
-	virtual void toDBus(const QString &path, QVariant &value);
+	virtual bool toDBus(const QString &path, QVariant &value);
 
-	virtual void fromDBus(const QString &path, QVariant &v);
+	virtual bool fromDBus(const QString &path, QVariant &v);
 
 private:
 	Settings *mSettings;

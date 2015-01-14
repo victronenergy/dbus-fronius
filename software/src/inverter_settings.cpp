@@ -37,4 +37,23 @@ void InverterSettings::setPosition(InverterSettings::Position position)
 		return;
 	mPosition = position;
 	emit positionChanged();
+	emit deviceInstanceChanged();
+}
+
+int InverterSettings::deviceInstance() const
+{
+	return mPosition + 20;
+}
+
+QString InverterSettings::customName() const
+{
+	return mCustomName;
+}
+
+void InverterSettings::setCustomName(const QString &n)
+{
+	if (mCustomName == n)
+		return;
+	mCustomName	= n;
+	emit customNameChanged();
 }

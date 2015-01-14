@@ -42,12 +42,14 @@ void DBusBridge::consume(QDBusConnection &connection, const QString &service,
 	vbi->getValue(); // force value retrieval
 }
 
-void DBusBridge::toDBus(const QString &, QVariant &)
+bool DBusBridge::toDBus(const QString &, QVariant &)
 {
+	return true;
 }
 
-void DBusBridge::fromDBus(const QString &, QVariant &)
+bool DBusBridge::fromDBus(const QString &, QVariant &)
 {
+	return true;
 }
 
 bool DBusBridge::addDBusObject(const QString &group, const QString &name,
@@ -81,8 +83,8 @@ void DBusBridge::onPropertyChanged()
 				if (bib.src == src &&
 					strcmp(bib.property.name(), mp.name()) == 0) {
 					QVariant value = src->property(mp.name());
-					toDBus(bib.path, value);
-					bib.item->setValue(value);
+					if (toDBus(bib.path, value))
+						bib.item->setValue(value);
 					break;
 				}
 			}
@@ -98,8 +100,8 @@ void DBusBridge::onVBusItemChanged()
 		 ++it) {
 		if (it->item == sender()) {
 			QVariant value = it->item->getValue();
-			fromDBus(it->path, value);
-			it->src->setProperty(it->property.name(), value);
+			if (fromDBus(it->path, value))
+				it->src->setProperty(it->property.name(), value);
 			if (!it->initialized) {
 				it->initialized = true;
 				checkInit = true;

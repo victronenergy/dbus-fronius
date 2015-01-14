@@ -41,7 +41,7 @@ bool DBusSettingsBridge::addDBusObjects()
 		addDBusObject("Fronius", "ScanProgress", 's', QDBusVariant(""));
 }
 
-void DBusSettingsBridge::toDBus(const QString &path, QVariant &value)
+bool DBusSettingsBridge::toDBus(const QString &path, QVariant &value)
 {
 	if (path == IpAddressesPath || path == KnownIpAddressesPath) {
 		// Convert QList<QHostAddress> to QStringList, because DBus
@@ -60,9 +60,10 @@ void DBusSettingsBridge::toDBus(const QString &path, QVariant &value)
 		int progress = value.toInt();
 		value = QVariant(QString("%1%").arg(progress));
 	}
+	return true;
 }
 
-void DBusSettingsBridge::fromDBus(const QString &path, QVariant &value)
+bool DBusSettingsBridge::fromDBus(const QString &path, QVariant &value)
 {
 	if (path == IpAddressesPath || path == KnownIpAddressesPath) {
 		// Convert from DBus type back to to QList<QHostAddress>.
@@ -72,5 +73,8 @@ void DBusSettingsBridge::fromDBus(const QString &path, QVariant &value)
 			addresses.append(QHostAddress(a));
 		}
 		value = QVariant::fromValue(addresses);
+	} else if (path == ScanProgressPath) {
+		return false;
 	}
+	return true;
 }

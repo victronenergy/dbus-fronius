@@ -15,7 +15,8 @@
 DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 									   InverterSettings *settings,
 									   QObject *parent) :
-	DBusBridge(parent)
+	DBusBridge(parent),
+	mInverter(inverter)
 {
 	Q_ASSERT(inverter != 0);
 	connect(inverter, SIGNAL(destroyed()), this, SLOT(deleteLater()));
@@ -33,6 +34,7 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	QDBusConnection connection = VBusItems::getConnection(mServiceName);
 
 	produce(connection, inverter, "isConnected", "/Connected");
+	produce(connection, inverter, "status", "/DeviceStatus");
 
 	addBusItems(connection, inverter->meanPowerInfo(), "/Ac");
 	addBusItems(connection, inverter->l1PowerInfo(), "/Ac/L1");
@@ -41,24 +43,19 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 
 	produce(connection, settings, "position", "/Position");
 	produce(connection, settings, "deviceInstance", "/DeviceInstance");
+	// The proper product name will be constructed in the toDBus function.
+	produce(connection, settings, "customName", "/ProductName");
 
 	QString connectionString = QString("%1 - %2").
 			arg(inverter->hostName()).
 			arg(inverter->id());
 	QString processName = QCoreApplication::arguments()[0];
-	QString customName = inverter->customName();
-	QString productName = QString("%1 - %2").
-						  arg(tr("Fronius PV inverter")).
-						  arg(customName.isEmpty() ?
-								  inverter->uniqueId() : customName);
 	// The values of the items below will not change after creation, so we don't
 	// need an update mechanism.
 	produce(connection, "/Mgmt/ProcessName", processName);
 	produce(connection, "/Mgmt/ProcessVersion", VERSION);
 	produce(connection, "/Mgmt/Connection", connectionString);
-
 	produce(connection, "/ProductId", VE_PROD_ID_PV_INVERTER_FRONIUS);
-	produce(connection, "/ProductName", productName);
 	produce(connection, "/Serial", inverter->uniqueId());
 
 	QLOG_INFO() << "Registering service" << mServiceName;
@@ -76,22 +73,42 @@ DBusInverterBridge::~DBusInverterBridge()
 	}
 }
 
-void DBusInverterBridge::toDBus(const QString &path, QVariant &value)
+bool DBusInverterBridge::toDBus(const QString &path, QVariant &value)
 {
-	if (path == "/Connected")
+	if (path == "/Connected") {
 		value = QVariant(value.toBool() ? 1 : 0);
-	else if (path == "/Position")
+	} else if (path == "/Position") {
 		value = QVariant(static_cast<int>(value.value<InverterSettings::Position>()));
+	} else if (path == "/ProductName") {
+		QString productName = value.toString();
+		if (productName.isEmpty()) {
+			if (mInverter.isNull() || mInverter->customName().isEmpty()) {
+				productName = QString("%1 - %2").
+							  arg(tr("Fronius PV inverter")).
+							  arg(mInverter->uniqueId());
+			} else {
+				productName = mInverter->customName();
+			}
+			value = QVariant(productName);
+		}
+	}
 	if (value.type() == QVariant::Double && !std::isfinite(value.toDouble()))
 		value = qVariantFromValue(QStringList());
+	return true;
 }
 
-void DBusInverterBridge::fromDBus(const QString &path, QVariant &value)
+bool DBusInverterBridge::fromDBus(const QString &path, QVariant &value)
 {
-	if (path == "/Connected")
+	if (path == "/Connected") {
 		value = QVariant(value.toInt() != 0);
-	else if (path == "/Position")
+	} else if (path == "/Position") {
 		value = QVariant(static_cast<InverterSettings::Position>(value.toInt()));
+	} else if (path == "/ProductName") {
+		// Returns false, so the product name constructed in toDBus will not
+		// be written back to the InverterSettings::customName.
+		return false;
+	}
+	return true;
 }
 
 void DBusInverterBridge::addBusItems(QDBusConnection &connection, PowerInfo *pi,
