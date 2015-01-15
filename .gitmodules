@@ -3,7 +3,7 @@
 	url = git@git.victronenergy.com:victron/velib.git
 [submodule "software/ext/qslog"]
 	path = software/ext/qslog
-	url = https://bitbucket.org/razvanpetru/qslog.git
+	url = https://github.com/victronenergy/QsLog.git
 [submodule "software/ext/bottle"]
 	path = software/ext/bottle
 	url = https://github.com/bottlepy/bottle.git
