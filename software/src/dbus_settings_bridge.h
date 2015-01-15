@@ -5,7 +5,6 @@
 #include <QHostAddress>
 #include "dbus_bridge.h"
 
-class InverterGateway;
 class InverterSettings;
 class QDBusVariant;
 class Settings;
@@ -21,8 +20,7 @@ class DBusSettingsBridge : public DBusBridge
 {
 	Q_OBJECT
 public:
-	DBusSettingsBridge(Settings *settings, InverterGateway *gateway,
-					   QObject *parent = 0);
+	DBusSettingsBridge(Settings *settings, QObject *parent = 0);
 
 	/*!
 	 * @brief Make sure the DBus objects are present.
@@ -37,9 +35,6 @@ protected:
 	virtual bool toDBus(const QString &path, QVariant &value);
 
 	virtual bool fromDBus(const QString &path, QVariant &v);
-
-private:
-	Settings *mSettings;
 };
 
 #endif // DBUS_SETTINGS_BRIDGE_H

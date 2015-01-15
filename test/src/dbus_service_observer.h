@@ -2,6 +2,8 @@
 #define DBUSSERVICEOBSERVER_H
 
 #include <QObject>
+#include <QString>
+#include <QStringList>
 
 class QDBusError;
 class QDBusMessage;
@@ -23,6 +25,14 @@ public:
 	bool setValue(const QString &path, const QVariant &value);
 
 	bool initialized() const;
+
+	bool logChangedPaths() const;
+
+	void setLogChangedPaths(bool l);
+
+	const QStringList &changedPaths() const;
+
+	void resetChangedPaths();
 
 signals:
 	void initializedChanged();
@@ -49,9 +59,11 @@ private:
 		bool initialized;
 	};
 	QList<ItemWrapper> mItems;
-	QList<QString> mPendingPaths;
+	QStringList mPendingPaths;
 	QString mIntrospectPath;
 	bool mInitialized;
+	QStringList mChangedPaths;
+	bool mLogChangedPaths;
 };
 
 #endif // DBUSSERVICEOBSERVER_H

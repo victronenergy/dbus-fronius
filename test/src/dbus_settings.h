@@ -2,7 +2,7 @@
 #define DBUS_SETTINGS_H
 
 #include <QDBusConnection>
-#include <QList>
+#include <QStringList>
 #include <QObject>
 #include <QPointer>
 
@@ -38,7 +38,7 @@ public:
 
 	void resetChangedPaths();
 
-	const QList<QString> &changedPaths() const;
+	const QStringList &changedPaths() const;
 
 	void addSetting(const QString &path, const QDBusVariant &defaultValue);
 
@@ -60,7 +60,7 @@ private:
 
 	QDBusConnection mCnx;
 	QPointer<VBusNode> mRoot;
-	QList<QString> mChangedPaths;
+	QStringList mChangedPaths;
 	QString mSettingsPath;
 	bool mTrackChanges;
 	QTimer *mTimer;

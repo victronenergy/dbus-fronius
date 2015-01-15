@@ -42,6 +42,26 @@ bool DBusServiceObserver::initialized() const
 	return mInitialized;
 }
 
+bool DBusServiceObserver::logChangedPaths() const
+{
+	return mLogChangedPaths;
+}
+
+void DBusServiceObserver::setLogChangedPaths(bool l)
+{
+	mLogChangedPaths = l;
+}
+
+const QStringList &DBusServiceObserver::changedPaths() const
+{
+	return mChangedPaths;
+}
+
+void DBusServiceObserver::resetChangedPaths()
+{
+	mChangedPaths.clear();
+}
+
 void DBusServiceObserver::onIntrospectSuccess(const QDBusMessage &reply)
 {
 	QVariant v = reply.arguments().first();
@@ -97,6 +117,11 @@ void DBusServiceObserver::onValueChanged()
 			}
 			break;
 		}
+	}
+	if (mLogChangedPaths) {
+		const QString &bind = item->getBind();
+		int i = bind.indexOf('/');
+		mChangedPaths.append(bind.mid(i));
 	}
 }
 

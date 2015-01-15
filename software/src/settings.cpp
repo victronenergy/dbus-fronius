@@ -4,22 +4,8 @@
 
 Settings::Settings(QObject *parent) :
 	QObject(parent),
-	mAutoDetect(true),
 	mPortNumber(80)
 {
-}
-
-bool Settings::autoDetect() const
-{
-	return mAutoDetect;
-}
-
-void Settings::setAutoDetect(bool a)
-{
-	if (mAutoDetect == a)
-		return;
-	mAutoDetect = a;
-	emit autoDetectChanged();
 }
 
 int Settings::portNumber() const

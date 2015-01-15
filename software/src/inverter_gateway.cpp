@@ -7,20 +7,36 @@
 #include "inverter_updater.h"
 #include "settings.h"
 
-static const int MaxSimultaneousRequests = 10;
+static const int MaxSimultaneousRequests = 20;
 
 InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
 	mSettings(settings),
-	mSettingsBusy(true)
+	mSettingsBusy(false),
+	mFullScanRequested(false)
 {
 	Q_ASSERT(settings != 0);
-	connect(settings, SIGNAL(autoDetectChanged()),
-			this, SLOT(onAutoDetectChanged()));
 	connect(settings, SIGNAL(ipAddressesChanged()),
 			this, SLOT(onSettingsChanged()));
 	connect(settings, SIGNAL(knownIpAddressesChanged()),
 			this, SLOT(onSettingsChanged()));
+}
+
+bool InverterGateway::autoDetect() const
+{
+	return mAutoDetect;
+}
+
+void InverterGateway::setAutoDetect(bool b)
+{
+	if (mAutoDetect == b)
+		return;
+	mAutoDetect	= b;
+	if (mSettingsBusy)
+		return;
+	mFullScanRequested = b;
+	updateAddressGenerator();
+	emit autoDetectChanged();
 }
 
 int InverterGateway::scanProgress() const
@@ -31,7 +47,7 @@ int InverterGateway::scanProgress() const
 void InverterGateway::startDetection()
 {
 	mSettingsBusy = true;
-	mSettings->setAutoDetect(true);
+	setAutoDetect(true);
 	mSettingsBusy = false;
 	updateAddressGenerator();
 }
@@ -64,7 +80,11 @@ void InverterGateway::updateDetection()
 					break;
 				}
 			}
-			if (count < addresses.size() || mUpdaters.size() == 0) {
+			if (mFullScanRequested) {
+				QLOG_INFO() << "Full scan requested, starting auto IP scan";
+				autoDetect = true;
+				mFullScanRequested = false;
+			} else if (count < addresses.size() || mUpdaters.size() == 0) {
 				/// @todo EV We may get here when auto detect is disabled manually
 				/// *before* any inverter have been found.
 				// Some devices were missing or no devices were found at all.
@@ -78,7 +98,7 @@ void InverterGateway::updateDetection()
 			QLOG_INFO() << "Auto IP scan completed. Detection finished";
 		}
 		mSettingsBusy = true;
-		mSettings->setAutoDetect(autoDetect);
+		setAutoDetect(autoDetect);
 		mSettingsBusy = false;
 		if (autoDetect) {
 			mAddressGenerator.setPriorityOnly(false);
@@ -138,19 +158,12 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 	updateDetection();
 }
 
-void InverterGateway::onAutoDetectChanged()
-{
-	if (mSettingsBusy)
-		return;
-	updateAddressGenerator();
-}
-
 void InverterGateway::onSettingsChanged()
 {
 	if (mSettingsBusy)
 		return;
 	mSettingsBusy = true;
-	mSettings->setAutoDetect(true);
+	setAutoDetect(true);
 	mSettingsBusy = false;
 	updateAddressGenerator();
 }
@@ -173,7 +186,7 @@ void InverterGateway::onIsConnectedChanged()
 		}
 	}
 	mSettingsBusy = true;
-	mSettings->setAutoDetect(true);
+	setAutoDetect(true);
 	mSettingsBusy = false;
 	updateAddressGenerator();
 }
@@ -208,9 +221,9 @@ InverterUpdater *InverterGateway::findUpdater(const QString &hostName)
 void InverterGateway::updateAddressGenerator()
 {
 	QLOG_TRACE() << __FUNCTION__
-				 << mSettings->autoDetect()
+				 << autoDetect()
 				 << mSettings->ipAddresses().size();
-	if (mSettings->autoDetect()) {
+	if (autoDetect()) {
 		QList<QHostAddress> addresses = mSettings->ipAddresses();
 		foreach (QHostAddress a, mSettings->knownIpAddresses()) {
 			if (!addresses.contains(a)) {

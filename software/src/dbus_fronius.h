@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+class DBusGatewayBridge;
 class DBusSettingsBridge;
 class InverterGateway;
 class InverterUpdater;
@@ -25,6 +26,7 @@ private:
 	Settings *mSettings;
 	InverterGateway *mGateway;
 	DBusSettingsBridge *mSettingsBridge;
+	DBusGatewayBridge *mGatewayBridge;
 };
 
 #endif // DBUS_TEST2_H

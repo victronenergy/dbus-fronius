@@ -57,13 +57,17 @@ INCLUDEPATH += \
 
 HEADERS += \
 	$$SRCDIR/dbus_bridge.h \
+	$$SRCDIR/dbus_gateway_bridge.h \
 	$$SRCDIR/dbus_inverter_bridge.h \
 	$$SRCDIR/dbus_settings_bridge.h \
 	$$SRCDIR/froniussolar_api.h \
 	$$SRCDIR/inverter.h \
+	$$SRCDIR/local_ip_address_generator.h \
 	$$SRCDIR/power_info.h \
 	$$SRCDIR/settings.h \
 	$$SRCDIR/v_bus_node.h \
+	$$SRCDIR/inverter_gateway.h \
+	$$SRCDIR/inverter_updater.h \
 	$$SRCDIR/inverter_settings.h \
 	$$SRCDIR/dbus_inverter_settings_bridge.h \
 	src/dbus_observer.h \
@@ -74,19 +78,24 @@ HEADERS += \
 	src/test_helper.h \
 	src/dbus_inverter_bridge_test.h \
 	src/dbus_settings_bridge_test.h \
-	src/dbus_inverter_settings_bridge_test.h
+	src/dbus_inverter_settings_bridge_test.h \
+    src/dbus_gateway_bridge_test.h
 
 SOURCES += \
 	$$SRCDIR/dbus_bridge.cpp \
+	$$SRCDIR/dbus_gateway_bridge.cpp \
 	$$SRCDIR/dbus_inverter_bridge.cpp \
+	$$SRCDIR/dbus_inverter_settings_bridge.cpp \
 	$$SRCDIR/dbus_settings_bridge.cpp \
 	$$SRCDIR/froniussolar_api.cpp \
 	$$SRCDIR/inverter.cpp \
+	$$SRCDIR/inverter_updater.cpp \
+	$$SRCDIR/local_ip_address_generator.cpp \
 	$$SRCDIR/power_info.cpp \
 	$$SRCDIR/settings.cpp \
 	$$SRCDIR/v_bus_node.cpp \
 	$$SRCDIR/inverter_settings.cpp \
-	$$SRCDIR/dbus_inverter_settings_bridge.cpp \
+	$$SRCDIR/inverter_gateway.cpp \
 	$$EXTDIR/googletest/src/gtest-all.cc \
 	src/main.cpp \
 	src/dbus_observer.cpp \
@@ -97,7 +106,8 @@ SOURCES += \
 	src/dbus_settings_bridge_test.cpp \
 	src/fronius_solar_api_test.cpp \
 	src/test_helper.cpp \
-	src/dbus_inverter_settings_bridge_test.cpp
+	src/dbus_inverter_settings_bridge_test.cpp \
+	src/dbus_gateway_bridge_test.cpp
 
 OTHER_FILES += \
 	src/fronius_sim/app.py \

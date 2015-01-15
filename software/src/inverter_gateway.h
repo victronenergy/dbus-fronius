@@ -28,9 +28,14 @@ struct InverterListData;
 class InverterGateway : public QObject
 {
 	Q_OBJECT
+	Q_PROPERTY(bool autoDetect READ autoDetect WRITE setAutoDetect NOTIFY autoDetectChanged)
 	Q_PROPERTY(int scanProgress READ scanProgress NOTIFY scanProgressChanged)
 public:
 	InverterGateway(Settings *settings, QObject *parent = 0);
+
+	bool autoDetect() const;
+
+	void setAutoDetect(bool b);
 
 	int scanProgress() const;
 
@@ -39,12 +44,12 @@ public:
 signals:
 	void inverterFound(InverterUpdater *iu);
 
+	void autoDetectChanged();
+
 	void scanProgressChanged();
 
 private slots:
 	void onConverterInfoFound(const InverterListData &data);
-
-	void onAutoDetectChanged();
 
 	void onSettingsChanged();
 
@@ -54,6 +59,8 @@ private:
 	void updateAddressGenerator();
 
 	void updateDetection();
+
+	void setAutoDetectInternal(bool b);
 
 	InverterUpdater *findUpdater(const QString &hostName,
 								 const QString &deviceId);
@@ -65,6 +72,8 @@ private:
 	QList<FroniusSolarApi *> mApis;
 	LocalIpAddressGenerator mAddressGenerator;
 	bool mSettingsBusy;
+	bool mAutoDetect;
+	bool mFullScanRequested;
 };
 
 #endif // INVERTER_GATEWAY_H

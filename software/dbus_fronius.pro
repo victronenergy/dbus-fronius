@@ -21,7 +21,7 @@ PRE_TARGETDEPS += $$OUT_PWD/version.h
 QMAKE_CXXFLAGS += -Wno-psabi
 
 # Add more folders to ship with the application here
-target.path = /opt/dbus_fronius
+target.path = /opt/color-control/dbus-fronius
 INSTALLS += target
 
 prefix = $$[QT_INSTALL_PREFIX]
@@ -65,7 +65,8 @@ SOURCES += \
 	src/dbus_inverter_bridge.cpp \
 	src/dbus_settings_bridge.cpp \
 	src/inverter_settings.cpp \
-	src/dbus_inverter_settings_bridge.cpp
+	src/dbus_inverter_settings_bridge.cpp \
+	src/dbus_gateway_bridge.cpp
 
 HEADERS += \
 	src/froniussolar_api.h \
@@ -81,4 +82,5 @@ HEADERS += \
 	src/dbus_inverter_bridge.h \
 	src/dbus_settings_bridge.h \
 	src/inverter_settings.h \
-	src/dbus_inverter_settings_bridge.h
+	src/dbus_inverter_settings_bridge.h \
+	src/dbus_gateway_bridge.h

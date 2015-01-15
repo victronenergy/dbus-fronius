@@ -1,5 +1,6 @@
 #include <QsLog.h>
 #include "dbus_fronius.h"
+#include "dbus_gateway_bridge.h"
 #include "dbus_inverter_bridge.h"
 #include "dbus_inverter_settings_bridge.h"
 #include "dbus_settings_bridge.h"
@@ -13,7 +14,8 @@ DBusFronius::DBusFronius(QObject *parent) :
 	QObject(parent),
 	mSettings(new Settings(this)),
 	mGateway(new InverterGateway(mSettings, this)),
-	mSettingsBridge(new DBusSettingsBridge(mSettings, mGateway, this))
+	mSettingsBridge(new DBusSettingsBridge(mSettings, this)),
+	mGatewayBridge(new DBusGatewayBridge(mGateway, this))
 {
 	// This enables us to retrieve values from QT properties via the
 	// QObject::property function.

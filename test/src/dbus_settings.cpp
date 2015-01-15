@@ -119,7 +119,7 @@ void DBusSettings::resetChangedPaths()
 	mChangedPaths.clear();
 }
 
-const QList<QString> &DBusSettings::changedPaths() const
+const QStringList &DBusSettings::changedPaths() const
 {
 	return mChangedPaths;
 }
