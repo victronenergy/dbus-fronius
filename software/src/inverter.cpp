@@ -2,10 +2,10 @@
 #include "power_info.h"
 
 Inverter::Inverter(const QString &hostName, int port, const QString &id,
-				   const QString &uniqueId, const QString &customName, QObject *parent) :
+				   const QString &uniqueId, const QString &customName,
+				   QObject *parent) :
 	QObject(parent),
 	mIsConnected(0),
-	mSupports3Phases(false),
 	mHostName(hostName),
 	mPort(port),
 	mId(id),
@@ -42,19 +42,6 @@ void Inverter::setStatus(const QString &c)
 		return;
 	mStatus = c;
 	emit statusChanged();
-}
-
-bool Inverter::supports3Phases() const
-{
-	return mSupports3Phases;
-}
-
-void Inverter::setSupports3Phases(bool p)
-{
-	if (mSupports3Phases == p)
-		return;
-	mSupports3Phases = p;
-	emit supports3PhasesChanged();
 }
 
 QString Inverter::id() const

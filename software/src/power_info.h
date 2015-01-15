@@ -9,6 +9,7 @@ class PowerInfo : public QObject
 	Q_PROPERTY(double current READ current WRITE setCurrent NOTIFY currentChanged)
 	Q_PROPERTY(double voltage READ voltage WRITE setVoltage NOTIFY voltageChanged)
 	Q_PROPERTY(double power READ power WRITE setPower NOTIFY powerChanged)
+	Q_PROPERTY(double totalEnergy READ totalEnergy WRITE setTotalEnergy	NOTIFY totalEnergyChanged)
 public:
 	explicit PowerInfo(QObject *parent = 0);
 
@@ -24,6 +25,10 @@ public:
 
 	void setPower(double p);
 
+	double totalEnergy() const;
+
+	void setTotalEnergy(double e);
+
 	/*!
 	 * @brief Reset all measured values to NaN
 	 */
@@ -36,10 +41,13 @@ signals:
 
 	void powerChanged();
 
+	void totalEnergyChanged();
+
 private:
 	double mCurrent;
 	double mVoltage;
 	double mPower;
+	double mTotalEnergy;
 };
 
 #endif // POWER_INFO_H

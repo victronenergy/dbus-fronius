@@ -14,6 +14,7 @@ InverterUpdater::InverterUpdater(Inverter *inverter, InverterSettings *settings,
 	mInverter(inverter),
 	mSettings(settings),
 	mSolarApi(new FroniusSolarApi(inverter->hostName(), inverter->port(), this)),
+	mPreviousTotalEnergy(0),
 	mInitialized(false),
 	mRetryCount(0)
 {
@@ -56,6 +57,8 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		pi->setCurrent(data.acCurrent);
 		pi->setVoltage(data.acVoltage);
 		pi->setPower(data.acPower);
+		// Fronius gives us energy in Wh. We need kWh here.
+		pi->setTotalEnergy(data.totalEnergy / 1000);
 		PowerInfo *li = 0;
 		switch (mSettings->phase()) {
 		case InverterSettings::L1:
@@ -76,11 +79,12 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 			break;
 		}
 		if (li != 0) {
-			li->setCurrent(data.acCurrent);
-			li->setVoltage(data.acVoltage);
-			li->setPower(data.acPower);
+			li->setCurrent(pi->current());
+			li->setVoltage(pi->voltage());
+			li->setPower(pi->power());
+			li->setTotalEnergy(pi->totalEnergy());
 		}
-		if (!mInitialized || mInverter->supports3Phases())
+		if (!mInitialized || mSettings->phase() == InverterSettings::AllPhases)
 		{
 			mRetryCount = 0;
 			mSolarApi->getThreePhasesInverterDataAsync(mInverter->id());
@@ -129,7 +133,6 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		// Inverter does not support common data retrieval?
 		///	@todo EV call setInitialized?
 		mInverter->setIsConnected(false);
-		mInverter->setSupports3Phases(false);
 		if (mSettings->phase() == InverterSettings::AllPhases) {
 			QLOG_WARN() << "Reset inverter settings from All Phases to L1."
 						   "Should not happen, because Fronius devices are"
@@ -162,26 +165,32 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 		double vi3 = data.acVoltagePhase3 * data.acCurrentPhase3;
 		double totalVi = vi1 + vi2 + vi3;
 		double powerCorrection = mInverter->meanPowerInfo()->power() / totalVi;
+		double totalEnergy = mInverter->meanPowerInfo()->totalEnergy();
+		double energyDelta = totalEnergy - mPreviousTotalEnergy;
+		if (energyDelta < 0)
+			energyDelta = 0;
+		double energyCorrection = energyDelta / totalVi;
 
 		PowerInfo *l1 = mInverter->l1PowerInfo();
 		l1->setCurrent(data.acCurrentPhase1);
 		l1->setVoltage(data.acVoltagePhase1);
 		l1->setPower(vi1 * powerCorrection);
+		l1->setTotalEnergy(l1->totalEnergy() + vi1 * energyCorrection);
 
 		PowerInfo *l2 = mInverter->l2PowerInfo();
 		l2->setCurrent(data.acCurrentPhase2);
 		l2->setVoltage(data.acVoltagePhase2);
 		l2->setPower(vi2 * powerCorrection);
+		l2->setTotalEnergy(l2->totalEnergy() + vi2 * energyCorrection);
 
 		PowerInfo *l3 = mInverter->l3PowerInfo();
 		l3->setCurrent(data.acCurrentPhase3);
 		l3->setVoltage(data.acVoltagePhase3);
 		l3->setPower(vi3 * powerCorrection);
+		l3->setTotalEnergy(l3->totalEnergy() + vi3 * energyCorrection);
 
+		mPreviousTotalEnergy = totalEnergy;
 		mInverter->setIsConnected(true);
-		/// @todo EV remote the Supports3Phases property because it duplicates
-		/// the InverterSettings::phase property
-		mInverter->setSupports3Phases(true);
 		mSettings->setPhase(InverterSettings::AllPhases);
 		mRetryCount = 0;
 		setInitialized();

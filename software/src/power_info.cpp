@@ -7,7 +7,8 @@ PowerInfo::PowerInfo(QObject *parent) :
 	QObject(parent),
 	mCurrent(NaN),
 	mVoltage(NaN),
-	mPower(NaN)
+	mPower(NaN),
+	mTotalEnergy(NaN)
 {
 }
 
@@ -50,9 +51,23 @@ void PowerInfo::setPower(double p)
 	emit powerChanged();
 }
 
+double PowerInfo::totalEnergy() const
+{
+	return mTotalEnergy;
+}
+
+void PowerInfo::setTotalEnergy(double e)
+{
+	if (mTotalEnergy == e)
+		return;
+	mTotalEnergy = e;
+	emit totalEnergyChanged();
+}
+
 void PowerInfo::resetValues()
 {
 	setCurrent(NaN);
 	setPower(NaN);
 	setVoltage(NaN);
+	setTotalEnergy(NaN);
 }

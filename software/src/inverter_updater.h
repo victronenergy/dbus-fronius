@@ -41,6 +41,7 @@ private:
 	Inverter *mInverter;
 	InverterSettings *mSettings;
 	FroniusSolarApi *mSolarApi;
+	double mPreviousTotalEnergy;
 	bool mInitialized;
 	int mRetryCount;
 };
