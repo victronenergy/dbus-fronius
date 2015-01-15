@@ -12,19 +12,19 @@ TEST_F(DBusInverterSettingsBridgeTest, changePosition)
 	mSettings->setPosition(InverterSettings::Input2);
 	qWait(100);
 	// Check new value
-	QVariant position = mSettingsClient->getValue("/Settings/Fronius/Inverters/475b/Position");
+	QVariant position = mSettingsClient->getValue("/Settings/Fronius/Inverters/I475b/Position");
 	EXPECT_EQ(QVariant(2), position);
 	// Check DBus signal
 	const QList<QString> &cp = mSettingsClient->changedPaths();
 	ASSERT_EQ(1, cp.size());
-	EXPECT_EQ(QString("/Settings/Fronius/Inverters/475b/Position"), cp.first());
+	EXPECT_EQ(QString("/Settings/Fronius/Inverters/I475b/Position"), cp.first());
 }
 
 TEST_F(DBusInverterSettingsBridgeTest, changePositionRemote)
 {
 	EXPECT_EQ(InverterSettings::Input1, mSettings->position());
 	// Set new value on DBus
-	mSettingsClient->setValue("/Settings/Fronius/Inverters/475b/Position", 1);
+	mSettingsClient->setValue("/Settings/Fronius/Inverters/I475b/Position", 1);
 	// Allow value form DBus to trickle to our settings object
 	qWait(100);
 	EXPECT_EQ(InverterSettings::Output, mSettings->position());
@@ -38,19 +38,19 @@ TEST_F(DBusInverterSettingsBridgeTest, changePhase)
 	mSettings->setPhase(InverterSettings::L2);
 	qWait(100);
 	// Check new value
-	QVariant phase = mSettingsClient->getValue("/Settings/Fronius/Inverters/475b/Phase");
+	QVariant phase = mSettingsClient->getValue("/Settings/Fronius/Inverters/I475b/Phase");
 	EXPECT_EQ(QVariant(2), phase);
 	// Check DBus signal
 	const QList<QString> &cp = mSettingsClient->changedPaths();
 	ASSERT_EQ(1, cp.size());
-	EXPECT_EQ(QString("/Settings/Fronius/Inverters/475b/Phase"), cp.first());
+	EXPECT_EQ(QString("/Settings/Fronius/Inverters/I475b/Phase"), cp.first());
 }
 
 TEST_F(DBusInverterSettingsBridgeTest, changePhaseRemote)
 {
 	EXPECT_EQ(InverterSettings::AllPhases, mSettings->phase());
 	// Set new value on DBus
-	mSettingsClient->setValue("/Settings/Fronius/Inverters/475b/Phase", 2);
+	mSettingsClient->setValue("/Settings/Fronius/Inverters/I475b/Phase", 2);
 	// Allow value form DBus to trickle to our settings object
 	qWait(100);
 	EXPECT_EQ(InverterSettings::L2, mSettings->phase());

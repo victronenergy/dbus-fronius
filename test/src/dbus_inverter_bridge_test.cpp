@@ -36,8 +36,10 @@ TEST_F(DBusInverterBridgeTest, constructor)
 	// because we want this test to fail if someone changes the define.
 	checkValue(QString::number(0xA142),
 			   mDBusClient->getValue(mServiceName, "/ProductId").toString());
-	checkValue(QString("Fronius PV inverter - cn"),
+	checkValue(QString("Fronius PV inverter"),
 			   mDBusClient->getValue(mServiceName, "/ProductName"));
+	checkValue(QString(""),
+			   mDBusClient->getValue(mServiceName, "/CustomName"));
 	checkValue(QVariant(22),
 			   mDBusClient->getValue(mServiceName, "/DeviceInstance"));
 

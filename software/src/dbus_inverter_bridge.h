@@ -34,7 +34,6 @@ private:
 	static QString fixServiceNameFragment(const QString &s);
 
 	QString mServiceName;
-	QPointer<Inverter> mInverter;
 };
 
 #endif // DBUS_INVERTER_BRIDGE_H
