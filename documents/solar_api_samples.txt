@@ -1,0 +1,416 @@
+This file contains some samples of the Fronius Solar API
+========================================================
+
+http://ziontrain.no-ip.org:8080/solar_api/GetAPIVersion.cgi
+{
+	"APIVersion" : 1,
+	"BaseURL" : "/solar_api/v1/"
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetInverterInfo.cgi
+{
+	"Head" : {
+		"RequestArguments" : {},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-10T11:12:56+01:00"
+	},
+	"Body" : {
+		"Data" : {
+			"1" : {
+				"DT" : 123,
+				"PVPower" : 8200,
+				"Show" : 1,
+				"UniqueID" : "476",
+				"ErrorCode" : 0,
+				"StatusCode" : 7,
+				"CustomName" : ""
+			}
+		}
+	}
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&DeviceId=1&DataCollection=CommonInverterData
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DataCollection" : "CommonInverterData",
+			"DeviceClass" : "Inverter",
+			"DeviceId" : "1",
+			"Scope" : "Device"
+		},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-10T11:15:43+01:00"
+	},
+	"Body" : {
+		"Data" : {
+			"DAY_ENERGY" : {
+				"Value" : 238,
+				"Unit" : "Wh"
+			},
+			"FAC" : {
+				"Value" : 49.96,
+				"Unit" : "Hz"
+			},
+			"IAC" : {
+				"Value" : 0.98,
+				"Unit" : "A"
+			},
+			"IDC" : {
+				"Value" : 0.86,
+				"Unit" : "A"
+			},
+			"PAC" : {
+				"Value" : 225,
+				"Unit" : "W"
+			},
+			"TOTAL_ENERGY" : {
+				"Value" : 5862967,
+				"Unit" : "Wh"
+			},
+			"UAC" : {
+				"Value" : 224.7,
+				"Unit" : "V"
+			},
+			"UDC" : {
+				"Value" : 293.7,
+				"Unit" : "V"
+			},
+			"YEAR_ENERGY" : {
+				"Value" : 2386642,
+				"Unit" : "Wh"
+			},
+			"DeviceStatus" : {
+				"StatusCode" : 7,
+				"MgmtTimerRemainingTime" : -1,
+				"ErrorCode" : 0,
+				"LEDColor" : 2,
+				"LEDState" : 0,
+				"StateToReset" : false
+			}
+		}
+	}
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&DeviceId=1&DataCollection=CumulationInverterData
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DataCollection" : "CumulationInverterData",
+			"DeviceClass" : "Inverter",
+			"DeviceId" : "1",
+			"Scope" : "Device"
+		},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-10T11:17:30+01:00"
+	},
+	"Body" : {
+		"Data" : {
+			"DAY_ENERGY" : {
+				"Value" : 245,
+				"Unit" : "Wh"
+			},
+			"PAC" : {
+				"Value" : 216,
+				"Unit" : "W"
+			},
+			"TOTAL_ENERGY" : {
+				"Value" : 5862974,
+				"Unit" : "Wh"
+			},
+			"YEAR_ENERGY" : {
+				"Value" : 2386649,
+				"Unit" : "Wh"
+			},
+			"DeviceStatus" : {
+				"StatusCode" : 7,
+				"MgmtTimerRemainingTime" : -1,
+				"ErrorCode" : 0,
+				"LEDColor" : 2,
+				"LEDState" : 0,
+				"StateToReset" : false
+			}
+		}
+	}
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&DeviceId=1&DataCollection=3PInverterData
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DataCollection" : "3PInverterData",
+			"DeviceClass" : "Inverter",
+			"DeviceId" : "1",
+			"Scope" : "Device"
+		},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-10T11:18:26+01:00"
+	},
+	"Body" : {
+		"Data" : {
+			"IAC_L1" : {
+				"Value" : 0.38,
+				"Unit" : "A"
+			},
+			"IAC_L2" : {
+				"Value" : 0.23,
+				"Unit" : "A"
+			},
+			"IAC_L3" : {
+				"Value" : 0.33,
+				"Unit" : "A"
+			},
+			"UAC_L1" : {
+				"Value" : 225.1,
+				"Unit" : "V"
+			},
+			"UAC_L2" : {
+				"Value" : 227.8,
+				"Unit" : "V"
+			},
+			"UAC_L3" : {
+				"Value" : 225.8,
+				"Unit" : "V"
+			}
+		}
+	}
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&DeviceId=1&DataCollection=MinMaxInverterData
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DataCollection" : "MinMaxInverterData",
+			"DeviceClass" : "Inverter",
+			"DeviceId" : "1",
+			"Scope" : "Device"
+		},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-10T11:24:22+01:00"
+	},
+	"Body" : {
+		"Data" : {
+			"DAY_PMAX" : {
+				"Value" : 248,
+				"Unit" : "W"
+			},
+			"DAY_UACMAX" : {
+				"Value" : 228.1,
+				"Unit" : "V"
+			},
+			"DAY_UDCMAX" : {
+				"Value" : 329,
+				"Unit" : "V"
+			},
+			"TOTAL_PMAX" : {
+				"Value" : 8264,
+				"Unit" : "W"
+			},
+			"TOTAL_UACMAX" : {
+				"Value" : 238.6,
+				"Unit" : "V"
+			},
+			"TOTAL_UDCMAX" : {
+				"Value" : 363.5,
+				"Unit" : "V"
+			},
+			"YEAR_PMAX" : {
+				"Value" : 5716,
+				"Unit" : "W"
+			},
+			"YEAR_UACMAX" : {
+				"Value" : 238.6,
+				"Unit" : "V"
+			},
+			"YEAR_UDCMAX" : {
+				"Value" : 363.5,
+				"Unit" : "V"
+			}
+		}
+	}
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DataCollection" : "",
+			"Scope" : "System"
+		},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-10T11:25:18+01:00"
+	},
+	"Body" : {
+		"Data" : {
+			"PAC" : {
+				"Unit" : "W",
+				"Values" : {
+					"1" : 277
+				}
+			},
+			"DAY_ENERGY" : {
+				"Unit" : "Wh",
+				"Values" : {
+					"1" : 274
+				}
+			},
+			"YEAR_ENERGY" : {
+				"Unit" : "Wh",
+				"Values" : {
+					"1" : 2386678
+				}
+			},
+			"TOTAL_ENERGY" : {
+				"Unit" : "Wh",
+				"Values" : {
+					"1" : 5863003
+				}
+			}
+		}
+	}
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetSensorRealtimeData.cgi?Scope=Device&DeviceId=1&DataCollection=NowSensorData
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DataCollection" : "NowSensorData",
+			"DeviceClass" : "SensorCard",
+			"DeviceId" : "1",
+			"Scope" : "Device"
+		},
+		"Status" : {
+			"Code" : 12,
+			"Reason" : "No SensorCard with this index found.",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-10T11:26:20+01:00"
+	}
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetActiveDeviceInfo.cgi?DeviceClass=Inverter
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DeviceClass" : "Inverter"
+		},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-10T11:29:45+01:00"
+	},
+	"Body" : {
+		"Data" : {
+			"1" : {
+				"DT" : 123
+			}
+		}
+	}
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetSensorRealtimeData.cgi?Scope=Device&DeviceId=1&DataCollection=NowSensorData
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DataCollection" : "NowSensorData",
+			"DeviceClass" : "SensorCard",
+			"DeviceId" : "1",
+			"Scope" : "Device"
+		},
+		"Status" : {
+			"Code" : 12,
+			"Reason" : "No SensorCard with this index found.",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-10T11:31:32+01:00"
+	}
+}
+
+# Nighttime
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&DeviceId=1&DataCollection=CommonInverterData
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DataCollection" : "CommonInverterData",
+			"DeviceClass" : "Inverter",
+			"DeviceId" : "1",
+			"Scope" : "Device"
+		},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-30T08:07:05+01:00"
+	},
+	"Body" : {
+		"Data" : {
+			"DAY_ENERGY" : {
+				"Value" : 0,
+				"Unit" : "Wh"
+			},
+			"TOTAL_ENERGY" : {
+				"Value" : 5897626,
+				"Unit" : "Wh"
+			},
+			"YEAR_ENERGY" : {
+				"Value" : 2421301,
+				"Unit" : "Wh"
+			},
+			"DeviceStatus" : {
+				"StatusCode" : 5,
+				"MgmtTimerRemainingTime" : -1,
+				"ErrorCode" : 523,
+				"LEDColor" : 3,
+				"LEDState" : 0,
+				"StateToReset" : true
+			}
+		}
+	}
+}
+
+http://ziontrain.no-ip.org:8080/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&DeviceId=1&DataCollection=3PInverterData
+{
+	"Head" : {
+		"RequestArguments" : {
+			"DataCollection" : "3PInverterData",
+			"DeviceClass" : "Inverter",
+			"DeviceId" : "1",
+			"Scope" : "Device"
+		},
+		"Status" : {
+			"Code" : 0,
+			"Reason" : "",
+			"UserMessage" : ""
+		},
+		"Timestamp" : "2014-12-30T08:10:49+01:00"
+	},
+	"Body" : {
+		"Data" : {}
+	}
+}
