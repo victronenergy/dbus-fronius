@@ -35,7 +35,7 @@ contains(prefix, ".*bpp3.*") {
 QT += core network dbus script
 QT -= gui
 
-TARGET = dbus_fronius
+TARGET = dbus-fronius
 CONFIG += console
 CONFIG -= app_bundle
 
