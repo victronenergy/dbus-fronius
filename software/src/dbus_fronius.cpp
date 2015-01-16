@@ -21,8 +21,8 @@ DBusFronius::DBusFronius(QObject *parent) :
 	// QObject::property function.
 	qRegisterMetaType<QList<QHostAddress> >();
 	qRegisterMetaType<QHostAddress>();
-	qRegisterMetaType<InverterSettings::Position>("Position");
-	qRegisterMetaType<InverterSettings::Phase>("Phase");
+	qRegisterMetaType<InverterPosition>("Position");
+	qRegisterMetaType<InverterPhase>("Phase");
 
 	connect(mGateway, SIGNAL(inverterFound(InverterUpdater *)),
 			this, SLOT(onInverterFound(InverterUpdater *)));

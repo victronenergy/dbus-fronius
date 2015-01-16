@@ -3,7 +3,6 @@
 #include <QStringList>
 #include <velib/qt/v_busitems.h>
 #include "dbus_settings_bridge.h"
-#include "inverter_settings.h"
 #include "settings.h"
 
 static const QString Service = "com.victronenergy.settings";

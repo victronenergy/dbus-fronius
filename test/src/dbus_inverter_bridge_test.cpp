@@ -70,7 +70,7 @@ TEST_F(DBusInverterBridgeTest, position)
 	SetUpBridge();
 
 	checkValue(QVariant(2), mDBusClient->getValue(mServiceName, "/Position"));
-	mSettings->setPosition(InverterSettings::Output);
+	mSettings->setPosition(Output);
 	qWait(100);
 	checkValue(QVariant(1), mDBusClient->getValue(mServiceName, "/Position"));
 }
@@ -80,7 +80,7 @@ TEST_F(DBusInverterBridgeTest, deviceInstance)
 	SetUpBridge();
 
 	checkValue(QVariant(22), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
-	mSettings->setPosition(InverterSettings::Output);
+	mSettings->setPosition(Output);
 	qWait(100);
 	checkValue(QVariant(21), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
 }
@@ -113,16 +113,16 @@ DBusInverterBridgeTest::DBusInverterBridgeTest():
 
 void DBusInverterBridgeTest::SetUpTestCase()
 {
-	qRegisterMetaType<InverterSettings::Position>("Position");
-	qRegisterMetaType<InverterSettings::Phase>("Phase");
+	qRegisterMetaType<InverterPosition>("Position");
+	qRegisterMetaType<InverterPhase>("Phase");
 }
 
 void DBusInverterBridgeTest::SetUp()
 {
 	mInverter.reset(new Inverter("10.0.1.4", 80, "3", "756", "cn"));
 	mSettings.reset(new InverterSettings(mInverter->uniqueId()));
-	mSettings->setPosition(InverterSettings::Input2);
-	mSettings->setPhase(InverterSettings::L2);
+	mSettings->setPosition(Input2);
+	mSettings->setPhase(PhaseL2);
 }
 
 void DBusInverterBridgeTest::TearDown()

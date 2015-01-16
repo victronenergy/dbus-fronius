@@ -70,6 +70,7 @@ HEADERS += \
 	$$SRCDIR/inverter_updater.h \
 	$$SRCDIR/inverter_settings.h \
 	$$SRCDIR/dbus_inverter_settings_bridge.h \
+	$$SRCDIR/fronius_data_processor.h \
 	src/dbus_observer.h \
 	src/dbus_service_observer.h \
 	src/dbus_settings_adaptor.h \
@@ -79,7 +80,8 @@ HEADERS += \
 	src/dbus_inverter_bridge_test.h \
 	src/dbus_settings_bridge_test.h \
 	src/dbus_inverter_settings_bridge_test.h \
-    src/dbus_gateway_bridge_test.h
+	src/dbus_gateway_bridge_test.h \
+	src/fronius_data_processor_test.h
 
 SOURCES += \
 	$$SRCDIR/dbus_bridge.cpp \
@@ -96,6 +98,7 @@ SOURCES += \
 	$$SRCDIR/v_bus_node.cpp \
 	$$SRCDIR/inverter_settings.cpp \
 	$$SRCDIR/inverter_gateway.cpp \
+	$$SRCDIR/fronius_data_processor.cpp \
 	$$EXTDIR/googletest/src/gtest-all.cc \
 	src/main.cpp \
 	src/dbus_observer.cpp \
@@ -107,7 +110,8 @@ SOURCES += \
 	src/fronius_solar_api_test.cpp \
 	src/test_helper.cpp \
 	src/dbus_inverter_settings_bridge_test.cpp \
-	src/dbus_gateway_bridge_test.cpp
+	src/dbus_gateway_bridge_test.cpp \
+	src/fronius_data_processor_test.cpp
 
 OTHER_FILES += \
 	src/fronius_sim/app.py \

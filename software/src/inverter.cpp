@@ -1,3 +1,4 @@
+#include <QsLog.h>
 #include "inverter.h"
 #include "power_info.h"
 
@@ -87,6 +88,23 @@ PowerInfo *Inverter::l2PowerInfo()
 PowerInfo *Inverter::l3PowerInfo()
 {
 	return mL3PowerInfo;
+}
+
+PowerInfo *Inverter::getPowerInfo(InverterPhase phase)
+{
+	switch (phase) {
+	case ThreePhases:
+		return mMeanPowerInfo;
+	case PhaseL1:
+		return mL1PowerInfo;
+	case PhaseL2:
+		return mL2PowerInfo;
+	case PhaseL3:
+		return mL3PowerInfo;
+	default:
+		QLOG_ERROR() <<"Incorrect phase:" << phase;
+		return 0;
+	}
 }
 
 void Inverter::resetValues()

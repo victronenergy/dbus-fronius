@@ -2,6 +2,7 @@
 #define INVERTER_H
 
 #include <QObject>
+#include "defines.h"
 
 class PowerInfo;
 
@@ -45,6 +46,8 @@ public:
 	PowerInfo *l2PowerInfo();
 
 	PowerInfo *l3PowerInfo();
+
+	PowerInfo *getPowerInfo(InverterPhase phase);
 
 	/*!
 	 * @brief Reset all measured values to NaN

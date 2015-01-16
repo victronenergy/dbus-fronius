@@ -3,51 +3,53 @@
 
 #include <QMetaType>
 #include <QObject>
+#include "defines.h"
 
 class InverterSettings : public QObject
 {
 	Q_OBJECT
 	Q_PROPERTY(QString uniqueId READ uniqueId)
 	Q_PROPERTY(QString customName READ customName WRITE setCustomName NOTIFY customNameChanged)
-	// Without the namespace prefixes below, we cannot use the setProperty
-	// function to set change the properties.
-	Q_PROPERTY(InverterSettings::Phase phase READ phase WRITE setPhase NOTIFY phaseChanged)
-	Q_PROPERTY(InverterSettings::Position position READ position WRITE setPosition NOTIFY positionChanged)
+	Q_PROPERTY(InverterPhase phase READ phase WRITE setPhase NOTIFY phaseChanged)
+	Q_PROPERTY(InverterPosition position READ position WRITE setPosition NOTIFY positionChanged)
 	Q_PROPERTY(int deviceInstance READ deviceInstance NOTIFY deviceInstanceChanged)
+	Q_PROPERTY(double l1Energy READ l1Energy WRITE setL1Energy NOTIFY l1EnergyChanged)
+	Q_PROPERTY(double l2Energy READ l2Energy WRITE setL2Energy NOTIFY l2EnergyChanged)
+	Q_PROPERTY(double l3Energy READ l3Energy WRITE setL3Energy NOTIFY l3EnergyChanged)
 public:
-	enum Phase {
-		/*!
-		 * Inverter produces 3 phased power
-		 */
-		AllPhases,
-		L1,
-		L2,
-		L3
-	};
-
-	enum Position {
-		Input1 = 0,
-		Output = 1,
-		Input2 = 2
-	};
-
 	explicit InverterSettings(const QString &uniqueId, QObject *parent = 0);
 
 	QString uniqueId() const;
 
-	Phase phase() const;
+	InverterPhase phase() const;
 
-	void setPhase(Phase phase);
+	void setPhase(InverterPhase phase);
 
-	Position position() const;
+	InverterPosition position() const;
 
-	void setPosition(Position position);
+	void setPosition(InverterPosition position);
 
 	int deviceInstance() const;
 
 	QString customName() const;
 
 	void setCustomName(const QString &n);
+
+	double l1Energy() const;
+
+	void setL1Energy(double e);
+
+	double l2Energy() const;
+
+	void setL2Energy(double e);
+
+	double l3Energy() const;
+
+	void setL3Energy(double e);
+
+	double getEnergy(InverterPhase phase) const;
+
+	void setEnergy(InverterPhase phase, double value);
 
 signals:
 	void phaseChanged();
@@ -58,14 +60,23 @@ signals:
 
 	void customNameChanged();
 
+	void l1EnergyChanged();
+
+	void l2EnergyChanged();
+
+	void l3EnergyChanged();
+
 private:
 	QString mUniqueId;
 	QString mCustomName;
-	Phase mPhase;
-	Position mPosition;
+	InverterPhase mPhase;
+	InverterPosition mPosition;
+	double mL1Energy;
+	double mL2Energy;
+	double mL3Energy;
 };
 
-Q_DECLARE_METATYPE(InverterSettings::Phase)
-Q_DECLARE_METATYPE(InverterSettings::Position)
+Q_DECLARE_METATYPE(InverterPhase)
+Q_DECLARE_METATYPE(InverterPosition)
 
 #endif // INVERTERSETTINGS_H

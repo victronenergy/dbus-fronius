@@ -2,10 +2,12 @@
 #define INVERTER_UPDATER_H
 
 #include <QObject>
+#include "fronius_data_processor.h"
 
 class FroniusSolarApi;
 class Inverter;
 class InverterSettings;
+class PowerInfo;
 class QTimer;
 struct CommonInverterData;
 struct ThreePhasesInverterData;
@@ -33,6 +35,8 @@ private slots:
 
 	void onPhaseChanged();
 
+	void onSettingsTimer();
+
 private:
 	void scheduleRetrieval();
 
@@ -41,7 +45,8 @@ private:
 	Inverter *mInverter;
 	InverterSettings *mSettings;
 	FroniusSolarApi *mSolarApi;
-	double mPreviousTotalEnergy;
+	QTimer *mSettingsTimer;
+	FroniusDataProcessor mProcessor;
 	bool mInitialized;
 	int mRetryCount;
 };

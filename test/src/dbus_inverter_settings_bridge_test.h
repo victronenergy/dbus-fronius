@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 #include <QScopedPointer>
+#include "defines.h"
 
 class DBusSettings;
 class DBusInverterSettingsBridge;
@@ -16,6 +17,10 @@ protected:
 	virtual void SetUp();
 
 	virtual void TearDown();
+
+	void checkStoredEnergy(InverterPhase phase);
+
+	void checkStoredEnergyRemote(InverterPhase phase);
 
 	QScopedPointer<InverterSettings> mSettings;
 	QScopedPointer<DBusInverterSettingsBridge> mBridge;
