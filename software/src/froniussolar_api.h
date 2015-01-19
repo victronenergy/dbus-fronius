@@ -5,7 +5,9 @@
 #include <QList>
 #include <QString>
 #include <QUrl>
+#include <QSharedPointer>
 #include <QVariantMap>
+#include <QWeakPointer>
 
 class QNetworkAccessManager;
 class QNetworkReply;
@@ -141,7 +143,9 @@ class FroniusSolarApi : public QObject
 {
 	Q_OBJECT
 public:
-	explicit FroniusSolarApi(QString hostName, int port, QObject *parent = 0);
+	FroniusSolarApi(QString hostName, int port, QObject *parent = 0);
+
+	~FroniusSolarApi();
 
 	QString hostName() const;
 
@@ -242,7 +246,8 @@ private:
 	 */
 	static QVariant getByPath(const QVariant &map, const QString &path);
 
-	static QNetworkAccessManager *mNam;
+	static QWeakPointer<QNetworkAccessManager> mStaticNam;
+	QSharedPointer<QNetworkAccessManager> mNam;
 	QString mHostName;
 	int mPort;
 	QNetworkReply *mReply;

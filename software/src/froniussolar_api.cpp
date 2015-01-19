@@ -7,19 +7,29 @@
 #include "froniussolar_api.h"
 #include "json/json.h"
 
-QNetworkAccessManager *FroniusSolarApi::mNam = 0;
+QWeakPointer<QNetworkAccessManager> FroniusSolarApi::mStaticNam;
 
 FroniusSolarApi::FroniusSolarApi(QString hostName, int port, QObject *parent) :
 	QObject(parent),
+	mNam(mStaticNam.toStrongRef()),
 	mHostName(hostName),
 	mPort(port),
 	mReply(0),
 	mTimeoutTimer(new QTimer(this))
 {
-	if (mNam == 0)
-		mNam = new QNetworkAccessManager();
+	if (mNam == 0) {
+		QLOG_WARN() << __FUNCTION__ << "Created QNetworkAccessManager";
+		mNam = QSharedPointer<QNetworkAccessManager>(new QNetworkAccessManager());
+		mStaticNam = mNam.toWeakRef();
+	}
 	mTimeoutTimer->setInterval(5000);
 	connect(mTimeoutTimer, SIGNAL(timeout()), this, SLOT(OnTimeout()));
+}
+
+FroniusSolarApi::~FroniusSolarApi()
+{
+	// If we do not have this function, the default destructor will call the
+	// destructor of mNam while QNetworkManager is undefined.
 }
 
 QString FroniusSolarApi::hostName() const
@@ -217,8 +227,10 @@ void FroniusSolarApi::processReply(QNetworkReply *reply, SolarApiReply &apiReply
 	}
 	QByteArray bytes = reply->readAll();
 	QString result(QString::fromLocal8Bit(bytes));
-	QLOG_TRACE() << result;
-	map = JSON::instance().parse(result).toMap();
+	if (result.size() > 0) {
+		QLOG_TRACE() << result;
+		map = JSON::instance().parse(result).toMap();
+	}
 	QVariantMap status = getByPath(map, "Head/Status").toMap();
 	if (!status.contains("Code")) {
 		apiReply.error = SolarApiReply::NetworkError;
