@@ -36,7 +36,7 @@ TEST_F(DBusInverterBridgeTest, constructor)
 	// because we want this test to fail if someone changes the define.
 	checkValue(QString::number(0xA142),
 			   mDBusClient->getValue(mServiceName, "/ProductId").toString());
-	checkValue(QString("Fronius PV inverter"),
+	checkValue(QString("Fronius Symo 8.2-3-M"),
 			   mDBusClient->getValue(mServiceName, "/ProductName"));
 	checkValue(QString(""),
 			   mDBusClient->getValue(mServiceName, "/CustomName"));
@@ -119,7 +119,7 @@ void DBusInverterBridgeTest::SetUpTestCase()
 
 void DBusInverterBridgeTest::SetUp()
 {
-	mInverter.reset(new Inverter("10.0.1.4", 80, "3", "756", "cn"));
+	mInverter.reset(new Inverter("10.0.1.4", 80, "3", 123, "756", "cn"));
 	mSettings.reset(new InverterSettings(mInverter->uniqueId()));
 	mSettings->setPosition(Input2);
 	mSettings->setPhase(PhaseL2);
@@ -139,7 +139,6 @@ void DBusInverterBridgeTest::SetUpBridge()
 	mDBusClient.reset(new DBusObserver(mServiceName));
 	while (!mDBusClient->isInitialized(mServiceName)) {
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-		usleep(10000);
 	}
 }
 

@@ -67,7 +67,8 @@ SOURCES += \
 	src/inverter_settings.cpp \
 	src/dbus_inverter_settings_bridge.cpp \
 	src/dbus_gateway_bridge.cpp \
-	src/fronius_data_processor.cpp
+	src/fronius_data_processor.cpp \
+	src/fronius_device_info.cpp
 
 HEADERS += \
 	src/froniussolar_api.h \
@@ -86,4 +87,5 @@ HEADERS += \
 	src/dbus_inverter_settings_bridge.h \
 	src/dbus_gateway_bridge.h \
 	src/defines.h \
-	src/fronius_data_processor.h
+	src/fronius_data_processor.h \
+	src/fronius_device_info.h

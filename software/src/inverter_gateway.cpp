@@ -7,7 +7,7 @@
 #include "inverter_updater.h"
 #include "settings.h"
 
-static const int MaxSimultaneousRequests = 20;
+static const int MaxSimultaneousRequests = 64;
 
 InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
@@ -32,10 +32,10 @@ void InverterGateway::setAutoDetect(bool b)
 	if (mAutoDetect == b)
 		return;
 	mAutoDetect	= b;
-	if (mSettingsBusy)
-		return;
-	mFullScanRequested = b;
-	updateAddressGenerator();
+	if (!mSettingsBusy) {
+		mFullScanRequested = b;
+		updateAddressGenerator();
+	}
 	emit autoDetectChanged();
 }
 
@@ -75,7 +75,7 @@ void InverterGateway::updateDetection()
 			QList<QHostAddress> addresses = mAddressGenerator.priorityAddresses();
 			int count = 0;
 			foreach (QHostAddress a, addresses) {
-				if (findUpdater(a.toString()) != 0) {
+				if (mDevicesFound.contains(a)) {
 					++count;
 					break;
 				}
@@ -84,7 +84,7 @@ void InverterGateway::updateDetection()
 				QLOG_INFO() << "Full scan requested, starting auto IP scan";
 				autoDetect = true;
 				mFullScanRequested = false;
-			} else if (count < addresses.size() || mUpdaters.size() == 0) {
+			} else if (count < addresses.size() || mDevicesFound.isEmpty()) {
 				/// @todo EV We may get here when auto detect is disabled manually
 				/// *before* any inverter have been found.
 				// Some devices were missing or no devices were found at all.
@@ -133,22 +133,16 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 			mSettings->setKnownIpAddresses(knownIpAddresses);
 			mSettingsBusy = false;
 		}
+		mDevicesFound.append(addr);
 		for (QList<InverterInfo>::const_iterator it = data.inverters.begin();
 			 it != data.inverters.end();
 			 ++it) {
-			InverterUpdater *iu = findUpdater(hostName, it->id);
-			if (iu == 0) {
-				Inverter *inverter = new Inverter(hostName, port, it->id,
-												  it->uniqueId, it->customName,
-												  this);
-				// connect(inverter, SIGNAL(isConnectedChanged()),
-				// 		this, SLOT(onIsConnectedChanged()));
-				InverterSettings *settings =
-						new InverterSettings(inverter->uniqueId(), inverter);
-				InverterUpdater *updater =
-						new InverterUpdater(inverter, settings, inverter);
-				mUpdaters.push_back(updater);
-				emit inverterFound(updater);
+			Inverter *inverter = new Inverter(hostName, port, it->id,
+											  it->deviceType, it->uniqueId,
+											  it->customName, this);
+			emit inverterFound(inverter);
+			if (inverter->parent() == this) {
+				delete inverter;
 			}
 		}
 	}
@@ -168,61 +162,8 @@ void InverterGateway::onSettingsChanged()
 	updateAddressGenerator();
 }
 
-void InverterGateway::onIsConnectedChanged()
-{
-	Inverter *inverter = static_cast<Inverter *>(sender());
-	if (inverter->isConnected())
-		return;
-	QLOG_INFO() << "Lost connection with: " << inverter->hostName() << " - "
-				<< inverter->id();
-	// Do not call delete here, because this slot is connected to an inverter
-	// slot, so one of its methods is still running.
-	inverter->deleteLater();
-	foreach (InverterUpdater *ui, mUpdaters) {
-		if (ui->inverter() == inverter) {
-			ui->deleteLater();
-			mUpdaters.removeOne(ui);
-			break;
-		}
-	}
-	mSettingsBusy = true;
-	setAutoDetect(true);
-	mSettingsBusy = false;
-	updateAddressGenerator();
-}
-
-InverterUpdater *InverterGateway::findUpdater(const QString &hostName,
-											  const QString &deviceId)
-{
-	for (QList<InverterUpdater *>::iterator it = mUpdaters.begin();
-		 it != mUpdaters.end();
-		 ++it)
-	{
-		const Inverter *inverter = (*it)->inverter();
-		if (inverter->hostName() == hostName && inverter->id() == deviceId)
-			return *it;
-	}
-	return 0;
-}
-
-InverterUpdater *InverterGateway::findUpdater(const QString &hostName)
-{
-	for (QList<InverterUpdater *>::iterator it = mUpdaters.begin();
-		 it != mUpdaters.end();
-		 ++it)
-	{
-		const Inverter *inverter = (*it)->inverter();
-		if (inverter->hostName() == hostName)
-			return *it;
-	}
-	return 0;
-}
-
 void InverterGateway::updateAddressGenerator()
 {
-	QLOG_TRACE() << __FUNCTION__
-				 << autoDetect()
-				 << mSettings->ipAddresses().size();
 	if (autoDetect()) {
 		QList<QHostAddress> addresses = mSettings->ipAddresses();
 		foreach (QHostAddress a, mSettings->knownIpAddresses()) {

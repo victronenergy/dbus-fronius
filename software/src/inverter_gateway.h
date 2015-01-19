@@ -7,7 +7,7 @@
 #include "local_ip_address_generator.h"
 
 class FroniusSolarApi;
-class InverterUpdater;
+class Inverter;
 class Settings;
 struct InverterListData;
 
@@ -42,7 +42,7 @@ public:
 	void startDetection();
 
 signals:
-	void inverterFound(InverterUpdater *iu);
+	void inverterFound(Inverter *inverter);
 
 	void autoDetectChanged();
 
@@ -53,8 +53,6 @@ private slots:
 
 	void onSettingsChanged();
 
-	void onIsConnectedChanged();
-
 private:
 	void updateAddressGenerator();
 
@@ -62,13 +60,8 @@ private:
 
 	void setAutoDetectInternal(bool b);
 
-	InverterUpdater *findUpdater(const QString &hostName,
-								 const QString &deviceId);
-
-	InverterUpdater *findUpdater(const QString &hostName);
-
 	QPointer<Settings> mSettings;
-	QList<InverterUpdater *> mUpdaters;
+	QList<QHostAddress> mDevicesFound;
 	QList<FroniusSolarApi *> mApis;
 	LocalIpAddressGenerator mAddressGenerator;
 	bool mSettingsBusy;

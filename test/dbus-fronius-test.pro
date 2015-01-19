@@ -71,6 +71,7 @@ HEADERS += \
 	$$SRCDIR/inverter_settings.h \
 	$$SRCDIR/dbus_inverter_settings_bridge.h \
 	$$SRCDIR/fronius_data_processor.h \
+	$$SRCDIR/fronius_device_info.h \
 	src/dbus_observer.h \
 	src/dbus_service_observer.h \
 	src/dbus_settings_adaptor.h \
@@ -99,6 +100,7 @@ SOURCES += \
 	$$SRCDIR/inverter_settings.cpp \
 	$$SRCDIR/inverter_gateway.cpp \
 	$$SRCDIR/fronius_data_processor.cpp \
+	$$SRCDIR/fronius_device_info.cpp \
 	$$EXTDIR/googletest/src/gtest-all.cc \
 	src/main.cpp \
 	src/dbus_observer.cpp \

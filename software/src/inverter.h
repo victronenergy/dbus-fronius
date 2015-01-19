@@ -5,6 +5,7 @@
 #include "defines.h"
 
 class PowerInfo;
+struct FroniusDeviceInfo;
 
 class Inverter : public QObject
 {
@@ -12,14 +13,17 @@ class Inverter : public QObject
 	Q_PROPERTY(bool isConnected READ isConnected WRITE setIsConnected NOTIFY isConnectedChanged)
 	Q_PROPERTY(QString status READ status WRITE setStatus NOTIFY statusChanged)
 	Q_PROPERTY(QString id READ id)
+	Q_PROPERTY(int deviceType READ deviceType)
 	Q_PROPERTY(QString uniqueId READ uniqueId)
 	Q_PROPERTY(QString customName READ customName)
 	Q_PROPERTY(QString hostName READ hostName)
-	Q_PROPERTY(QString port READ port)
+	Q_PROPERTY(int port READ port)
+	Q_PROPERTY(bool supports3Phases READ supports3Phases)
+	Q_PROPERTY(QString productName READ productName)
 public:
 	Inverter(const QString &hostName, int port, const QString &id,
-			 const QString &uniqueId, const QString &customName,
-			 QObject *parent = 0);
+			 int deviceType, const QString &uniqueId,
+			 const QString &customName, QObject *parent = 0);
 
 	bool isConnected() const;
 
@@ -31,6 +35,8 @@ public:
 
 	QString id() const;
 
+	int deviceType() const;
+
 	QString uniqueId() const;
 
 	QString customName() const;
@@ -38,6 +44,10 @@ public:
 	QString hostName() const;
 
 	int port() const;
+
+	bool supports3Phases() const;
+
+	QString productName() const;
 
 	PowerInfo *meanPowerInfo();
 
@@ -57,8 +67,6 @@ public:
 signals:
 	void isConnectedChanged();
 
-	void supports3PhasesChanged();
-
 	void statusChanged();
 
 private:
@@ -67,8 +75,10 @@ private:
 	QString mHostName;
 	int mPort;
 	QString mId;
+	int mDeviceType;
 	QString mUniqueId;
 	QString mCustomName;
+	const FroniusDeviceInfo *mDeviceInfo;
 	PowerInfo *mMeanPowerInfo;
 	PowerInfo *mL1PowerInfo;
 	PowerInfo *mL2PowerInfo;

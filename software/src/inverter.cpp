@@ -1,22 +1,28 @@
 #include <QsLog.h>
+#include "fronius_device_info.h"
 #include "inverter.h"
 #include "power_info.h"
 
 Inverter::Inverter(const QString &hostName, int port, const QString &id,
-				   const QString &uniqueId, const QString &customName,
-				   QObject *parent) :
+				   int deviceType, const QString &uniqueId,
+				   const QString &customName, QObject *parent) :
 	QObject(parent),
 	mIsConnected(0),
 	mHostName(hostName),
 	mPort(port),
 	mId(id),
+
 	mUniqueId(uniqueId),
 	mCustomName(customName),
+	mDeviceInfo(FroniusDeviceInfo::find(deviceType)),
 	mMeanPowerInfo(new PowerInfo(this)),
 	mL1PowerInfo(new PowerInfo(this)),
 	mL2PowerInfo(new PowerInfo(this)),
 	mL3PowerInfo(new PowerInfo(this))
 {
+	if (mDeviceInfo == 0) {
+		QLOG_WARN() << "Unknow inverter type:" << deviceType;
+	}
 }
 
 bool Inverter::isConnected() const
@@ -50,6 +56,11 @@ QString Inverter::id() const
 	return mId;
 }
 
+int Inverter::deviceType() const
+{
+	return mDeviceType;
+}
+
 QString Inverter::uniqueId() const
 {
 	return mUniqueId;
@@ -68,6 +79,17 @@ QString Inverter::hostName() const
 int Inverter::port() const
 {
 	return mPort;
+}
+
+bool Inverter::supports3Phases() const
+{
+	return mDeviceInfo != 0 && mDeviceInfo->supports3Phases;
+}
+
+QString Inverter::productName() const
+{
+	return mDeviceInfo == 0 ? QString(tr("Unknown Fronius Inverter")) :
+							  mDeviceInfo->name;
 }
 
 PowerInfo *Inverter::meanPowerInfo()

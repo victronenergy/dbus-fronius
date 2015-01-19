@@ -53,7 +53,9 @@ bool DBusBridge::fromDBus(const QString &, QVariant &)
 }
 
 bool DBusBridge::addDBusObject(const QString &group, const QString &name,
-								QChar type, const QDBusVariant &defaultValue)
+							   QChar type, const QDBusVariant &defaultValue,
+							   const QDBusVariant &minValue,
+							   const QDBusVariant &maxValue)
 {
 	QDBusConnection &connection = VBusItems::getConnection();
 	QDBusMessage m = QDBusMessage::createMethodCall(
@@ -65,10 +67,25 @@ bool DBusBridge::addDBusObject(const QString &group, const QString &name,
 					 << name
 					 << QVariant::fromValue(defaultValue)
 					 << QString(type)
-					 << QVariant::fromValue(QDBusVariant(0))
-					 << QVariant::fromValue(QDBusVariant(0));
+					 << QVariant::fromValue(minValue)
+					 << QVariant::fromValue(maxValue);
 	QDBusMessage reply = connection.call(m);
 	return reply.type() == QDBusMessage::ReplyMessage;
+}
+
+bool DBusBridge::addDBusObject(const QString &group, const QString &name,
+								QChar type, const QDBusVariant &defaultValue)
+{
+	return addDBusObject(group, name, type, defaultValue,
+						QDBusVariant(0), QDBusVariant(0));
+}
+
+bool DBusBridge::addDBusDouble(const QString &group, const QString &name,
+							   double defaultValue, double minValue,
+							   double maxValue)
+{
+	return addDBusObject(group, name, 'f', QDBusVariant(defaultValue),
+						QDBusVariant(minValue), QDBusVariant(maxValue));
 }
 
 void DBusBridge::onPropertyChanged()

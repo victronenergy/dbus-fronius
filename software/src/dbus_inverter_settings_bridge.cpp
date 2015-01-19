@@ -26,10 +26,10 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 	/// the type in the settings, because the inverter may be offline
 	/// when we need it.
 	addDBusObject("Fronius", group + "/CustomName", 's',
-				  QDBusVariant(tr("Fronius PV inverter")));
-	addDBusObject("Fronius", group + "/L1Energy", 'f', QDBusVariant(0.0));
-	addDBusObject("Fronius", group + "/L2Energy", 'f', QDBusVariant(0.0));
-	addDBusObject("Fronius", group + "/L3Energy", 'f', QDBusVariant(0.0));
+				  QDBusVariant(settings->customName()));
+	addDBusDouble("Fronius", group + "/L1Energy", 0.0, 0.0, 1e6);
+	addDBusDouble("Fronius", group + "/L2Energy", 0.0, 0.0, 1e6);
+	addDBusDouble("Fronius", group + "/L3Energy", 0.0, 0.0, 1e6);
 
 	QString path = BasePath + group;
 	consume(connection, Service, settings, "phase", path + "/Phase");

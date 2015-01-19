@@ -108,7 +108,16 @@ protected:
 	virtual bool fromDBus(const QString &path, QVariant &v);
 
 	static bool addDBusObject(const QString &group, const QString &name,
-							   QChar type, const QDBusVariant &defaultValue);
+							  QChar type, const QDBusVariant &defaultValue,
+							  const QDBusVariant &minValue,
+							  const QDBusVariant &maxValue);
+
+	static bool addDBusObject(const QString &group, const QString &name,
+							  QChar type, const QDBusVariant &defaultValue);
+
+	static bool addDBusDouble(const QString &group, const QString &name,
+							  double defaultValue, double minValue,
+							  double maxValue);
 
 private slots:
 	void onPropertyChanged();

@@ -22,8 +22,7 @@ InverterUpdater::InverterUpdater(Inverter *inverter, InverterSettings *settings,
 {
 	Q_ASSERT(inverter != 0);
 	Q_ASSERT(mSettings != 0);
-	mSettingsTimer->setInterval(UpdateSettingsInterval);
-	mSettingsTimer->start();
+	Q_ASSERT(inverter->supports3Phases() == (mSettings->phase() == ThreePhases));
 	connect(
 		mSolarApi, SIGNAL(commonDataFound(const CommonInverterData &)),
 		this, SLOT(onCommonDataFound(const CommonInverterData &)));
@@ -36,6 +35,8 @@ InverterUpdater::InverterUpdater(Inverter *inverter, InverterSettings *settings,
 	connect(
 		mSettingsTimer, SIGNAL(timeout()),
 		this, SLOT(onSettingsTimer()));
+	mSettingsTimer->setInterval(UpdateSettingsInterval);
+	mSettingsTimer->start();
 	onStartRetrieval();
 }
 
@@ -60,13 +61,14 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 	{
 	case SolarApiReply::NoError:
 	{
-		mProcessor.process(data, mInitialized);
-		if (!mInitialized || mSettings->phase() == ThreePhases)
+		mProcessor.process(data);
+		mRetryCount = 0;
+		if (mInverter->supports3Phases())
 		{
-			mRetryCount = 0;
 			mSolarApi->getThreePhasesInverterDataAsync(mInverter->id());
 		} else {
 			mInverter->setIsConnected(true);
+			setInitialized();
 			scheduleRetrieval();
 		}
 		QString msg;
@@ -108,14 +110,11 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		break;
 	case SolarApiReply::ApiError:
 		// Inverter does not support common data retrieval?
-		///	@todo EV call setInitialized?
 		mInverter->setIsConnected(false);
-		if (mSettings->phase() == ThreePhases) {
-			QLOG_WARN() << "Reset inverter settings from All Phases to L1."
-						   "Should not happen, because Fronius devices are"
-						   "either single phased to 3 phased.";
-			mSettings->setPhase(PhaseL1);
-		}
+		setInitialized();
+		QLOG_ERROR() << "Could not retrieve common inverter data."
+						"This should not happen, because all Fronius inverters"
+						"support this command.";
 		break;
 	}
 }
@@ -125,13 +124,11 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 	switch (data.error)
 	{
 	case SolarApiReply::NoError:
-	{
+		Q_ASSERT(mInverter->supports3Phases() && mSettings->phase() == ThreePhases);
 		mProcessor.process(data);
 		mInverter->setIsConnected(true);
-		mSettings->setPhase(ThreePhases);
 		mRetryCount = 0;
 		setInitialized();
-	}
 		break;
 	case SolarApiReply::NetworkError:
 		++mRetryCount;
@@ -142,9 +139,9 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 		}
 		break;
 	case SolarApiReply::ApiError:
-		// Inverter does not support 3 phases?
 		mInverter->setIsConnected(true);
 		setInitialized();
+		QLOG_ERROR() << "Could not retrieve 3Phase data from inverter.";
 		break;
 	}
 	scheduleRetrieval();
@@ -152,7 +149,7 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 
 void InverterUpdater::onPhaseChanged()
 {
-	if (mSettings->phase() == ThreePhases)
+	if (mInverter->supports3Phases())
 		return;
 	mInverter->l1PowerInfo()->resetValues();
 	mInverter->l2PowerInfo()->resetValues();

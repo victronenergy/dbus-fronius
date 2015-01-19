@@ -11,11 +11,13 @@ FroniusDataProcessor::FroniusDataProcessor(Inverter *inverter,
 	mSettings(settings),
 	mPreviousTotalEnergy(0)
 {
+	Q_ASSERT(mInverter->supports3Phases() == (mSettings->phase() == ThreePhases));
 }
 
-void FroniusDataProcessor::process(const CommonInverterData &data,
-								   bool setPhaseData)
+void FroniusDataProcessor::process(const CommonInverterData &data)
 {
+	Q_ASSERT(mInverter->supports3Phases() == (mSettings->phase() == ThreePhases));
+
 	PowerInfo *pi = mInverter->meanPowerInfo();
 	pi->setCurrent(data.acCurrent);
 	pi->setVoltage(data.acVoltage);
@@ -23,7 +25,7 @@ void FroniusDataProcessor::process(const CommonInverterData &data,
 	// Fronius gives us energy in Wh. We need kWh here.
 	pi->setTotalEnergy(data.totalEnergy / 1000);
 	InverterPhase phase = mSettings->phase();
-	if (setPhaseData && phase != ThreePhases) {
+	if (phase != ThreePhases) {
 		PowerInfo *li = mInverter->getPowerInfo(phase);
 		li->setCurrent(pi->current());
 		li->setVoltage(pi->voltage());
@@ -44,6 +46,9 @@ void FroniusDataProcessor::process(const ThreePhasesInverterData &data)
 	 * leave the values as computed, so we can send invalid values to the
 	 * DBus later.
 	 */
+
+	Q_ASSERT(mInverter->supports3Phases());
+	Q_ASSERT(mSettings->phase() == ThreePhases);
 
 	double vi1 = data.acVoltagePhase1 * data.acCurrentPhase1;
 	double vi2 = data.acVoltagePhase2 * data.acCurrentPhase2;
@@ -83,6 +88,8 @@ void FroniusDataProcessor::process(const ThreePhasesInverterData &data)
 
 void FroniusDataProcessor::updateEnergySettings()
 {
+	if (!mInverter->supports3Phases())
+		return;
 	updateEnergySettings(PhaseL1);
 	updateEnergySettings(PhaseL2);
 	updateEnergySettings(PhaseL3);

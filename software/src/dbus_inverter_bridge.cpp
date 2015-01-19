@@ -20,15 +20,8 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	Q_ASSERT(inverter != 0);
 	connect(inverter, SIGNAL(destroyed()), this, SLOT(deleteLater()));
 
-	QStringList spl = inverter->hostName().split('.');
-	QString addr;
-	for (int i=0; i<spl.length(); ++i) {
-		addr.append(QString("%1").arg(spl[i], 3, QChar('0')));
-	}
-
-	mServiceName = QString("com.victronenergy.pvinverter.fronius_%1_%2").
-			arg(addr).
-			arg(fixServiceNameFragment(inverter->id()));
+	mServiceName = QString("com.victronenergy.pvinverter.fronius_%1").
+			arg(fixServiceNameFragment(inverter->uniqueId()));
 
 	QDBusConnection connection = VBusItems::getConnection(mServiceName);
 
@@ -53,7 +46,7 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	produce(connection, "/Mgmt/ProcessName", processName);
 	produce(connection, "/Mgmt/ProcessVersion", VERSION);
 	produce(connection, "/Mgmt/Connection", connectionString);
-	produce(connection, "/ProductName", tr("Fronius PV inverter"));
+	produce(connection, "/ProductName", inverter->productName());
 	produce(connection, "/ProductId", VE_PROD_ID_PV_INVERTER_FRONIUS);
 	produce(connection, "/Serial", inverter->uniqueId());
 
@@ -100,7 +93,7 @@ void DBusInverterBridge::addBusItems(QDBusConnection &connection, PowerInfo *pi,
 	produce(connection, pi, "current", path + "/Current", "A", 1);
 	produce(connection, pi, "voltage", path + "/Voltage", "V", 0);
 	produce(connection, pi, "power", path + "/Power", "W", 0);
-	produce(connection, pi, "totalEnergy", path + "/Energy/Forward", "kWh", 0);
+	produce(connection, pi, "totalEnergy", path + "/Energy/Forward", "kWh", 2);
 }
 
 QString DBusInverterBridge::fixServiceNameFragment(const QString &s)
