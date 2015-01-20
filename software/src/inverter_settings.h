@@ -9,6 +9,7 @@ class InverterSettings : public QObject
 {
 	Q_OBJECT
 	Q_PROPERTY(QString uniqueId READ uniqueId)
+	Q_PROPERTY(int deviceType READ deviceType)
 	Q_PROPERTY(QString customName READ customName WRITE setCustomName NOTIFY customNameChanged)
 	Q_PROPERTY(InverterPhase phase READ phase WRITE setPhase NOTIFY phaseChanged)
 	Q_PROPERTY(InverterPosition position READ position WRITE setPosition NOTIFY positionChanged)
@@ -17,9 +18,12 @@ class InverterSettings : public QObject
 	Q_PROPERTY(double l2Energy READ l2Energy WRITE setL2Energy NOTIFY l2EnergyChanged)
 	Q_PROPERTY(double l3Energy READ l3Energy WRITE setL3Energy NOTIFY l3EnergyChanged)
 public:
-	explicit InverterSettings(const QString &uniqueId, QObject *parent = 0);
+	InverterSettings(int deviceType, const QString &uniqueId,
+					 QObject *parent = 0);
 
 	QString uniqueId() const;
+
+	int deviceType() const;
 
 	InverterPhase phase() const;
 
@@ -68,6 +72,7 @@ signals:
 
 private:
 	QString mUniqueId;
+	int mDeviceType;
 	QString mCustomName;
 	InverterPhase mPhase;
 	InverterPosition mPosition;

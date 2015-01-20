@@ -11,7 +11,7 @@ Inverter::Inverter(const QString &hostName, int port, const QString &id,
 	mHostName(hostName),
 	mPort(port),
 	mId(id),
-
+	mDeviceType(deviceType),
 	mUniqueId(uniqueId),
 	mCustomName(customName),
 	mDeviceInfo(FroniusDeviceInfo::find(deviceType)),

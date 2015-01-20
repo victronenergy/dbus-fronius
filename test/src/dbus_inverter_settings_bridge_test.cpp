@@ -4,6 +4,8 @@
 #include "inverter_settings.h"
 #include "test_helper.h"
 
+static const QString BasePath = "/Settings/Fronius/Inverters/I224_475b";
+
 TEST_F(DBusInverterSettingsBridgeTest, changePosition)
 {
 	// Check default value from DBus
@@ -12,19 +14,19 @@ TEST_F(DBusInverterSettingsBridgeTest, changePosition)
 	mSettings->setPosition(Input2);
 	qWait(100);
 	// Check new value
-	QVariant position = mSettingsClient->getValue("/Settings/Fronius/Inverters/I475b/Position");
+	QVariant position = mSettingsClient->getValue(BasePath + "/Position");
 	EXPECT_EQ(QVariant(2), position);
 	// Check DBus signal
 	const QList<QString> &cp = mSettingsClient->changedPaths();
 	ASSERT_EQ(1, cp.size());
-	EXPECT_EQ(QString("/Settings/Fronius/Inverters/I475b/Position"), cp.first());
+	EXPECT_EQ(QString(BasePath + "/Position"), cp.first());
 }
 
 TEST_F(DBusInverterSettingsBridgeTest, changePositionRemote)
 {
 	EXPECT_EQ(Input1, mSettings->position());
 	// Set new value on DBus
-	mSettingsClient->setValue("/Settings/Fronius/Inverters/I475b/Position", 1);
+	mSettingsClient->setValue(BasePath + "/Position", 1);
 	// Allow value form DBus to trickle to our settings object
 	qWait(100);
 	EXPECT_EQ(Output, mSettings->position());
@@ -38,19 +40,19 @@ TEST_F(DBusInverterSettingsBridgeTest, changePhase)
 	mSettings->setPhase(PhaseL2);
 	qWait(100);
 	// Check new value
-	QVariant phase = mSettingsClient->getValue("/Settings/Fronius/Inverters/I475b/Phase");
+	QVariant phase = mSettingsClient->getValue(BasePath + "/Phase");
 	EXPECT_EQ(QVariant(2), phase);
 	// Check DBus signal
 	const QList<QString> &cp = mSettingsClient->changedPaths();
 	ASSERT_EQ(1, cp.size());
-	EXPECT_EQ(QString("/Settings/Fronius/Inverters/I475b/Phase"), cp.first());
+	EXPECT_EQ(QString(BasePath + "/Phase"), cp.first());
 }
 
 TEST_F(DBusInverterSettingsBridgeTest, changePhaseRemote)
 {
 	EXPECT_EQ(ThreePhases, mSettings->phase());
 	// Set new value on DBus
-	mSettingsClient->setValue("/Settings/Fronius/Inverters/I475b/Phase", 2);
+	mSettingsClient->setValue(BasePath + "/Phase", 2);
 	// Allow value form DBus to trickle to our settings object
 	qWait(100);
 	EXPECT_EQ(PhaseL2, mSettings->phase());
@@ -95,7 +97,7 @@ void DBusInverterSettingsBridgeTest::SetUpTestCase()
 void DBusInverterSettingsBridgeTest::SetUp()
 {
 	mSettingsClient.reset(new DBusSettings());
-	mSettings.reset(new InverterSettings("475b"));
+	mSettings.reset(new InverterSettings(224, "475b"));
 	mBridge.reset(new DBusInverterSettingsBridge(mSettings.data(), 0));
 	// Wait for DBusSettingsBridge to fill settings object with default values
 	// specified by DBusSettingsBridge::addDBusObjects
@@ -116,7 +118,7 @@ void DBusInverterSettingsBridgeTest::checkStoredEnergy(InverterPhase phase)
 	mSettings->setEnergy(phase, 37.4);
 	qWait(100);
 	// Check new value
-	QString path = QString("/Settings/Fronius/Inverters/I475b/L%1Energy").
+	QString path = QString(BasePath + "/L%1Energy").
 				   arg(static_cast<int>(phase));
 	QVariant e = mSettingsClient->getValue(path);
 	EXPECT_EQ(QVariant(37.4), e);
@@ -131,7 +133,7 @@ void DBusInverterSettingsBridgeTest::checkStoredEnergyRemote(
 {
 	EXPECT_EQ(ThreePhases, mSettings->getEnergy(phase));
 	// Set new value on DBus
-	QString path = QString("/Settings/Fronius/Inverters/I475b/L%1Energy").
+	QString path = QString(BasePath + "/L%1Energy").
 				   arg(static_cast<int>(phase));
 	mSettingsClient->setValue(path, 1234.8);
 	// Allow value form DBus to trickle to our settings object

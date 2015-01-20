@@ -28,14 +28,13 @@ private slots:
 	void onIsConnectedChanged();
 
 private:
-	InverterUpdater *findUpdater(const QString &hostName,
-								 const QString &deviceId);
+	Inverter *findInverter(int deviceType, const QString &uniqueId);
 
 	Settings *mSettings;
 	InverterGateway *mGateway;
 	DBusSettingsBridge *mSettingsBridge;
 	DBusGatewayBridge *mGatewayBridge;
-	QList<InverterUpdater *> mUpdaters;
+	QList<Inverter *> mInverters;
 };
 
 #endif // DBUS_TEST2_H

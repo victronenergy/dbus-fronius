@@ -20,7 +20,8 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	Q_ASSERT(inverter != 0);
 	connect(inverter, SIGNAL(destroyed()), this, SLOT(deleteLater()));
 
-	mServiceName = QString("com.victronenergy.pvinverter.fronius_%1").
+	mServiceName = QString("com.victronenergy.pvinverter.fronius_%1_%2").
+			arg(inverter->deviceType()).
 			arg(fixServiceNameFragment(inverter->uniqueId()));
 
 	QDBusConnection connection = VBusItems::getConnection(mServiceName);

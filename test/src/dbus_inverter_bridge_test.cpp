@@ -107,7 +107,7 @@ TEST_F(DBusInverterBridgeTest, acPower)
 }
 
 DBusInverterBridgeTest::DBusInverterBridgeTest():
-	mServiceName("com.victronenergy.pvinverter.fronius_010000001004_3")
+	mServiceName("com.victronenergy.pvinverter.fronius_123_756")
 {
 }
 
@@ -120,7 +120,8 @@ void DBusInverterBridgeTest::SetUpTestCase()
 void DBusInverterBridgeTest::SetUp()
 {
 	mInverter.reset(new Inverter("10.0.1.4", 80, "3", 123, "756", "cn"));
-	mSettings.reset(new InverterSettings(mInverter->uniqueId()));
+	mSettings.reset(new InverterSettings(mInverter->deviceType(),
+										 mInverter->uniqueId()));
 	mSettings->setPosition(Input2);
 	mSettings->setPhase(PhaseL2);
 }

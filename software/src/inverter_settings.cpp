@@ -1,9 +1,11 @@
 #include <QsLog.h>
 #include "inverter_settings.h"
 
-InverterSettings::InverterSettings(const QString &uniqueId, QObject *parent) :
+InverterSettings::InverterSettings(int deviceType, const QString &uniqueId,
+								   QObject *parent) :
 	QObject(parent),
 	mUniqueId(uniqueId),
+	mDeviceType(deviceType),
 	mPhase(PhaseL1),
 	mPosition(Input1),
 	mL1Energy(0),
@@ -15,6 +17,11 @@ InverterSettings::InverterSettings(const QString &uniqueId, QObject *parent) :
 QString InverterSettings::uniqueId() const
 {
 	return mUniqueId;
+}
+
+int InverterSettings::deviceType() const
+{
+	return mDeviceType;
 }
 
 InverterPhase InverterSettings::phase() const

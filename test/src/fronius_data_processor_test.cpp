@@ -252,7 +252,8 @@ void FroniusDataProcessorTest::setUpProcessor(InverterPhase phase)
 {
 	int deviceType = phase == ThreePhases ? 123 : 224;
 	mInverter.reset(new Inverter("127.0.0.1", 80, "1", deviceType, "1212b", "cn"));
-	mSettings.reset(new InverterSettings(mInverter->uniqueId()));
+	mSettings.reset(new InverterSettings(mInverter->deviceType(),
+										 mInverter->uniqueId()));
 	mSettings->setPhase(phase);
 	mProcessor.reset(new FroniusDataProcessor(mInverter.data(),
 											  mSettings.data()));

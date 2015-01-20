@@ -16,7 +16,8 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 	// name of a DBus object causes trouble: the local settings application
 	// saves the settings as xml and uses object names as element names.
 	// Unfortunately, the name of an xml element cannot start with a number.
-	QString group = "Inverters/I" + settings->uniqueId();
+	QString group = QString("Inverters/I%1_%2").
+					arg(settings->deviceType()).arg(settings->uniqueId());
 	addDBusObject("Fronius", group + "/Position", 'i',
 				  QDBusVariant(static_cast<int>(settings->position())));
 	addDBusObject("Fronius", group + "/Phase", 'i',

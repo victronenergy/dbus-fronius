@@ -37,14 +37,25 @@ void DBusFronius::onSettingsInitialized()
 
 void DBusFronius::onInverterFound(Inverter *inverter)
 {
-	if (findUpdater(inverter->hostName(), inverter->id()) != 0)
-		return;
+	Inverter *oldInverter = findInverter(inverter->deviceType(),
+										 inverter->uniqueId());
+	if (oldInverter != 0) {
+		if (oldInverter->hostName() == inverter->hostName() &&
+			oldInverter->port() == inverter->port()) {
+			return;
+		}
+		mInverters.removeOne(oldInverter);
+		delete oldInverter;
+	}
 	inverter->setParent(this);
+	mInverters.append(inverter);
 	// connect(inverter, SIGNAL(isConnectedChanged()),
 	// 		this, SLOT(onIsConnectedChanged()));
-	QLOG_INFO() << "New inverter:" << inverter->hostName() << inverter->id();
+	QLOG_INFO() << "New inverter:" << inverter->uniqueId()
+				<< "@" << inverter->hostName() << ':' << inverter->id();
 	InverterSettings *settings =
-		new InverterSettings(inverter->uniqueId(), inverter);
+		new InverterSettings(inverter->deviceType(), inverter->uniqueId(),
+							 inverter);
 	// The custom name we set here will be use as default (and initial) value
 	// of the D-Bus parameter. If the parameter already exists, this value
 	// will be overwritten by the current value taken from the D-Bus.
@@ -67,12 +78,11 @@ void DBusFronius::onInverterSettingsInitialized()
 		settings->setPhase(ThreePhases);
 	} else if (settings->phase() == ThreePhases) {
 		QLOG_ERROR() << "Inverter is single phased, but settings report"
-					 << "muliphase. Adjusting settings.";
+					 << "multiphase. Adjusting settings.";
 		settings->setPhase(PhaseL1);
 	}
-	InverterUpdater *iu = new InverterUpdater(inverter, settings);
+	InverterUpdater *iu = new InverterUpdater(inverter, settings, inverter);
 	connect(iu, SIGNAL(initialized()), this, SLOT(onInverterInitialized()));
-	mUpdaters.append(iu);
 }
 
 void DBusFronius::onInverterInitialized()
@@ -80,9 +90,6 @@ void DBusFronius::onInverterInitialized()
 	InverterUpdater *ui = static_cast<InverterUpdater *>(sender());
 	Inverter *inverter = ui->inverter();
 	InverterSettings *settings = ui->settings();
-
-	// DBusInverterBridge will set inverter as its parent, so we have no
-	// memory leak here.
 	new DBusInverterBridge(inverter, settings, inverter);
 }
 
@@ -96,25 +103,23 @@ void DBusFronius::onIsConnectedChanged()
 	// Do not delete the inverter here because right now a function within
 	// Inverter is emitting the isConnectedChanged signal.
 	inverter->deleteLater();
-	foreach (InverterUpdater *ui, mUpdaters) {
-		if (ui->inverter() == inverter) {
-			ui->deleteLater();
-			mUpdaters.removeOne(ui);
+	foreach (Inverter *i, mInverters) {
+		if (i == inverter) {
+			i->deleteLater();
+			mInverters.removeOne(i);
 			break;
 		}
 	}
 }
 
-InverterUpdater *DBusFronius::findUpdater(const QString &hostName,
-										  const QString &deviceId)
+Inverter *DBusFronius::findInverter(int deviceType, const QString &uniqueId)
 {
-	for (QList<InverterUpdater *>::iterator it = mUpdaters.begin();
-		 it != mUpdaters.end();
-		 ++it)
+	foreach (Inverter *inverter, mInverters)
 	{
-		const Inverter *inverter = (*it)->inverter();
-		if (inverter->hostName() == hostName && inverter->id() == deviceId)
-			return *it;
+		if (inverter->deviceType() == deviceType &&
+			inverter->uniqueId() == uniqueId) {
+			return inverter;
+		}
 	}
 	return 0;
 }
