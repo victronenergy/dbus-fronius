@@ -1,8 +1,13 @@
 import random
+import time
+
 
 class PowerInfo:
 	def __init__(self):
-		pass
+		self._lastEnergy = 0
+		self._prevPower = 0
+		# Use time.perf_counter() instead of time.clock() when using python 3
+		self._lastTimeStamp = time.clock()
 
 	@property
 	def current(self):
@@ -14,11 +19,21 @@ class PowerInfo:
 
 	@property
 	def power(self):
-		return random.gauss(3373, 1000)
+		p = random.gauss(3000, 100)
+		t = time.clock()
+		self._lastEnergy += (self._prevPower + p) * (t - self._lastTimeStamp) / (2 * 3600)
+		self._lastTimeStamp = t
+		self._prevPower = p
+		return p
+
+	@property
+	def energy(self):
+		p = self.power
+		return self._lastEnergy
 
 
 class FroniusSim:
-	def __init__(self, id, unique_id, custom_name='', has_3phases=True):
+	def __init__(self, id, unique_id, device_type, custom_name='', has_3phases=True):
 		self.main = PowerInfo()
 		self.has_3phases = has_3phases
 		if has_3phases:
@@ -28,3 +43,4 @@ class FroniusSim:
 		self.id = id
 		self.unique_id = unique_id
 		self.custom_name = custom_name
+		self.device_type = device_type

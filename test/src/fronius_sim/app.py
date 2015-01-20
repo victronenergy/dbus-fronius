@@ -12,8 +12,9 @@ from fronius_sim import FroniusSim
 application = bottle.default_app()
 
 inverters = [
-	FroniusSim(id='1', unique_id='1234', custom_name='SouthWest', has_3phases=True),
-	FroniusSim(id='2', unique_id='4321', custom_name='', has_3phases=False)
+	FroniusSim(id='1', device_type=232, unique_id='1234', custom_name='SouthWest', has_3phases=True),
+	FroniusSim(id='2', device_type=224, unique_id='4321', custom_name='', has_3phases=False),
+	FroniusSim(id='3', device_type=208, unique_id='1111', custom_name='Tmp', has_3phases=False)
 ]
 
 
@@ -28,7 +29,7 @@ def get_inverter_info():
 		'Head': create_head({}),
 		'Body': {
 			'Data': dict((x.id, {
-				'DT': 192,
+				'DT': x.device_type,
 				'PVPower': 5000,
 				'Show': 1,
 				'UniqueID': x.unique_id,
@@ -85,13 +86,13 @@ def get_inverter_realtime_data():
 						'PAC': {'Value': inverter.main.power, 'Unit': 'W'},
 						'SAC': {'Value': 3413, 'Unit': 'VA'},
 						'IAC': {'Value': inverter.main.current, 'Unit': 'Hz'},
-						'UAC': {'Value': inverter.main.power, 'Unit': 'V'},
+						'UAC': {'Value': inverter.main.voltage, 'Unit': 'V'},
 						'FAC': {'Value': 50, 'Unit': 'Hz'},
 						'IDC': {'Value': 8.2, 'Unit': 'A'},
 						'UDC': {'Value': 426, 'Unit': 'V'},
 						'DAY_ENERGY': {'Value': 8000, 'Unit': 'Wh'},
 						'YEAR_ENERGY': {'Value': 44000, 'Unit': 'Wh'},
-						'TOTAL_ENERGY': {'Value': 45000, 'Unit': 'Wh'},
+						'TOTAL_ENERGY': {'Value': inverter.main.energy, 'Unit': 'Wh'},
 						'DeviceStatus': {
 							'StatusCode': 7,
 							'MgmtTimerRemainingTime': -1,

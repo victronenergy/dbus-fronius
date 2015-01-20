@@ -18,14 +18,12 @@ INCLUDEPATH += \
 	../software/src
 
 HEADERS += \
-	$$SRCDIR/v_bus_node.h \
 	src/dbus_observer.h \
 	src/dbus_settings.h \
 	src/dbus_settings_adaptor.h \
 	src/dbus_service_observer.h
 
 SOURCES += \
-	$$SRCDIR/v_bus_node.cpp \
 	src/test_tool.cpp \
 	src/dbus_observer.cpp \
 	src/dbus_settings.cpp \
