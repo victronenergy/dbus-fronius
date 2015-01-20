@@ -59,7 +59,6 @@ SOURCES += \
 	src/inverter_gateway.cpp \
 	src/local_ip_address_generator.cpp \
 	src/settings.cpp \
-	src/v_bus_node.cpp \
 	src/dbus_fronius.cpp \
 	src/dbus_bridge.cpp \
 	src/dbus_inverter_bridge.cpp \

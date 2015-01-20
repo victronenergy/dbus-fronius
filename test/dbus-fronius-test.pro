@@ -65,7 +65,6 @@ HEADERS += \
 	$$SRCDIR/local_ip_address_generator.h \
 	$$SRCDIR/power_info.h \
 	$$SRCDIR/settings.h \
-	$$SRCDIR/v_bus_node.h \
 	$$SRCDIR/inverter_gateway.h \
 	$$SRCDIR/inverter_updater.h \
 	$$SRCDIR/inverter_settings.h \
@@ -96,7 +95,6 @@ SOURCES += \
 	$$SRCDIR/local_ip_address_generator.cpp \
 	$$SRCDIR/power_info.cpp \
 	$$SRCDIR/settings.cpp \
-	$$SRCDIR/v_bus_node.cpp \
 	$$SRCDIR/inverter_settings.cpp \
 	$$SRCDIR/inverter_gateway.cpp \
 	$$SRCDIR/fronius_data_processor.cpp \
