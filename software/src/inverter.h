@@ -16,8 +16,8 @@ class Inverter : public QObject
 	Q_PROPERTY(int deviceType READ deviceType)
 	Q_PROPERTY(QString uniqueId READ uniqueId)
 	Q_PROPERTY(QString customName READ customName)
-	Q_PROPERTY(QString hostName READ hostName)
-	Q_PROPERTY(int port READ port)
+	Q_PROPERTY(QString hostName READ hostName WRITE setHostName NOTIFY hostNameChanged)
+	Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
 	Q_PROPERTY(bool supports3Phases READ supports3Phases)
 	Q_PROPERTY(QString productName READ productName)
 public:
@@ -43,7 +43,11 @@ public:
 
 	QString hostName() const;
 
+	void setHostName(const QString &h);
+
 	int port() const;
+
+	void setPort(int p);
 
 	bool supports3Phases() const;
 
@@ -68,6 +72,10 @@ signals:
 	void isConnectedChanged();
 
 	void statusChanged();
+
+	void hostNameChanged();
+
+	void portChanged();
 
 private:
 	bool mIsConnected;

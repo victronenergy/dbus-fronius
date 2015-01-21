@@ -37,6 +37,8 @@ private slots:
 
 	void onSettingsTimer();
 
+	void onConnectionDataChanged();
+
 private:
 	void scheduleRetrieval();
 

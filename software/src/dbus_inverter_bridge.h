@@ -33,6 +33,7 @@ private:
 
 	static QString fixServiceNameFragment(const QString &s);
 
+	Inverter *mInverter;
 	QString mServiceName;
 };
 

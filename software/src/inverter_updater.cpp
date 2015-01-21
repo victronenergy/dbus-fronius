@@ -35,6 +35,12 @@ InverterUpdater::InverterUpdater(Inverter *inverter, InverterSettings *settings,
 	connect(
 		mSettingsTimer, SIGNAL(timeout()),
 		this, SLOT(onSettingsTimer()));
+	connect(
+		mInverter, SIGNAL(hostNameChanged()),
+		this, SLOT(onConnectionDataChanged()));
+	connect(
+		mInverter, SIGNAL(portChanged()),
+		this, SLOT(onConnectionDataChanged()));
 	mSettingsTimer->setInterval(UpdateSettingsInterval);
 	mSettingsTimer->start();
 	onStartRetrieval();
@@ -159,6 +165,12 @@ void InverterUpdater::onPhaseChanged()
 void InverterUpdater::onSettingsTimer()
 {
 	mProcessor.updateEnergySettings();
+}
+
+void InverterUpdater::onConnectionDataChanged()
+{
+	mSolarApi->setHostName(mInverter->hostName());
+	mSolarApi->setPort(mInverter->port());
 }
 
 void InverterUpdater::scheduleRetrieval()

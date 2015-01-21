@@ -149,7 +149,11 @@ public:
 
 	QString hostName() const;
 
+	void setHostName(const QString &h);
+
 	int port() const;
+
+	void setPort(int port);
 
 	/*!
 	 * @brief retrieves the list of inverters from the data manager specified

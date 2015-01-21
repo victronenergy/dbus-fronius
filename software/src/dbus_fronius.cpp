@@ -40,17 +40,18 @@ void DBusFronius::onInverterFound(Inverter *inverter)
 	Inverter *oldInverter = findInverter(inverter->deviceType(),
 										 inverter->uniqueId());
 	if (oldInverter != 0) {
-		if (oldInverter->hostName() == inverter->hostName() &&
-			oldInverter->port() == inverter->port()) {
-			return;
-		}
-		mInverters.removeOne(oldInverter);
-		delete oldInverter;
+		oldInverter->setHostName(inverter->hostName());
+		oldInverter->setPort(inverter->port());
+		QLOG_INFO() << "Updated connection settings:" << inverter->uniqueId()
+					<< "@" << inverter->hostName() << ':' << inverter->id();
+		// inverter will be deleted by InverterGateway, because we have not
+		// set a new parent.
+		return;
 	}
 	inverter->setParent(this);
 	mInverters.append(inverter);
-	// connect(inverter, SIGNAL(isConnectedChanged()),
-	// 		this, SLOT(onIsConnectedChanged()));
+	connect(inverter, SIGNAL(isConnectedChanged()),
+			this, SLOT(onIsConnectedChanged()));
 	QLOG_INFO() << "New inverter:" << inverter->uniqueId()
 				<< "@" << inverter->hostName() << ':' << inverter->id();
 	InverterSettings *settings =
@@ -98,18 +99,14 @@ void DBusFronius::onIsConnectedChanged()
 	Inverter *inverter = static_cast<Inverter *>(sender());
 	if (inverter->isConnected())
 		return;
-	QLOG_INFO() << "Lost connection with: " << inverter->hostName() << " - "
-				<< inverter->id();
-	// Do not delete the inverter here because right now a function within
-	// Inverter is emitting the isConnectedChanged signal.
-	inverter->deleteLater();
-	foreach (Inverter *i, mInverters) {
-		if (i == inverter) {
-			i->deleteLater();
-			mInverters.removeOne(i);
-			break;
-		}
-	}
+	QLOG_INFO() << "Lost connection with: " << inverter->uniqueId();
+	// Start device scan, maybe the IP address of the data card has changed.
+	mGateway->setAutoDetect(true);
+	//	// Do not delete the inverter here because right now a function within
+	//	// InverterUpdater is emitting the isConnectedChanged signal. Deleting
+	//	// the inverter will also delete the InverterUpdater
+	//	mInverters.removeOne(inverter);
+	//	inverter->deleteLater();
 }
 
 Inverter *DBusFronius::findInverter(int deviceType, const QString &uniqueId)

@@ -18,7 +18,6 @@ FroniusSolarApi::FroniusSolarApi(QString hostName, int port, QObject *parent) :
 	mTimeoutTimer(new QTimer(this))
 {
 	if (mNam == 0) {
-		QLOG_WARN() << __FUNCTION__ << "Created QNetworkAccessManager";
 		mNam = QSharedPointer<QNetworkAccessManager>(new QNetworkAccessManager());
 		mStaticNam = mNam.toWeakRef();
 	}
@@ -37,9 +36,19 @@ QString FroniusSolarApi::hostName() const
 	return mHostName;
 }
 
+void FroniusSolarApi::setHostName(const QString &h)
+{
+	mHostName = h;
+}
+
 int FroniusSolarApi::port() const
 {
 	return mPort;
+}
+
+void FroniusSolarApi::setPort(int port)
+{
+	mPort = port;
 }
 
 void FroniusSolarApi::getConverterInfoAsync()

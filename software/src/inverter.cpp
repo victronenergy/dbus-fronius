@@ -76,9 +76,25 @@ QString Inverter::hostName() const
 	return mHostName;
 }
 
+void Inverter::setHostName(const QString &h)
+{
+	if (mHostName == h)
+		return;
+	mHostName = h;
+	emit hostNameChanged();
+}
+
 int Inverter::port() const
 {
 	return mPort;
+}
+
+void Inverter::setPort(int p)
+{
+	if (mPort == p)
+		return;
+	mPort = p;
+	emit portChanged();
 }
 
 bool Inverter::supports3Phases() const

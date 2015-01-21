@@ -15,7 +15,8 @@
 DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 									   InverterSettings *settings,
 									   QObject *parent) :
-	DBusBridge(parent)
+	DBusBridge(parent),
+	mInverter(inverter)
 {
 	Q_ASSERT(inverter != 0);
 	connect(inverter, SIGNAL(destroyed()), this, SLOT(deleteLater()));
@@ -37,16 +38,13 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	produce(connection, settings, "position", "/Position");
 	produce(connection, settings, "deviceInstance", "/DeviceInstance");
 	produce(connection, settings, "customName", "/CustomName");
+	produce(connection, inverter, "hostName", "/Mgmt/Connection");
 
-	QString connectionString = QString("%1 - %2").
-			arg(inverter->hostName()).
-			arg(inverter->id());
 	QString processName = QCoreApplication::arguments()[0];
 	// The values of the items below will not change after creation, so we don't
 	// need an update mechanism.
 	produce(connection, "/Mgmt/ProcessName", processName);
 	produce(connection, "/Mgmt/ProcessVersion", VERSION);
-	produce(connection, "/Mgmt/Connection", connectionString);
 	produce(connection, "/ProductName", inverter->productName());
 	produce(connection, "/ProductId", VE_PROD_ID_PV_INVERTER_FRONIUS);
 	produce(connection, "/Serial", inverter->uniqueId());
@@ -72,6 +70,8 @@ bool DBusInverterBridge::toDBus(const QString &path, QVariant &value)
 		value = QVariant(value.toBool() ? 1 : 0);
 	} else if (path == "/Position") {
 		value = QVariant(static_cast<int>(value.value<InverterPosition>()));
+	} else if (path == "/Mgmt/Connection") {
+		value = QString("%1 - %2").arg(value.toString()).arg(mInverter->id());
 	}
 	if (value.type() == QVariant::Double && !std::isfinite(value.toDouble()))
 		value = qVariantFromValue(QStringList());
@@ -84,6 +84,8 @@ bool DBusInverterBridge::fromDBus(const QString &path, QVariant &value)
 		value = QVariant(value.toInt() != 0);
 	} else if (path == "/Position") {
 		value = QVariant(static_cast<InverterPosition>(value.toInt()));
+	} else if (path == "/Mgmt/Connection") {
+		return false;
 	}
 	return true;
 }
