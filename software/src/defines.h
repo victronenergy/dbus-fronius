@@ -5,7 +5,7 @@ enum InverterPhase {
 	/*!
 	 * Inverter produces 3 phased power
 	 */
-	ThreePhases = 0,
+	MultiPhase = 0,
 	PhaseL1 = 1,
 	PhaseL2 = 2,
 	PhaseL3 = 3

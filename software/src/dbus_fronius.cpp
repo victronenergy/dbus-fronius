@@ -75,9 +75,9 @@ void DBusFronius::onInverterSettingsInitialized()
 		static_cast<InverterSettings *>(bridge->parent());
 	Inverter *inverter =
 		static_cast<Inverter *>(settings->parent());
-	if (inverter->supports3Phases()) {
-		settings->setPhase(ThreePhases);
-	} else if (settings->phase() == ThreePhases) {
+	if (inverter->phaseCount() > 1) {
+		settings->setPhase(MultiPhase);
+	} else if (settings->phase() == MultiPhase) {
 		QLOG_ERROR() << "Inverter is single phased, but settings report"
 					 << "multiphase. Adjusting settings.";
 		settings->setPhase(PhaseL1);

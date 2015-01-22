@@ -4,7 +4,8 @@
 struct FroniusDeviceInfo
 {
 	int deviceType;
-	bool supports3Phases;
+	int phaseCount;
+	bool isMultiString;
 	const char *name;
 
 	static const FroniusDeviceInfo *find(int deviceType);

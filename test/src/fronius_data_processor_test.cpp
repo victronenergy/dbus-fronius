@@ -79,7 +79,7 @@ TEST_F(FroniusDataProcessorTest, L3PhaseUpdate)
 
 TEST_F(FroniusDataProcessorTest, AllPhaseCommonUpdate)
 {
-	setUpProcessor(ThreePhases);
+	setUpProcessor(MultiPhase);
 
 	CommonInverterData data;
 	data.acPower = 445.7;
@@ -104,7 +104,7 @@ TEST_F(FroniusDataProcessorTest, AllPhaseCommonUpdate)
 
 TEST_F(FroniusDataProcessorTest, ThreePhaseInitial)
 {
-	setUpProcessor(ThreePhases);
+	setUpProcessor(MultiPhase);
 
 	CommonInverterData data;
 	data.acPower = 445.7;
@@ -151,7 +151,7 @@ TEST_F(FroniusDataProcessorTest, ThreePhaseInitial)
 
 TEST_F(FroniusDataProcessorTest, ThreePhaseTwice)
 {
-	setUpProcessor(ThreePhases);
+	setUpProcessor(MultiPhase);
 
 	CommonInverterData data;
 	data.acPower = 445.7;
@@ -190,7 +190,7 @@ TEST_F(FroniusDataProcessorTest, ThreePhaseTwice)
 
 TEST_F(FroniusDataProcessorTest, ThreePhaseMultiple)
 {
-	setUpProcessor(ThreePhases);
+	setUpProcessor(MultiPhase);
 
 	CommonInverterData data;
 	data.acPower = 445.7;
@@ -250,7 +250,7 @@ void FroniusDataProcessorTest::TearDown()
 
 void FroniusDataProcessorTest::setUpProcessor(InverterPhase phase)
 {
-	int deviceType = phase == ThreePhases ? 123 : 224;
+	int deviceType = phase == MultiPhase ? 123 : 224;
 	mInverter.reset(new Inverter("127.0.0.1", 80, "1", deviceType, "1212b", "cn"));
 	mSettings.reset(new InverterSettings(mInverter->deviceType(),
 										 mInverter->uniqueId()));
@@ -258,5 +258,5 @@ void FroniusDataProcessorTest::setUpProcessor(InverterPhase phase)
 	mProcessor.reset(new FroniusDataProcessor(mInverter.data(),
 											  mSettings.data()));
 
-	Q_ASSERT(mInverter->supports3Phases() == (mSettings->phase() == ThreePhases));
+	Q_ASSERT((mInverter->phaseCount() > 1) == (mSettings->phase() == MultiPhase));
 }

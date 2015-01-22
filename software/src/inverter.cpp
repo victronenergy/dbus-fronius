@@ -97,9 +97,9 @@ void Inverter::setPort(int p)
 	emit portChanged();
 }
 
-bool Inverter::supports3Phases() const
+int Inverter::phaseCount() const
 {
-	return mDeviceInfo != 0 && mDeviceInfo->supports3Phases;
+	return mDeviceInfo == 0 ? 1 : mDeviceInfo->phaseCount;
 }
 
 QString Inverter::productName() const
@@ -131,7 +131,7 @@ PowerInfo *Inverter::l3PowerInfo()
 PowerInfo *Inverter::getPowerInfo(InverterPhase phase)
 {
 	switch (phase) {
-	case ThreePhases:
+	case MultiPhase:
 		return mMeanPowerInfo;
 	case PhaseL1:
 		return mL1PowerInfo;
@@ -140,7 +140,7 @@ PowerInfo *Inverter::getPowerInfo(InverterPhase phase)
 	case PhaseL3:
 		return mL3PowerInfo;
 	default:
-		QLOG_ERROR() <<"Incorrect phase:" << phase;
+		QLOG_ERROR() << "Incorrect phase:" << phase;
 		return 0;
 	}
 }

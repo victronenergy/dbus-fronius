@@ -153,10 +153,10 @@ void FroniusSolarApi::processCumulationData(QNetworkReply *reply)
 	QVariantMap map;
 	processReply(reply, data, map);
 	QVariant d = getByPath(map, "Body/Data");
-	data.acPower = getByPath(d, "PAC/Value").toInt();
-	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
-	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
-	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
+	data.acPower = getByPath(d, "PAC/Value").toDouble();
+	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toDouble();
+	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toDouble();
+	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toDouble();
 	emit cumulationDataFound(data);
 }
 
@@ -167,15 +167,15 @@ void FroniusSolarApi::processCommonData(QNetworkReply *reply)
 	processReply(reply, data, map);
 	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").toString();
 	QVariant d = getByPath(map, "Body/Data");
-	data.acPower = getByPath(d, "PAC/Value").toInt();
+	data.acPower = getByPath(d, "PAC/Value").toDouble();
 	data.acCurrent = getByPath(d, "IAC/Value").toDouble();
 	data.acVoltage = getByPath(d, "UAC/Value").toDouble();
 	data.acFrequency = getByPath(d, "FAC/Value").toDouble();
 	data.dcCurrent = getByPath(d, "IDC/Value").toDouble();
 	data.dcVoltage = getByPath(d, "UDC/Value").toDouble();
-	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
-	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
-	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
+	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toDouble();
+	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toDouble();
+	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toDouble();
 	data.statusCode = getByPath(d, "DeviceStatus/StatusCode").toInt();
 	data.errorCode = getByPath(d, "DeviceStatus/ErrorCode").toInt();
 	emit commonDataFound(data);
@@ -204,10 +204,10 @@ void FroniusSolarApi::processSystemData(QNetworkReply *reply)
 	QVariantMap map;
 	processReply(reply, data, map);
 	QVariant d = getByPath(map, "Body/Data");
-	data.acPower = getByPath(d, "PAC/Value").toInt();
-	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toInt();
-	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toInt();
-	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toInt();
+	data.acPower = getByPath(d, "PAC/Value").toDouble();
+	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toDouble();
+	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toDouble();
+	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toDouble();
 	emit systemDataFound(data);
 }
 

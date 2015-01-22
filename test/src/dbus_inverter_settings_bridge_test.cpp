@@ -35,7 +35,7 @@ TEST_F(DBusInverterSettingsBridgeTest, changePositionRemote)
 TEST_F(DBusInverterSettingsBridgeTest, changePhase)
 {
 	// Check default value from DBus
-	EXPECT_EQ(ThreePhases, mSettings->phase());
+	EXPECT_EQ(MultiPhase, mSettings->phase());
 	mSettingsClient->resetChangedPaths();
 	mSettings->setPhase(PhaseL2);
 	qWait(100);
@@ -50,7 +50,7 @@ TEST_F(DBusInverterSettingsBridgeTest, changePhase)
 
 TEST_F(DBusInverterSettingsBridgeTest, changePhaseRemote)
 {
-	EXPECT_EQ(ThreePhases, mSettings->phase());
+	EXPECT_EQ(MultiPhase, mSettings->phase());
 	// Set new value on DBus
 	mSettingsClient->setValue(BasePath + "/Phase", 2);
 	// Allow value form DBus to trickle to our settings object
@@ -131,7 +131,7 @@ void DBusInverterSettingsBridgeTest::checkStoredEnergy(InverterPhase phase)
 void DBusInverterSettingsBridgeTest::checkStoredEnergyRemote(
 		InverterPhase phase)
 {
-	EXPECT_EQ(ThreePhases, mSettings->getEnergy(phase));
+	EXPECT_EQ(MultiPhase, mSettings->getEnergy(phase));
 	// Set new value on DBus
 	QString path = QString(BasePath + "/L%1Energy").
 				   arg(static_cast<int>(phase));

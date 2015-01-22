@@ -18,7 +18,7 @@ class Inverter : public QObject
 	Q_PROPERTY(QString customName READ customName)
 	Q_PROPERTY(QString hostName READ hostName WRITE setHostName NOTIFY hostNameChanged)
 	Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
-	Q_PROPERTY(bool supports3Phases READ supports3Phases)
+	Q_PROPERTY(int phaseCount READ phaseCount)
 	Q_PROPERTY(QString productName READ productName)
 public:
 	Inverter(const QString &hostName, int port, const QString &id,
@@ -49,7 +49,7 @@ public:
 
 	void setPort(int p);
 
-	bool supports3Phases() const;
+	int phaseCount() const;
 
 	QString productName() const;
 
