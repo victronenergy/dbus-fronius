@@ -26,11 +26,7 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 
-#if QT_NO_DEBUG
-	initLogger(QsLogging::ErrorLevel);
-#else
-	initLogger(QsLogging::TraceLevel);
-#endif
+	initLogger(QsLogging::WarnLevel);
 
 #if TARGET_ccgx
 	VBusItems::setConnectionType(QDBusConnection::SystemBus);

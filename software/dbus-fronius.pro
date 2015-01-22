@@ -1,5 +1,5 @@
 # Application version and revision
-VERSION = 0.0.1
+VERSION = 1.0.0
 REVISION = $$system(git --git-dir $$PWD/../.git --work-tree $$PWD describe --always --dirty --tags)
 
 # Create a include file with VERION / REVISION
@@ -77,7 +77,6 @@ HEADERS += \
 	src/inverter_gateway.h \
 	src/local_ip_address_generator.h \
 	src/settings.h \
-	src/v_bus_node.h \
 	src/dbus_fronius.h \
 	src/dbus_bridge.h \
 	src/dbus_inverter_bridge.h \
