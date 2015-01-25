@@ -116,9 +116,13 @@ void DBusBridge::onVBusItemChanged()
 		 it != mBusItems.end();
 		 ++it) {
 		if (it->item == sender()) {
-			QVariant value = it->item->getValue();
-			if (fromDBus(it->path, value))
-				it->src->setProperty(it->property.name(), value);
+			if (it->src == 0) {
+				QLOG_WARN() << "Value changed on D-Bus could not be stored in QT-property";
+			} else {
+				QVariant value = it->item->getValue();
+				if (fromDBus(it->path, value))
+					it->src->setProperty(it->property.name(), value);
+			}
 			if (!it->initialized) {
 				it->initialized = true;
 				checkInit = true;
