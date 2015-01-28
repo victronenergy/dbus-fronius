@@ -99,7 +99,8 @@ void DBusFronius::onIsConnectedChanged()
 	Inverter *inverter = static_cast<Inverter *>(sender());
 	if (inverter->isConnected())
 		return;
-	QLOG_INFO() << "Lost connection with: " << inverter->uniqueId();
+	QLOG_WARN() << "Lost connection with: " << inverter->uniqueId()
+				<< "@ " << inverter->hostName() << ':' << inverter->port();
 	// Start device scan, maybe the IP address of the data card has changed.
 	mGateway->setAutoDetect(true);
 	//	// Do not delete the inverter here because right now a function within
