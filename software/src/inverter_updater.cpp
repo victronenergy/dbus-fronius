@@ -112,6 +112,7 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		if (mRetryCount == 5)
 		{
 			mInverter->setIsConnected(false);
+			mInverter->resetValues();
 			mRetryCount = 0;
 		}
 		scheduleRetrieval();
@@ -143,6 +144,7 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 		if (mRetryCount == 5)
 		{
 			mInverter->setIsConnected(false);
+			mInverter->resetValues();
 			mRetryCount = 0;
 		}
 		break;
