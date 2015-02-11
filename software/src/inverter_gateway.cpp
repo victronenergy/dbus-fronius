@@ -16,6 +16,8 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	mFullScanRequested(false)
 {
 	Q_ASSERT(settings != 0);
+	connect(settings, SIGNAL(portNumberChanged()),
+			this, SLOT(onSettingsChanged()));
 	connect(settings, SIGNAL(ipAddressesChanged()),
 			this, SLOT(onSettingsChanged()));
 	connect(settings, SIGNAL(knownIpAddressesChanged()),
