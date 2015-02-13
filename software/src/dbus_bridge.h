@@ -141,6 +141,7 @@ private:
 	};
 	QList<BusItemBridge> mBusItems;
 	QPointer<VBusNode> mServiceRoot;
+	bool mUpdateBusy;
 };
 
 #endif // DBUS_BRIDGE_H

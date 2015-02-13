@@ -5,7 +5,8 @@
 #include "dbus_bridge.h"
 
 DBusBridge::DBusBridge(QObject *parent) :
-	QObject(parent)
+	QObject(parent),
+	mUpdateBusy(false)
 {
 }
 
@@ -100,8 +101,11 @@ void DBusBridge::onPropertyChanged()
 				if (bib.src == src &&
 					strcmp(bib.property.name(), mp.name()) == 0) {
 					QVariant value = src->property(mp.name());
-					if (toDBus(bib.path, value))
+					if (toDBus(bib.path, value)) {
+						mUpdateBusy = true;
 						bib.item->setValue(value);
+						mUpdateBusy = false;
+					}
 					break;
 				}
 			}
@@ -111,6 +115,8 @@ void DBusBridge::onPropertyChanged()
 
 void DBusBridge::onVBusItemChanged()
 {
+	if (mUpdateBusy)
+		return;
 	bool checkInit = false;
 	for (QList<BusItemBridge>::iterator it = mBusItems.begin();
 		 it != mBusItems.end();
