@@ -51,6 +51,19 @@ void Inverter::setStatus(const QString &c)
 	emit statusChanged();
 }
 
+int Inverter::errorCode() const
+{
+	return mErrorCode;
+}
+
+void Inverter::setErrorCode(int code)
+{
+	if (mErrorCode == code)
+		return;
+	mErrorCode = code;
+	emit errorCodeChanged();
+}
+
 QString Inverter::id() const
 {
 	return mId;

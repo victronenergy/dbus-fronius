@@ -29,6 +29,7 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 
 	produce(connection, inverter, "isConnected", "/Connected");
 	produce(connection, inverter, "status", "/DeviceStatus");
+	produce(connection, inverter, "errorCode", "/ErrorCode");
 
 	addBusItems(connection, inverter->meanPowerInfo(), "/Ac");
 	addBusItems(connection, inverter->l1PowerInfo(), "/Ac/L1");
