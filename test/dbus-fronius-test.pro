@@ -20,6 +20,9 @@ PRE_TARGETDEPS += $$OUT_PWD/version.h
 # suppress the mangling of va_arg has changed for gcc 4.4
 QMAKE_CXXFLAGS += -Wno-psabi
 
+# gcc 4.8 and newer don't like the QOMPILE_ASSERT in qt
+QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
+
 # Add more folders to ship with the application here
 target.path = /opt/dbus_fronius_test
 INSTALLS += target
