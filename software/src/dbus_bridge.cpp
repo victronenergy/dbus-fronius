@@ -1,7 +1,7 @@
 #include <QsLog.h>
 #include <velib/qt/v_busitem.h>
 #include <velib/qt/v_busitems.h>
-#include <velib/qt/v_bus_node.h>
+#include "v_bus_node.h"
 #include "dbus_bridge.h"
 
 DBusBridge::DBusBridge(QObject *parent) :

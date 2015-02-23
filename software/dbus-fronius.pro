@@ -43,7 +43,9 @@ TEMPLATE = app
 
 include(src/json/json.pri)
 include(ext/qslog/QsLog.pri)
-include(ext/velib/qt.pri)
+
+VELIB_INC = ext/velib/inc/velib/qt
+VELIB_SRC = ext/velib/src/qt
 
 INCLUDEPATH += \
     ext/qslog \
@@ -51,6 +53,12 @@ INCLUDEPATH += \
     ext/velib/lib/Qvelib
 
 SOURCES += \
+    $$VELIB_SRC/v_busitem.cpp \
+    $$VELIB_SRC/v_busitems.cpp \
+    $$VELIB_SRC/v_busitem_adaptor.cpp \
+    $$VELIB_SRC/v_busitem_private_cons.cpp \
+    $$VELIB_SRC/v_busitem_private_prod.cpp \
+    $$VELIB_SRC/v_busitem_proxy.cpp \
     src/main.cpp \
     src/froniussolar_api.cpp \
     src/inverter.cpp \
@@ -67,9 +75,17 @@ SOURCES += \
     src/dbus_inverter_settings_bridge.cpp \
     src/dbus_gateway_bridge.cpp \
     src/fronius_data_processor.cpp \
-    src/fronius_device_info.cpp
+    src/fronius_device_info.cpp \
+    src/v_bus_node.cpp
 
 HEADERS += \
+    $$VELIB_SRC/v_busitem_adaptor.h \
+    $$VELIB_SRC/v_busitem_private_cons.h \
+    $$VELIB_SRC/v_busitem_private_prod.h \
+    $$VELIB_SRC/v_busitem_private.h \
+    $$VELIB_SRC/v_busitem_proxy.h \
+    $$VELIB_INC/v_busitem.h \
+    $$VELIB_INC/v_busitems.h \
     src/froniussolar_api.h \
     src/inverter.h \
     src/power_info.h \
@@ -86,4 +102,5 @@ HEADERS += \
     src/dbus_gateway_bridge.h \
     src/defines.h \
     src/fronius_data_processor.h \
-    src/fronius_device_info.h
+    src/fronius_device_info.h \
+    src/v_bus_node.h

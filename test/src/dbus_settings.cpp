@@ -5,7 +5,7 @@
 #include <QTimer>
 #include <velib/qt/v_busitem.h>
 #include <velib/qt/v_busitems.h>
-#include <velib/qt/v_bus_node.h>
+#include "v_bus_node.h"
 #include "dbus_settings.h"
 #include "dbus_settings_adaptor.h"
 

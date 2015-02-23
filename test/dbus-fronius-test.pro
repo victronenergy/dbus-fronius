@@ -42,11 +42,12 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 include(../software/src/json/json.pri)
-include(../software/ext/velib/qt.pri)
 include(../software/ext/qslog/QsLog.pri)
 
 SRCDIR = ../software/src
 EXTDIR = ../software/ext
+VELIB_INC = ../software/ext/velib/inc/velib/qt
+VELIB_SRC = ../software/ext/velib/src/qt
 
 INCLUDEPATH += \
     ../software/ext/velib/inc \
@@ -56,6 +57,13 @@ INCLUDEPATH += \
     ../software/src
 
 HEADERS += \
+    $$VELIB_SRC/v_busitem_adaptor.h \
+    $$VELIB_SRC/v_busitem_private_cons.h \
+    $$VELIB_SRC/v_busitem_private_prod.h \
+    $$VELIB_SRC/v_busitem_private.h \
+    $$VELIB_SRC/v_busitem_proxy.h \
+    $$VELIB_INC/v_busitem.h \
+    $$VELIB_INC/v_busitems.h \
     $$SRCDIR/dbus_bridge.h \
     $$SRCDIR/dbus_gateway_bridge.h \
     $$SRCDIR/dbus_inverter_bridge.h \
@@ -71,6 +79,7 @@ HEADERS += \
     $$SRCDIR/dbus_inverter_settings_bridge.h \
     $$SRCDIR/fronius_data_processor.h \
     $$SRCDIR/fronius_device_info.h \
+    $$SRCDIR/v_bus_node.h \
     src/dbus_observer.h \
     src/dbus_service_observer.h \
     src/dbus_settings_adaptor.h \
@@ -84,6 +93,12 @@ HEADERS += \
     src/fronius_data_processor_test.h
 
 SOURCES += \
+    $$VELIB_SRC/v_busitem.cpp \
+    $$VELIB_SRC/v_busitems.cpp \
+    $$VELIB_SRC/v_busitem_adaptor.cpp \
+    $$VELIB_SRC/v_busitem_private_cons.cpp \
+    $$VELIB_SRC/v_busitem_private_prod.cpp \
+    $$VELIB_SRC/v_busitem_proxy.cpp \
     $$SRCDIR/dbus_bridge.cpp \
     $$SRCDIR/dbus_gateway_bridge.cpp \
     $$SRCDIR/dbus_inverter_bridge.cpp \
@@ -99,6 +114,7 @@ SOURCES += \
     $$SRCDIR/inverter_gateway.cpp \
     $$SRCDIR/fronius_data_processor.cpp \
     $$SRCDIR/fronius_device_info.cpp \
+    $$SRCDIR/v_bus_node.cpp \
     $$EXTDIR/googletest/src/gtest-all.cc \
     src/main.cpp \
     src/dbus_observer.cpp \
@@ -111,7 +127,7 @@ SOURCES += \
     src/test_helper.cpp \
     src/dbus_inverter_settings_bridge_test.cpp \
     src/dbus_gateway_bridge_test.cpp \
-    src/fronius_data_processor_test.cpp
+    src/fronius_data_processor_test.cpp \
 
 OTHER_FILES += \
     src/fronius_sim/app.py \
