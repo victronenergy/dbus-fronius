@@ -54,9 +54,9 @@ void DBusFronius::onInverterFound(Inverter *inverter)
 			this, SLOT(onIsConnectedChanged()));
 	QLOG_INFO() << "New inverter:" << inverter->uniqueId()
 				<< "@" << inverter->hostName() << ':' << inverter->id();
-	InverterSettings *settings =
-		new InverterSettings(inverter->deviceType(), inverter->uniqueId(),
-							 inverter);
+	InverterSettings *settings = new InverterSettings(inverter->deviceType(),
+													  inverter->uniqueId(),
+													  inverter);
 	// The custom name we set here will be use as default (and initial) value
 	// of the D-Bus parameter. If the parameter already exists, this value
 	// will be overwritten by the current value taken from the D-Bus.
@@ -65,6 +65,7 @@ void DBusFronius::onInverterFound(Inverter *inverter)
 		new DBusInverterSettingsBridge(settings, settings);
 	connect(bridge, SIGNAL(initialized()),
 			this, SLOT(onInverterSettingsInitialized()));
+	mSettings->registerInverter(inverter->deviceType(), inverter->uniqueId());
 }
 
 void DBusFronius::onInverterSettingsInitialized()

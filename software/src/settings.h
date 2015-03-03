@@ -5,6 +5,7 @@
 #include <QHostAddress>
 #include <QList>
 #include <QMetaType>
+#include <QStringList>
 
 class Settings : public QObject
 {
@@ -12,6 +13,7 @@ class Settings : public QObject
 	Q_PROPERTY(int portNumber READ portNumber WRITE setPortNumber NOTIFY portNumberChanged)
 	Q_PROPERTY(QList<QHostAddress> ipAddresses READ ipAddresses WRITE setIpAddresses NOTIFY ipAddressesChanged)
 	Q_PROPERTY(QList<QHostAddress> knownIpAddresses READ knownIpAddresses WRITE setKnownIpAddresses NOTIFY knownIpAddressesChanged)
+	Q_PROPERTY(QStringList inverterIds READ inverterIds WRITE setInverterIds NOTIFY inverterIdsChanged)
 public:
 	explicit Settings(QObject *parent = 0);
 
@@ -27,6 +29,30 @@ public:
 
 	void setKnownIpAddresses(const QList<QHostAddress> &addresses);
 
+	/*!
+	 * Returns the list with D-Bus object names for each registered inverter.
+	 * The names in the list are based on the device type and the serial
+	 * (unique ID).
+	 */
+	const QStringList &inverterIds() const;
+
+	void setInverterIds(const QStringList &serial);
+
+	/*!
+	 * Registers an inverter.
+	 * If the inverter is unknown, it will be added to `inverterIds`.
+	 * @param deviceType The device type as specified by Fronius.
+	 * @param unique The inverter serial (called unique ID by Fronius).
+	 */
+	void registerInverter(int deviceType, const QString &uniqueId);
+
+	/*!
+	 * Creates the D-Bus settings object name for the specified inverter.
+	 * @param deviceType The device type as specified by Fronius.
+	 * @param unique The inverter serial (called unique ID by Fronius).
+	 */
+	static QString createInverterId(int deviceType, const QString &deviceSerial);
+
 signals:
 	void portNumberChanged();
 
@@ -34,10 +60,13 @@ signals:
 
 	void knownIpAddressesChanged();
 
+	void inverterIdsChanged();
+
 private:
 	int mPortNumber;
 	QList<QHostAddress> mIpAddresses;
 	QList<QHostAddress> mKnownIpAddresses;
+	QStringList mInverterIds;
 };
 
 #endif // SETTINGS_H

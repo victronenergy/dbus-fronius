@@ -2,6 +2,7 @@
 #include <QDBusVariant>
 #include <velib/qt/v_busitems.h>
 #include "dbus_inverter_settings_bridge.h"
+#include "settings.h"
 #include "inverter_settings.h"
 
 static const QString Service = "com.victronenergy.settings";
@@ -16,8 +17,9 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 	// name of a DBus object causes trouble: the local settings application
 	// saves the settings as xml and uses object names as element names.
 	// Unfortunately, the name of an xml element cannot start with a number.
-	QString group = QString("Inverters/I%1_%2").
-					arg(settings->deviceType()).arg(settings->uniqueId());
+	QString group = "Inverters/" +
+					Settings::createInverterId(settings->deviceType(),
+											   settings->uniqueId());
 	addDBusObject("Fronius", group + "/Position", 'i',
 				  QDBusVariant(static_cast<int>(settings->position())));
 	addDBusObject("Fronius", group + "/Phase", 'i',

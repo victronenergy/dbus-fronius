@@ -46,3 +46,30 @@ void Settings::setKnownIpAddresses(const QList<QHostAddress> &addresses)
 	mKnownIpAddresses = addresses;
 	emit knownIpAddressesChanged();
 }
+
+const QStringList &Settings::inverterIds() const
+{
+	return mInverterIds;
+}
+
+void Settings::setInverterIds(const QStringList &serials)
+{
+	if (mInverterIds == serials)
+		return;
+	mInverterIds = serials;
+	emit inverterIdsChanged();
+}
+
+void Settings::registerInverter(int deviceType, const QString &uniqueId)
+{
+	QString settingsId = createInverterId(deviceType, uniqueId);
+	if (mInverterIds.contains(settingsId))
+		return;
+	mInverterIds.append(settingsId);
+	emit inverterIdsChanged();
+}
+
+QString Settings::createInverterId(int deviceType, const QString &deviceSerial)
+{
+	return QString("I%1_%2").arg(deviceType).arg(deviceSerial);
+}
