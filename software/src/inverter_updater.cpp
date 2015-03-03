@@ -80,10 +80,8 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 			scheduleRetrieval();
 		}
 		QString msg;
-		int statusCode = 0;
 		if (data.statusCode >= 0 && data.statusCode <= 6) {
 			msg = tr("Startup");
-			statusCode = 2 + data.statusCode;
 		} else {
 			switch (data.statusCode) {
 			case 7:
@@ -94,11 +92,9 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 				break;
 			case 9:
 				msg = tr("Boot loading");
-				statusCode =1;
 				break;
 			case 10:
 				msg = tr("Error");
-				statusCode = 100 + data.statusCode;
 				break;
 			default:
 				msg	= tr("Unknown");
@@ -109,7 +105,8 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 			  arg(msg).
 			  arg(data.statusCode).
 			  arg(data.errorCode));
-		mInverter->setErrorCode(statusCode);
+		mInverter->setStatusCode(data.statusCode);
+		mInverter->setErrorCode(data.errorCode);
 	}
 		break;
 	case SolarApiReply::NetworkError:

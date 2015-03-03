@@ -8,6 +8,8 @@ Inverter::Inverter(const QString &hostName, int port, const QString &id,
 				   const QString &customName, QObject *parent) :
 	QObject(parent),
 	mIsConnected(0),
+	mErrorCode(0),
+	mStatusCode(0),
 	mHostName(hostName),
 	mPort(port),
 	mId(id),
@@ -62,6 +64,19 @@ void Inverter::setErrorCode(int code)
 		return;
 	mErrorCode = code;
 	emit errorCodeChanged();
+}
+
+int Inverter::statusCode() const
+{
+	return mStatusCode;
+}
+
+void Inverter::setStatusCode(int code)
+{
+	if (mStatusCode == code)
+		return;
+	mStatusCode = code;
+	emit statusCodeChanged();
 }
 
 QString Inverter::id() const

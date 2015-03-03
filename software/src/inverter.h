@@ -12,6 +12,7 @@ class Inverter : public QObject
 	Q_OBJECT
 	Q_PROPERTY(bool isConnected READ isConnected WRITE setIsConnected NOTIFY isConnectedChanged)
 	Q_PROPERTY(QString status READ status WRITE setStatus NOTIFY statusChanged)
+	Q_PROPERTY(int statusCode READ statusCode WRITE setStatusCode NOTIFY statusCodeChanged)
 	Q_PROPERTY(int errorCode READ errorCode WRITE setErrorCode NOTIFY errorCodeChanged)
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(int deviceType READ deviceType)
@@ -30,22 +31,31 @@ public:
 
 	void setIsConnected(bool v);
 
+	/*!
+	 * Human readable status text based on `errorCode` and `statusCode`.
+	 */
 	QString status() const;
 
 	void setStatus(const QString &c);
 
 	/*!
-	 * @brief Returns the error code, which is a combination of the status code
-	 * and error code returned by the fronius API
-	 * @return
-	 * - 0: No Error
-	 * - 1: Inverter is in boot mode
-	 * - 2-8: inverter is starting up
-	 * - >100: 100 + fronius error code.
+	 * Error code as returned by the fronius inverter
 	 */
 	int errorCode() const;
 
 	void setErrorCode(int code);
+
+	/*!
+	 * Status as returned by the fronius inverter
+	 * - 0-6: Startup
+	 * - 7: Running
+	 * - 8: Standby
+	 * - 9: Boot loading
+	 * - 10: Error
+	 */
+	int statusCode() const;
+
+	void setStatusCode(int code);
 
 	QString id() const;
 
@@ -93,10 +103,13 @@ signals:
 
 	void errorCodeChanged();
 
+	void statusCodeChanged();
+
 private:
 	bool mIsConnected;
 	QString mStatus;
 	int mErrorCode;
+	int mStatusCode;
 	QString mHostName;
 	int mPort;
 	QString mId;
