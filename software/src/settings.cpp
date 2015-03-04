@@ -1,5 +1,6 @@
 #include <QsLog.h>
 #include <velib/qt/v_busitem.h>
+#include "defines.h"
 #include "settings.h"
 
 Settings::Settings(QObject *parent) :
@@ -67,6 +68,15 @@ void Settings::registerInverter(int deviceType, const QString &uniqueId)
 		return;
 	mInverterIds.append(settingsId);
 	emit inverterIdsChanged();
+}
+
+int Settings::getDeviceInstance(int deviceType, const QString &uniqueId) const
+{
+	QString settingsId = createInverterId(deviceType, uniqueId);
+	int i = mInverterIds.indexOf(settingsId);
+	if (i == -1)
+		return -1;
+	return MinDeviceInstance + i % (MaxDeviceInstance - MinDeviceInstance + 1);
 }
 
 QString Settings::createInverterId(int deviceType, const QString &deviceSerial)

@@ -1,4 +1,5 @@
 #include <QsLog.h>
+#include "defines.h"
 #include "inverter_settings.h"
 
 InverterSettings::InverterSettings(int deviceType, const QString &uniqueId,
@@ -6,6 +7,7 @@ InverterSettings::InverterSettings(int deviceType, const QString &uniqueId,
 	QObject(parent),
 	mUniqueId(uniqueId),
 	mDeviceType(deviceType),
+	mDeviceInstance(InvalidDeviceInstance),
 	mPhase(PhaseL1),
 	mPosition(Input1),
 	mL1Energy(0),
@@ -53,7 +55,15 @@ void InverterSettings::setPosition(InverterPosition position)
 
 int InverterSettings::deviceInstance() const
 {
-	return mPosition + 20;
+	return mDeviceInstance;
+}
+
+void InverterSettings::setDeviceInstance(int instance)
+{
+	if (mDeviceInstance == instance)
+		return;
+	mDeviceInstance = instance;
+	emit deviceInstanceChanged();
 }
 
 QString InverterSettings::customName() const

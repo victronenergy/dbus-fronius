@@ -2,6 +2,7 @@
 #include <QDBusVariant>
 #include <velib/qt/v_busitems.h>
 #include "dbus_inverter_settings_bridge.h"
+#include "defines.h"
 #include "settings.h"
 #include "inverter_settings.h"
 
@@ -30,6 +31,7 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 	/// when we need it.
 	addDBusObject("Fronius", group + "/CustomName", 's',
 				  QDBusVariant(settings->customName()));
+	addDBusObject("Fronius", group + "/DeviceInstance", 'i', QDBusVariant(InvalidDeviceInstance));
 	addDBusDouble("Fronius", group + "/L1Energy", 0.0, 0.0, 1e6);
 	addDBusDouble("Fronius", group + "/L2Energy", 0.0, 0.0, 1e6);
 	addDBusDouble("Fronius", group + "/L3Energy", 0.0, 0.0, 1e6);
@@ -37,6 +39,7 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 	QString path = BasePath + group;
 	consume(connection, Service, settings, "phase", path + "/Phase");
 	consume(connection, Service, settings, "position", path + "/Position");
+	consume(connection, Service, settings, "deviceInstance", path + "/DeviceInstance");
 	consume(connection, Service, settings, "customName", path + "/CustomName");
 	consume(connection, Service, settings, "l1Energy", path + "/L1Energy");
 	consume(connection, Service, settings, "l2Energy", path + "/L2Energy");

@@ -46,6 +46,8 @@ public:
 	 */
 	void registerInverter(int deviceType, const QString &uniqueId);
 
+	int getDeviceInstance(int deviceType, const QString &uniqueId) const;
+
 	/*!
 	 * Creates the D-Bus settings object name for the specified inverter.
 	 * @param deviceType The device type as specified by Fronius.

@@ -4,6 +4,7 @@
 #include "dbus_inverter_bridge.h"
 #include "dbus_inverter_settings_bridge.h"
 #include "dbus_settings_bridge.h"
+#include "defines.h"
 #include "inverter.h"
 #include "inverter_gateway.h"
 #include "inverter_settings.h"
@@ -65,7 +66,6 @@ void DBusFronius::onInverterFound(Inverter *inverter)
 		new DBusInverterSettingsBridge(settings, settings);
 	connect(bridge, SIGNAL(initialized()),
 			this, SLOT(onInverterSettingsInitialized()));
-	mSettings->registerInverter(inverter->deviceType(), inverter->uniqueId());
 }
 
 void DBusFronius::onInverterSettingsInitialized()
@@ -82,6 +82,14 @@ void DBusFronius::onInverterSettingsInitialized()
 		QLOG_ERROR() << "Inverter is single phased, but settings report"
 					 << "multiphase. Adjusting settings.";
 		settings->setPhase(PhaseL1);
+	}
+	mSettings->registerInverter(inverter->deviceType(), inverter->uniqueId());
+	if (settings->deviceInstance() == InvalidDeviceInstance) {
+		int deviceInstance = mSettings->getDeviceInstance(
+								 inverter->deviceType(), inverter->uniqueId());
+		QLOG_INFO() << "Assigning device instance" << deviceInstance << "to"
+					<< inverter->uniqueId();
+		settings->setDeviceInstance(deviceInstance);
 	}
 	InverterUpdater *iu = new InverterUpdater(inverter, settings, inverter);
 	connect(iu, SIGNAL(initialized()), this, SLOT(onInverterInitialized()));
