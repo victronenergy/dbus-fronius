@@ -49,6 +49,7 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	produce(connection, "/Mgmt/ProcessVersion", VERSION);
 	produce(connection, "/ProductName", inverter->productName());
 	produce(connection, "/ProductId", VE_PROD_ID_PV_INVERTER_FRONIUS);
+	produce(connection, "/FroniusDeviceType", inverter->deviceType());
 	produce(connection, "/Serial", inverter->uniqueId());
 
 	QLOG_INFO() << "Registering service" << mServiceName;
