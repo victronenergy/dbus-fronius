@@ -40,19 +40,6 @@ void Inverter::setIsConnected(bool v)
 	emit isConnectedChanged();
 }
 
-QString Inverter::status() const
-{
-	return mStatus;
-}
-
-void Inverter::setStatus(const QString &c)
-{
-	if (mStatus == c)
-		return;
-	mStatus = c;
-	emit statusChanged();
-}
-
 int Inverter::errorCode() const
 {
 	return mErrorCode;

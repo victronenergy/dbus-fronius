@@ -28,7 +28,6 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	QDBusConnection connection = VBusItems::getConnection(mServiceName);
 
 	produce(connection, inverter, "isConnected", "/Connected");
-	produce(connection, inverter, "status", "/DeviceStatus");
 	produce(connection, inverter, "errorCode", "/ErrorCode");
 	produce(connection, inverter, "statusCode", "/StatusCode");
 

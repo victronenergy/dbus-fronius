@@ -11,7 +11,6 @@ class Inverter : public QObject
 {
 	Q_OBJECT
 	Q_PROPERTY(bool isConnected READ isConnected WRITE setIsConnected NOTIFY isConnectedChanged)
-	Q_PROPERTY(QString status READ status WRITE setStatus NOTIFY statusChanged)
 	Q_PROPERTY(int statusCode READ statusCode WRITE setStatusCode NOTIFY statusCodeChanged)
 	Q_PROPERTY(int errorCode READ errorCode WRITE setErrorCode NOTIFY errorCodeChanged)
 	Q_PROPERTY(QString id READ id)
@@ -30,13 +29,6 @@ public:
 	bool isConnected() const;
 
 	void setIsConnected(bool v);
-
-	/*!
-	 * Human readable status text based on `errorCode` and `statusCode`.
-	 */
-	QString status() const;
-
-	void setStatus(const QString &c);
 
 	/*!
 	 * Error code as returned by the fronius inverter

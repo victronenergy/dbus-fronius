@@ -112,11 +112,11 @@ void DBusFronius::onIsConnectedChanged()
 				<< "@ " << inverter->hostName() << ':' << inverter->port();
 	// Start device scan, maybe the IP address of the data card has changed.
 	mGateway->setAutoDetect(true);
-	//	// Do not delete the inverter here because right now a function within
-	//	// InverterUpdater is emitting the isConnectedChanged signal. Deleting
-	//	// the inverter will also delete the InverterUpdater
-	//	mInverters.removeOne(inverter);
-	//	inverter->deleteLater();
+	// Do not delete the inverter here because right now a function within
+	// InverterUpdater is emitting the isConnectedChanged signal. Deleting
+	// the inverter will also delete the InverterUpdater
+	mInverters.removeOne(inverter);
+	inverter->deleteLater();
 }
 
 Inverter *DBusFronius::findInverter(int deviceType, const QString &uniqueId)
