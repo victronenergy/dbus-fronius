@@ -27,9 +27,8 @@ QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 target.path = /opt/color-control/dbus-fronius
 INSTALLS += target
 
-prefix = $$[QT_INSTALL_PREFIX]
-contains(prefix, ".*bpp3.*") {
-    message(Target is ccgx)
+machine=$$(MACHINE)
+contains(machine,ccgx) {
     DEFINES += TARGET_ccgx
 }
 
