@@ -1,6 +1,9 @@
 This file contains some samples of the Fronius Solar API
 ========================================================
 
+API version 1
+-------------
+
 http://ziontrain.no-ip.org:8080/solar_api/GetAPIVersion.cgi
 {
 	"APIVersion" : 1,
@@ -413,4 +416,162 @@ http://ziontrain.no-ip.org:8080/solar_api/v1/GetInverterRealtimeData.cgi?Scope=D
 	"Body" : {
 		"Data" : {}
 	}
+}
+
+API version 0
+-------------
+
+http://10.10.1.6:80/solar_api/GetInverterInfo.cgi
+{
+    "Head" : {
+        "RequestArguments" : {},
+        "Status" : {
+            "Code" : 0,
+            "Reason" : "",
+            "UserMessage" : ""
+        },
+        "Timestamp" : "2015-03-10T09:26:18+01:00"
+    },
+    "Body" : {
+        "Data" : {
+            "1" : {
+                "DT" : 173,
+                "PVPower" : 8000,
+                "UniqueID" : "",
+                "ErrorCode" : 0,
+                "StatusCode" : 7
+            }
+        }
+    }
+}
+
+http://10.10.1.6:80/solar_api/GetInverterRealtimeData.cgi?Scope=Device&DeviceIndex=1&DataCollectionCommonInverterData
+{
+    "Head" : {
+        "RequestArguments" : {
+            "DataCollection" : "CommonInverterData",
+            "DeviceClass" : "Inverter",
+            "DeviceIndex" : "1",
+            "Scope" : "Device"
+        },
+        "Status" : {
+            "Code" : 0,
+            "Reason" : "",
+            "UserMessage" : ""
+        },
+        "Timestamp" : "2015-03-10T09:50:07+01:00"
+    },
+    "Body" : {
+        "Data" : {
+            "DAY_ENERGY" : {
+                "Value" : 2000,
+                "Unit" : "Wh"
+            },
+            "FAC" : {
+                "Value" : 49.95,
+                "Unit" : "Hz"
+            },
+            "IAC" : {
+                "Value" : 3.02,
+                "Unit" : "A"
+            },
+            "IDC" : {
+                "Value" : 1.92,
+                "Unit" : "A"
+            },
+            "PAC" : {
+                "Value" : 714,
+                "Unit" : "W"
+            },
+            "TOTAL_ENERGY" : {
+                "Value" : 4173000,
+                "Unit" : "Wh"
+            },
+            "UAC" : {
+                "Value" : 230,
+                "Unit" : "V"
+            },
+            "UDC" : {
+                "Value" : 372,
+                "Unit" : "V"
+            },
+            "YEAR_ENERGY" : {
+                "Value" : 399000,
+                "Unit" : "Wh"
+            },
+            "DeviceStatus" : {
+                "StatusCode" : 7,
+                "MgmtTimerRemainingTime" : -1,
+                "ErrorCode" : 0,
+                "LEDColor" : 2,
+                "LEDState" : 0,
+                "StateToReset" : false
+            }
+        }
+    }
+}
+
+http://10.10.1.6:80/solar_api/GetInverterRealtimeData.cgi?Scope=System
+{
+    "Head" : {
+        "RequestArguments" : {
+            "Scope" : "System"
+        },
+        "Status" : {
+            "Code" : 0,
+            "Reason" : "",
+            "UserMessage" : ""
+        },
+        "Timestamp" : "2015-03-10T09:52:16+01:00"
+    },
+    "Body" : {
+        "Data" : {
+            "PAC" : {
+                "Unit" : "W",
+                "Values" : {
+                    "1" : 838
+                }
+            },
+            "DAY_ENERGY" : {
+                "Unit" : "Wh",
+                "Values" : {
+                    "1" : 2000
+                }
+            },
+            "YEAR_ENERGY" : {
+                "Unit" : "Wh",
+                "Values" : {
+                    "1" : 399000
+                }
+            },
+            "TOTAL_ENERGY" : {
+                "Unit" : "Wh",
+                "Values" : {
+                    "1" : 4173000
+                }
+            }
+        }
+    }
+}
+
+http://10.10.1.6:80/solar_api/GetActiveDeviceInfo.cgi?DeviceClass=Inverter
+{
+    "Head" : {
+        "RequestArguments" : {
+            "DeviceClass" : "Inverter"
+        },
+        "Status" : {
+            "Code" : 0,
+            "Reason" : "",
+            "UserMessage" : ""
+        },
+        "Timestamp" : "2015-03-10T09:54:25+01:00"
+    },
+    "Body" : {
+        "Data" : {
+            "1" : {
+                "DT" : 173
+            }
+        }
+    }
 }
