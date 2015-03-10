@@ -25,12 +25,7 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 				  QDBusVariant(static_cast<int>(settings->position())));
 	addDBusObject("Fronius", group + "/Phase", 'i',
 				  QDBusVariant(static_cast<int>(settings->phase())));
-	/// @todo EV We might need the exact device type here
-	/// (eg. Fronius Galvo 3.0-1). This would force (?) us to store
-	/// the type in the settings, because the inverter may be offline
-	/// when we need it.
-	addDBusObject("Fronius", group + "/CustomName", 's',
-				  QDBusVariant(settings->customName()));
+	addDBusObject("Fronius", group + "/CustomName", 's', QDBusVariant(""));
 	addDBusObject("Fronius", group + "/DeviceInstance", 'i', QDBusVariant(InvalidDeviceInstance));
 	addDBusDouble("Fronius", group + "/L1Energy", 0.0, 0.0, 1e6);
 	addDBusDouble("Fronius", group + "/L2Energy", 0.0, 0.0, 1e6);

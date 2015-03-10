@@ -74,6 +74,10 @@ bool DBusInverterBridge::toDBus(const QString &path, QVariant &value)
 		value = QVariant(static_cast<int>(value.value<InverterPosition>()));
 	} else if (path == "/Mgmt/Connection") {
 		value = QString("%1 - %2").arg(value.toString()).arg(mInverter->id());
+	} else if (path == "/CustomName") {
+		QString name = value.toString();
+		if (name.isEmpty())
+			value = mInverter->productName();
 	}
 	if (value.type() == QVariant::Double && !std::isfinite(value.toDouble()))
 		value = qVariantFromValue(QStringList());
@@ -88,6 +92,10 @@ bool DBusInverterBridge::fromDBus(const QString &path, QVariant &value)
 		value = QVariant(static_cast<InverterPosition>(value.toInt()));
 	} else if (path == "/Mgmt/Connection") {
 		return false;
+	} else if (path == "/CustomName") {
+		QString name = value.toString();
+		if (name == mInverter->productName())
+			value = "";
 	}
 	return true;
 }

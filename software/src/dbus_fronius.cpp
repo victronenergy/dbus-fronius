@@ -58,10 +58,6 @@ void DBusFronius::onInverterFound(Inverter *inverter)
 	InverterSettings *settings = new InverterSettings(inverter->deviceType(),
 													  inverter->uniqueId(),
 													  inverter);
-	// The custom name we set here will be use as default (and initial) value
-	// of the D-Bus parameter. If the parameter already exists, this value
-	// will be overwritten by the current value taken from the D-Bus.
-	settings->setCustomName(inverter->productName());
 	DBusInverterSettingsBridge *bridge =
 		new DBusInverterSettingsBridge(settings, settings);
 	connect(bridge, SIGNAL(initialized()),
