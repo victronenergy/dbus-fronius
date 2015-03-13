@@ -12,8 +12,11 @@ static const int MaxSimultaneousRequests = 64;
 InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
 	mSettings(settings),
+	mTimer(new QTimer(this)),
 	mSettingsBusy(false),
-	mFullScanRequested(false)
+	mAutoDetect(false),
+	mFullScanRequested(false),
+	mFullScanIfNoDeviceFound(false)
 {
 	Q_ASSERT(settings != 0);
 	connect(settings, SIGNAL(portNumberChanged()),
@@ -22,6 +25,9 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 			this, SLOT(onSettingsChanged()));
 	connect(settings, SIGNAL(knownIpAddressesChanged()),
 			this, SLOT(onSettingsChanged()));
+	mTimer->setInterval(60000);
+	mTimer->start();
+	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
 }
 
 bool InverterGateway::autoDetect() const
@@ -36,6 +42,7 @@ void InverterGateway::setAutoDetect(bool b)
 	mAutoDetect	= b;
 	if (!mSettingsBusy) {
 		mFullScanRequested = b;
+		mFullScanIfNoDeviceFound = b;
 		updateAddressGenerator();
 	}
 	emit autoDetectChanged();
@@ -49,6 +56,7 @@ int InverterGateway::scanProgress() const
 void InverterGateway::startDetection()
 {
 	mSettingsBusy = true;
+	mFullScanIfNoDeviceFound = true;
 	setAutoDetect(true);
 	mSettingsBusy = false;
 	updateAddressGenerator();
@@ -86,7 +94,7 @@ void InverterGateway::updateDetection()
 				QLOG_INFO() << "Full scan requested, starting auto IP scan";
 				autoDetect = true;
 				mFullScanRequested = false;
-			} else if (count < addresses.size() || mDevicesFound.isEmpty()) {
+			} else if (mFullScanIfNoDeviceFound && (count < addresses.size() || mDevicesFound.isEmpty())) {
 				/// @todo EV We may get here when auto detect is disabled manually
 				/// *before* any inverter have been found.
 				// Some devices were missing or no devices were found at all.
@@ -162,6 +170,27 @@ void InverterGateway::onSettingsChanged()
 	setAutoDetect(true);
 	mSettingsBusy = false;
 	updateAddressGenerator();
+}
+
+void InverterGateway::onTimer()
+{
+	if (mAddressGenerator.hasNext())
+		return;
+	QList<QHostAddress> addresses = mSettings->ipAddresses();
+	foreach (QHostAddress a, mSettings->knownIpAddresses()) {
+		if (!addresses.contains(a)) {
+			addresses.append(a);
+		}
+	}
+	if (addresses.isEmpty())
+		return;
+	QLOG_INFO() << "Starting known IP scan (timer based)";
+	mFullScanIfNoDeviceFound = false;
+	mAddressGenerator.setPriorityAddresses(addresses);
+	mAddressGenerator.setPriorityOnly(true);
+	mAddressGenerator.reset();
+	for (int i=mApis.size(); i<MaxSimultaneousRequests; ++i)
+		updateDetection();
 }
 
 void InverterGateway::updateAddressGenerator()

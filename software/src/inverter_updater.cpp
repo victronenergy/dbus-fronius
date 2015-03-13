@@ -68,11 +68,9 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 	switch (data.error)
 	{
 	case SolarApiReply::NoError:
-	{
 		mProcessor.process(data);
 		mRetryCount = 0;
-		if (mInverter->phaseCount() > 1)
-		{
+		if (mInverter->phaseCount() > 1) {
 			mSolarApi->getThreePhasesInverterDataAsync(mInverter->id());
 		} else {
 			mInverter->setIsConnected(true);
@@ -81,25 +79,16 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		}
 		mInverter->setStatusCode(data.statusCode);
 		mInverter->setErrorCode(data.errorCode);
-	}
 		break;
 	case SolarApiReply::NetworkError:
-		++mRetryCount;
-		if (mRetryCount == 5)
-		{
-			mInverter->setIsConnected(false);
-			mInverter->resetValues();
-			mRetryCount = 0;
-		}
+		handleError();
 		scheduleRetrieval();
 		break;
 	case SolarApiReply::ApiError:
-		// Inverter does not support common data retrieval?
-		mInverter->setIsConnected(false);
-		setInitialized();
-		QLOG_ERROR() << "Could not retrieve common inverter data."
-						"This should not happen, because all Fronius inverters"
-						"support this command.";
+		QLOG_ERROR() << "Fronius CommonInverterData retrieval error:"
+					 << data.errorMessage;
+		handleError();
+		scheduleRetrieval();
 		break;
 	}
 }
@@ -111,24 +100,17 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 	case SolarApiReply::NoError:
 		Q_ASSERT(mInverter->phaseCount() > 1 && mSettings->phase() == MultiPhase);
 		mProcessor.process(data);
-		mInverter->setIsConnected(true);
 		mRetryCount = 0;
+		mInverter->setIsConnected(true);
 		setInitialized();
 		break;
 	case SolarApiReply::NetworkError:
-		++mRetryCount;
-		if (mRetryCount == 5)
-		{
-			mInverter->setIsConnected(false);
-			mInverter->resetValues();
-			mRetryCount = 0;
-		}
+		handleError();
 		break;
 	case SolarApiReply::ApiError:
-		mInverter->setIsConnected(true);
-		setInitialized();
-		QLOG_ERROR() << "Could not retrieve 3Phase data from inverter."
+		QLOG_ERROR() << "Fronius 3Phase inverter data retrieval error:"
 					 << data.errorMessage;
+		handleError();
 		break;
 	}
 	scheduleRetrieval();
@@ -161,9 +143,18 @@ void InverterUpdater::scheduleRetrieval()
 
 void InverterUpdater::setInitialized()
 {
-	if (!mInitialized)
-	{
-		emit initialized();
+	if (!mInitialized) {
 		mInitialized = true;
+		emit initialized();
+	}
+}
+
+void InverterUpdater::handleError()
+{
+	++mRetryCount;
+	if (mRetryCount == 5) {
+		mInverter->setIsConnected(false);
+		mInverter->resetValues();
+		mRetryCount = 0;
 	}
 }

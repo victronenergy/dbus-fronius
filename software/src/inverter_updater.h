@@ -44,6 +44,8 @@ private:
 
 	void setInitialized();
 
+	void handleError();
+
 	Inverter *mInverter;
 	InverterSettings *mSettings;
 	FroniusSolarApi *mSolarApi;

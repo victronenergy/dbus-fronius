@@ -8,6 +8,7 @@
 
 class FroniusSolarApi;
 class Inverter;
+class QTimer;
 class Settings;
 struct InverterListData;
 
@@ -53,6 +54,8 @@ private slots:
 
 	void onSettingsChanged();
 
+	void onTimer();
+
 private:
 	void updateAddressGenerator();
 
@@ -64,9 +67,11 @@ private:
 	QList<QHostAddress> mDevicesFound;
 	QList<FroniusSolarApi *> mApis;
 	LocalIpAddressGenerator mAddressGenerator;
+	QTimer *mTimer;
 	bool mSettingsBusy;
 	bool mAutoDetect;
 	bool mFullScanRequested;
+	bool mFullScanIfNoDeviceFound;
 };
 
 #endif // INVERTER_GATEWAY_H

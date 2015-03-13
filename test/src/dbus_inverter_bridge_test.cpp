@@ -19,6 +19,7 @@ TEST_F(DBusInverterBridgeTest, constructor)
 	mInverter->l2PowerInfo()->setCurrent(1.7);
 	mInverter->l2PowerInfo()->setPower(138);
 	mInverter->l2PowerInfo()->setVoltage(344);
+	mSettings->setDeviceInstance(22);
 
 	SetUpBridge();
 
@@ -38,7 +39,7 @@ TEST_F(DBusInverterBridgeTest, constructor)
 			   mDBusClient->getValue(mServiceName, "/ProductId").toString());
 	checkValue(QString("Fronius Symo 8.2-3-M"),
 			   mDBusClient->getValue(mServiceName, "/ProductName"));
-	checkValue(QString(""),
+	checkValue(QString("Fronius Symo 8.2-3-M"),
 			   mDBusClient->getValue(mServiceName, "/CustomName"));
 	checkValue(QVariant(22),
 			   mDBusClient->getValue(mServiceName, "/DeviceInstance"));
@@ -79,8 +80,8 @@ TEST_F(DBusInverterBridgeTest, deviceInstance)
 {
 	SetUpBridge();
 
-	checkValue(QVariant(22), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
-	mSettings->setPosition(Output);
+	checkValue(QVariant(-1), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
+	mSettings->setDeviceInstance(21);
 	qWait(100);
 	checkValue(QVariant(21), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
 }
