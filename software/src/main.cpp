@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 
-	initLogger(QsLogging::WarnLevel);
+	initLogger(QsLogging::InfoLevel);
 
 #if TARGET_ccgx
 	VBusItems::setConnectionType(QDBusConnection::SystemBus);

@@ -41,10 +41,13 @@ void DBusFronius::onInverterFound(Inverter *inverter)
 	Inverter *oldInverter = findInverter(inverter->deviceType(),
 										 inverter->uniqueId());
 	if (oldInverter != 0) {
-		oldInverter->setHostName(inverter->hostName());
-		oldInverter->setPort(inverter->port());
-		QLOG_INFO() << "Updated connection settings:" << inverter->uniqueId()
-					<< "@" << inverter->hostName() << ':' << inverter->id();
+		if (oldInverter->hostName() != inverter->hostName() ||
+			oldInverter->port() != inverter->port()) {
+			oldInverter->setHostName(inverter->hostName());
+			oldInverter->setPort(inverter->port());
+			QLOG_INFO() << "Updated connection settings:" << inverter->uniqueId()
+						<< "@" << inverter->hostName() << ':' << inverter->id();
+		}
 		// inverter will be deleted by InverterGateway, because we have not
 		// set a new parent.
 		return;

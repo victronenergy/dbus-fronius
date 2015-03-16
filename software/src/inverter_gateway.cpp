@@ -94,7 +94,9 @@ void InverterGateway::updateDetection()
 				QLOG_INFO() << "Full scan requested, starting auto IP scan";
 				autoDetect = true;
 				mFullScanRequested = false;
-			} else if (mFullScanIfNoDeviceFound && (count < addresses.size() || mDevicesFound.isEmpty())) {
+			} else if (!mFullScanIfNoDeviceFound) {
+				QLOG_DEBUG() << "No auto IP scan requested. Detection finished";
+			} else if (count < addresses.size() || mDevicesFound.isEmpty()) {
 				/// @todo EV We may get here when auto detect is disabled manually
 				/// *before* any inverter have been found.
 				// Some devices were missing or no devices were found at all.
@@ -102,7 +104,7 @@ void InverterGateway::updateDetection()
 				QLOG_INFO() << "Not all devices found, starting auto IP scan";
 				autoDetect = true;
 			} else {
-				QLOG_INFO() << "Auto IP scan disabled, all devices found";
+				QLOG_DEBUG() << "Auto IP scan disabled, all devices found";
 			}
 		} else {
 			QLOG_INFO() << "Auto IP scan completed. Detection finished";
@@ -134,7 +136,7 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 	if (data.error == InverterListData::NoError) {
 		QString hostName = api->hostName();
 		int port = api->port();
-		QLOG_INFO() << "Inverter found at" << hostName << ':' << port;
+		QLOG_DEBUG() << "Inverter found at" << hostName << ':' << port;
 		QList<QHostAddress> knownIpAddresses = mSettings->knownIpAddresses();
 		QHostAddress addr(hostName);
 		if (!knownIpAddresses.contains(addr)) {
@@ -184,7 +186,7 @@ void InverterGateway::onTimer()
 	}
 	if (addresses.isEmpty())
 		return;
-	QLOG_INFO() << "Starting known IP scan (timer based)";
+	QLOG_DEBUG() << "Starting known IP scan (timer based)";
 	mFullScanIfNoDeviceFound = false;
 	mAddressGenerator.setPriorityAddresses(addresses);
 	mAddressGenerator.setPriorityOnly(true);
@@ -207,7 +209,7 @@ void InverterGateway::updateAddressGenerator()
 			mAddressGenerator.setPriorityOnly(false);
 			mAddressGenerator.reset();
 		} else {
-			QLOG_INFO() << "Starting known IP scan";
+			QLOG_DEBUG() << "Starting known IP scan";
 			mAddressGenerator.setPriorityAddresses(addresses);
 			mAddressGenerator.setPriorityOnly(true);
 			mAddressGenerator.reset();
@@ -215,7 +217,7 @@ void InverterGateway::updateAddressGenerator()
 		for (int i=mApis.size(); i<MaxSimultaneousRequests; ++i)
 			updateDetection();
 	} else {
-		QLOG_INFO() << "Auto IP scan disabled";
+		QLOG_DEBUG() << "Auto IP scan disabled";
 		mAddressGenerator.setPriorityOnly(true);
 		mAddressGenerator.setPriorityAddresses(QList<QHostAddress>());
 		mAddressGenerator.reset();

@@ -228,10 +228,12 @@ void FroniusSolarApi::sendGetRequest(QUrl url, const QString &id)
 void FroniusSolarApi::processReply(QNetworkReply *reply, SolarApiReply &apiReply,
 								 QVariantMap &map)
 {
+	// Some error will be logged with QLOG_DEBUG because they occur often during
+	// a device scan and would fill the log with a lot of useless information.
 	if (reply->error() != QNetworkReply::NoError) {
 		apiReply.error = SolarApiReply::NetworkError;
 		apiReply.errorMessage = reply->errorString();
-		QLOG_INFO() << "Network error:" << apiReply.errorMessage << reply->url();
+		QLOG_DEBUG() << "Network error:" << apiReply.errorMessage << reply->url();
 		return;
 	}
 	QByteArray bytes = reply->readAll();
@@ -246,7 +248,7 @@ void FroniusSolarApi::processReply(QNetworkReply *reply, SolarApiReply &apiReply
 		apiReply.errorMessage = "Reply message has no status "
 								"(we're probably talking to a device "
 								"that does not support the Fronius Solar API)";
-		QLOG_INFO() << "Network error:" << apiReply.errorMessage << reply->url();
+		QLOG_DEBUG() << "Network error:" << apiReply.errorMessage << reply->url();
 		return;
 	}
 	int errorCode = status["Code"].toInt();
@@ -254,7 +256,7 @@ void FroniusSolarApi::processReply(QNetworkReply *reply, SolarApiReply &apiReply
 	{
 		apiReply.error = SolarApiReply::ApiError;
 		apiReply.errorMessage = status["Reason"].toString();
-		QLOG_INFO() << "Fronius solar API error:" << apiReply.errorMessage;
+		QLOG_ERROR() << "Fronius solar API error:" << apiReply.errorMessage;
 		return;
 	}
 	apiReply.error = SolarApiReply::NoError;
