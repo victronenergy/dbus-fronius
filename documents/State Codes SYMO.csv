@@ -1,0 +1,44 @@
+Servicecode;Description
+102;Grid voltage above permitted limit
+103;Grid voltage below permitted limit
+105;Mains frequency above permitted limit
+106;Mains frequency below permitted limit
+107;Synchronisation with the public mains supply not possible
+108;Islanding detected
+112;RCMU error
+301;Current peak on the mains supply detected
+302;Current peak on the PV generator detected
+303;temp. High Ch1  (DC overtemperature)
+304;temp. High Ch2  (AC overtemperature)
+305;Feed-in process not possible, although public mains  within limits
+306;POWER LOW
+307;DC LOW
+308;The intermediate circuit voltage has exceeded the max. permissible range 
+309;Too high DC1 voltage
+313;Too high DC2 voltage
+408;On the inverter an unacceptably high DC injection was detected
+412;Adjusted Fix-voltage DC 1 beyond the accessible MPP range 
+415;External shutdown tripped
+426;charging intermediate circuit takes to long
+448;Neutral Wire fault
+456;Error in the Anti - Islanding monitoring detected
+457;Grid Relais doesn't release
+458;RCMU selfcheck failed
+459;faulty Isolation Measurement 
+460;Reference voltage outside permitted limits
+462;Failure on the DC injection monitoring detected 
+463;AC pole reversed
+474;RCMU sensor error
+475;Isolation failure detected (isolation below Country Setup limit)
+476;Internal Power supply missing
+482;inverter switched off during commissioning
+502;An isolation fault between DC+ or DC- to earth has been detected
+509;No feed in operation for 24 hours
+517;Power stack Derating caused by too high temperature
+520;No feed in operation for 24 hours from DC Input 1
+521;No feed in operation for 24 hours from DC Input 2
+522;DC LOW Ch1
+523;DC LOW Ch2
+558;Country setup not supported
+560;Power reduction because of over frequency
+567;GVDPR active
