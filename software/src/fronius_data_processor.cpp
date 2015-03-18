@@ -9,7 +9,7 @@ FroniusDataProcessor::FroniusDataProcessor(Inverter *inverter,
 										   InverterSettings *settings):
 	mInverter(inverter),
 	mSettings(settings),
-	mPreviousTotalEnergy(0)
+	mPreviousTotalEnergy(-1)
 {
 	Q_ASSERT((mInverter->phaseCount() > 1) == (mSettings->phase() == MultiPhase));
 }
@@ -65,8 +65,12 @@ void FroniusDataProcessor::process(const ThreePhasesInverterData &data)
 		accumulatedEnergy += getEnergyValue(PhaseL3);
 		totalVi += vi3;
 	}
-	double powerCorrection = mInverter->meanPowerInfo()->power() / totalVi;
-	double energyCorrection = energyDelta / totalVi;
+	double powerCorrection = 0;
+	double energyCorrection = 0;
+	if (totalVi > 0) {
+		powerCorrection = mInverter->meanPowerInfo()->power() / totalVi;
+		energyCorrection = energyDelta / totalVi;
+	}
 
 	PowerInfo *l1 = mInverter->l1PowerInfo();
 	l1->setCurrent(data.acCurrentPhase1);
@@ -100,20 +104,25 @@ void FroniusDataProcessor::updateEnergySettings()
 
 void FroniusDataProcessor::updateEnergyValue(InverterPhase phase,
 											 double accumulatedEnergy,
-											 double offset)
+											 double energyDelta)
 {
-	if (mPreviousTotalEnergy <= 0)
+	if (mPreviousTotalEnergy < 0)
 		return;
-	double v0 = 0;
+	double phaseEnergy = 0;
 	if (accumulatedEnergy > 0) {
-		double ep = getEnergyValue(phase);
-		v0 = mPreviousTotalEnergy * ep / accumulatedEnergy;
+		double prevPhaseEnergy = getEnergyValue(phase);
+		// p0 is calculated as the weighted fraction of mPreviousTotalEnergy.
+		// The weight is ep / accumulatedEnergy.
+		// We do this instead of simply incrementing 'phaseEnergy' with
+		// 'energyDelta' to prevent that the sum of the phase energy value
+		// drifts away from the toal energy value.
+		phaseEnergy = mPreviousTotalEnergy * prevPhaseEnergy / accumulatedEnergy;
 	} else {
-		v0 = mPreviousTotalEnergy / mInverter->phaseCount();
+		phaseEnergy = mPreviousTotalEnergy / mInverter->phaseCount();
 	}
-	v0 += offset;
+	phaseEnergy += energyDelta;
 	PowerInfo *pi = mInverter->getPowerInfo(phase);
-	pi->setTotalEnergy(v0);
+	pi->setTotalEnergy(phaseEnergy);
 }
 
 double FroniusDataProcessor::getEnergyValue(InverterPhase phase)

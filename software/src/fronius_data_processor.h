@@ -31,7 +31,7 @@ public:
 
 private:
 	void updateEnergyValue(InverterPhase phase,
-						   double accumulatedEnergy, double offset);
+						   double accumulatedEnergy, double energyDelta);
 
 	double getEnergyValue(InverterPhase phase);
 
