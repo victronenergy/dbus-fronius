@@ -1,8 +1,8 @@
 #include <QCoreApplication>
-#include <QDBusConnection>
 #include <QsLog.h>
 #include <QStringList>
 #include <unistd.h>
+#include <velib/qt/v_busitem.h>
 #include <velib/qt/v_busitems.h>
 #include "dbus_fronius.h"
 #include "dbus_settings_bridge.h"
@@ -20,6 +20,26 @@ void initLogger(QsLogging::Level logLevel)
 	QLOG_INFO() << "Built with Qt" << QT_VERSION_STR << "running on" << qVersion();
 	QLOG_INFO() << "Built on" << __DATE__ << "at" << __TIME__;
 	logger.setLoggingLevel(logLevel);
+}
+
+void initDBus()
+{
+#if TARGET_ccgx
+	VBusItems::setDBusAddress("system");
+
+	QLOG_INFO() << "Wait for local settings on DBus... ";
+	VBusItem settings;
+	settings.consume("com.victronenergy.settings", "/Settings/Vrmlogger/Url");
+	for (;;) {
+		QVariant reply = settings.getValue();
+		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+		if (reply.isValid())
+			break;
+		usleep(2000000);
+		QLOG_INFO() << "Waiting...";
+	}
+	QLOG_INFO() << "Local settings found";
+#endif
 }
 
 int main(int argc, char *argv[])
@@ -65,14 +85,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	QLOG_INFO() << "Wait for local setting on DBus...";
-	for (;;) {
-		if (DBusSettingsBridge::addDBusObjects())
-			break;
-		QLOG_INFO() << "Wait...";
-		usleep(2000000);
-	}
-	QLOG_INFO() << "Local settings found!";
+	initDBus();
 
 	DBusFronius test(&a);
 

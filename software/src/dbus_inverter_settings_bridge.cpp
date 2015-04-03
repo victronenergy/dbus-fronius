@@ -1,44 +1,31 @@
-#include <QDBusConnection>
-#include <QDBusVariant>
-#include <velib/qt/v_busitems.h>
 #include "dbus_inverter_settings_bridge.h"
 #include "defines.h"
 #include "settings.h"
 #include "inverter_settings.h"
 
 static const QString Service = "com.victronenergy.settings";
-static const QString BasePath = "/Settings/Fronius/";
+static const QString BasePath = "/Settings/Fronius/Inverters/";
 
 DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 	InverterSettings *settings, QObject *parent) :
 	DBusBridge(parent)
 {
-	QDBusConnection &connection = VBusItems::getConnection();
-	// Unique ID of a fronius inverter is currently a number. Using numbers as
-	// name of a DBus object causes trouble: the local settings application
-	// saves the settings as xml and uses object names as element names.
-	// Unfortunately, the name of an xml element cannot start with a number.
-	QString group = "Inverters/" +
-					Settings::createInverterId(settings->deviceType(),
-											   settings->uniqueId());
-	addDBusObject("Fronius", group + "/Position", 'i',
-				  QDBusVariant(static_cast<int>(settings->position())));
-	addDBusObject("Fronius", group + "/Phase", 'i',
-				  QDBusVariant(static_cast<int>(settings->phase())));
-	addDBusObject("Fronius", group + "/CustomName", 's', QDBusVariant(""));
-	addDBusObject("Fronius", group + "/DeviceInstance", 'i', QDBusVariant(InvalidDeviceInstance));
-	addDBusDouble("Fronius", group + "/L1Energy", 0.0, 0.0, 1e6);
-	addDBusDouble("Fronius", group + "/L2Energy", 0.0, 0.0, 1e6);
-	addDBusDouble("Fronius", group + "/L3Energy", 0.0, 0.0, 1e6);
-
-	QString path = BasePath + group;
-	consume(connection, Service, settings, "phase", path + "/Phase");
-	consume(connection, Service, settings, "position", path + "/Position");
-	consume(connection, Service, settings, "deviceInstance", path + "/DeviceInstance");
-	consume(connection, Service, settings, "customName", path + "/CustomName");
-	consume(connection, Service, settings, "l1Energy", path + "/L1Energy");
-	consume(connection, Service, settings, "l2Energy", path + "/L2Energy");
-	consume(connection, Service, settings, "l3Energy", path + "/L3Energy");
+	QString path = BasePath + Settings::createInverterId(settings->deviceType(),
+														 settings->uniqueId());
+	consume(Service, settings, "phase",
+			QVariant(static_cast<int>(settings->phase())), path + "/Phase");
+	consume(Service, settings, "position",
+			QVariant(static_cast<int>(settings->position())), path + "/Position");
+	consume(Service, settings, "deviceInstance",
+			QVariant(InvalidDeviceInstance), path + "/DeviceInstance");
+	consume(Service, settings, "customName",
+			QVariant(""), path + "/CustomName");
+	consume(Service, settings, "l1Energy",
+			0.0, 0.0, 1e6, path + "/L1Energy");
+	consume(Service, settings, "l2Energy",
+			0.0, 0.0, 1e6, path + "/L2Energy");
+	consume(Service, settings, "l3Energy",
+			0.0, 0.0, 1e6, path + "/L3Energy");
 }
 
 bool DBusInverterSettingsBridge::toDBus(const QString &path, QVariant &v)

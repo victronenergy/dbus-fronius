@@ -29,12 +29,15 @@ class DBusBridge : public QObject
 public:
 	explicit DBusBridge(QObject *parent);
 
+	DBusBridge(const QString &serviceName, QObject *parent);
+
+	~DBusBridge();
+
 	/*!
 	 * \brief Connects a QT property to a DBus object, and registers the object.
 	 * Connects the QT property specified by `src` and `property` to the
 	 * DBus object specified by `connection` and `path`.
 	 * The DBus object will also be registered by this function.
-	 * \param connection
 	 * \param src The owner of the property
 	 * \param property The name of the property.
 	 * \param path The path to the DBus object
@@ -43,8 +46,7 @@ public:
 	 * \param precision The precision of the GetText result. Will only be used
 	 * if the property has a floating point value.
 	 */
-	void produce(QDBusConnection &connection, QObject *src,
-				 const char *property, const QString &path,
+	void produce(QObject *src, const char *property, const QString &path,
 				 const QString &unit = QString(), int precision = -1);
 
 	/*!
@@ -55,27 +57,41 @@ public:
 	 * full control of the variant passed to this function, it will not be
 	 * passed through the toDBus function.
 	 * The DBus object will also be registered by this function.
-	 * \param connection
 	 * \param path
 	 * \param value
 	 * \param unit
 	 */
-	void produce(QDBusConnection &connection, const QString &path,
-				 const QVariant &value, const QString &unit = QString(),
-				 int precision = -1);
+	void produce(const QString &path, const QVariant &value,
+				 const QString &unit = QString(), int precision = -1);
 
 	/*!
 	 * \brief Connects a QT property to an existing DBus item.
 	 * Connects the QT property specified by `src` and `property` to the
 	 * DBus object specified by `connection`, `service`, and `path`.
-	 * \param connection
 	 * \param service
 	 * \param src
 	 * \param property
 	 * \param path
 	 */
-	void consume(QDBusConnection &connection, const QString &service,
+	void consume(const QString &service,
 				 QObject *src, const char *property, const QString &path);
+
+	void consume(const QString &service,
+				 QObject *src, const char *property,
+				 const QVariant &defaultValue, const QString &path);
+
+	void consume(const QString &service,
+				 QObject *src, const char *property, double defaultValue,
+				 double minValue, double maxValue, const QString &path);
+
+	QString serviceName() const;
+
+	void setServiceName(const QString &sn);
+
+	void registerService();
+
+	static bool addSetting(const QString &path, const QVariant &defaultValue,
+						   const QVariant &minValue, const QVariant &maxValue);
 
 signals:
 	void initialized();
@@ -107,18 +123,6 @@ protected:
 	 */
 	virtual bool fromDBus(const QString &path, QVariant &v);
 
-	static bool addDBusObject(const QString &group, const QString &name,
-							  QChar type, const QDBusVariant &defaultValue,
-							  const QDBusVariant &minValue,
-							  const QDBusVariant &maxValue);
-
-	static bool addDBusObject(const QString &group, const QString &name,
-							  QChar type, const QDBusVariant &defaultValue);
-
-	static bool addDBusDouble(const QString &group, const QString &name,
-							  double defaultValue, double minValue,
-							  double maxValue);
-
 private slots:
 	void onPropertyChanged();
 
@@ -128,8 +132,7 @@ private:
 	void connectItem(VBusItem *item, QObject *src, const char *property,
 					 const QString &path);
 
-	void addVBusNodes(QDBusConnection &connection, const QString &path,
-					  VBusItem *vbi);
+	void addVBusNodes(const QString &path, VBusItem *vbi);
 
 	struct BusItemBridge
 	{
@@ -141,6 +144,8 @@ private:
 	};
 	QList<BusItemBridge> mBusItems;
 	QPointer<VBusNode> mServiceRoot;
+	QString mServiceName;
+	bool mServiceRegistered;
 	bool mUpdateBusy;
 };
 

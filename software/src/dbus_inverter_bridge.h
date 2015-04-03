@@ -20,21 +20,17 @@ public:
 	explicit DBusInverterBridge(Inverter *inverter, InverterSettings *settings,
 								QObject *parent = 0);
 
-	virtual ~DBusInverterBridge();
-
 protected:
 	virtual bool toDBus(const QString &path, QVariant &value);
 
 	virtual bool fromDBus(const QString &path, QVariant &value);
 
 private:
-	void addBusItems(QDBusConnection &connection, PowerInfo *pi,
-					 const QString &path);
+	void addBusItems(PowerInfo *pi, const QString &path);
 
 	static QString fixServiceNameFragment(const QString &s);
 
 	Inverter *mInverter;
-	QString mServiceName;
 };
 
 #endif // DBUS_INVERTER_BRIDGE_H

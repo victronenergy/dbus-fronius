@@ -1,7 +1,5 @@
-#include <QDBusVariant>
 #include <QsLog.h>
 #include <QStringList>
-#include <velib/qt/v_busitems.h>
 #include "dbus_settings_bridge.h"
 #include "settings.h"
 
@@ -16,20 +14,10 @@ DBusSettingsBridge::DBusSettingsBridge(Settings *settings, QObject *parent):
 {
 	Q_ASSERT(settings != 0);
 
-	QDBusConnection &connection = VBusItems::getConnection();
-	consume(connection, Service, settings, "portNumber", PortNumberPath);
-	consume(connection, Service, settings, "ipAddresses", IpAddressesPath);
-	consume(connection, Service, settings, "knownIpAddresses", KnownIpAddressesPath);
-	consume(connection, Service, settings, "inverterIds", InverterIdsPath);
-}
-
-bool DBusSettingsBridge::addDBusObjects()
-{
-	return
-		addDBusObject("Fronius", "PortNumber", 'i', QDBusVariant(80)) &&
-		addDBusObject("Fronius", "IPAddresses", 's', QDBusVariant("")) &&
-		addDBusObject("Fronius", "KnownIPAddresses", 's', QDBusVariant("")) &&
-		addDBusObject("Fronius", "InverterIds", 's', QDBusVariant(""));
+	consume(Service, settings, "portNumber", QVariant(80), PortNumberPath);
+	consume(Service, settings, "ipAddresses", QVariant(""), IpAddressesPath);
+	consume(Service, settings, "knownIpAddresses", QVariant(""), KnownIpAddressesPath);
+	consume(Service, settings, "inverterIds", QVariant(""), InverterIdsPath);
 }
 
 bool DBusSettingsBridge::toDBus(const QString &path, QVariant &value)

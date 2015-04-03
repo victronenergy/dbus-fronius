@@ -1,10 +1,8 @@
 #include <cmath>
 #include <QCoreApplication>
-#include <QDBusConnection>
 #include <QHostAddress>
 #include <QsLog.h>
 #include <QStringList>
-#include <velib/qt/v_busitems.h>
 #include <velib/vecan/products.h>
 #include "dbus_inverter_bridge.h"
 #include "inverter.h"
@@ -21,49 +19,35 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	Q_ASSERT(inverter != 0);
 	connect(inverter, SIGNAL(destroyed()), this, SLOT(deleteLater()));
 
-	mServiceName = QString("com.victronenergy.pvinverter.fronius_%1_%2").
+	setServiceName(QString("com.victronenergy.pvinverter.fronius_%1_%2").
 			arg(inverter->deviceType()).
-			arg(fixServiceNameFragment(inverter->uniqueId()));
+			arg(fixServiceNameFragment(inverter->uniqueId())));
 
-	QDBusConnection connection = VBusItems::getConnection(mServiceName);
+	produce(inverter, "isConnected", "/Connected");
+	produce(inverter, "errorCode", "/ErrorCode");
+	produce(inverter, "statusCode", "/StatusCode");
 
-	produce(connection, inverter, "isConnected", "/Connected");
-	produce(connection, inverter, "errorCode", "/ErrorCode");
-	produce(connection, inverter, "statusCode", "/StatusCode");
+	addBusItems(inverter->meanPowerInfo(), "/Ac");
+	addBusItems(inverter->l1PowerInfo(), "/Ac/L1");
+	addBusItems(inverter->l2PowerInfo(), "/Ac/L2");
+	addBusItems(inverter->l3PowerInfo(), "/Ac/L3");
 
-	addBusItems(connection, inverter->meanPowerInfo(), "/Ac");
-	addBusItems(connection, inverter->l1PowerInfo(), "/Ac/L1");
-	addBusItems(connection, inverter->l2PowerInfo(), "/Ac/L2");
-	addBusItems(connection, inverter->l3PowerInfo(), "/Ac/L3");
-
-	produce(connection, settings, "position", "/Position");
-	produce(connection, settings, "deviceInstance", "/DeviceInstance");
-	produce(connection, settings, "customName", "/CustomName");
-	produce(connection, inverter, "hostName", "/Mgmt/Connection");
+	produce(settings, "position", "/Position");
+	produce(settings, "deviceInstance", "/DeviceInstance");
+	produce(settings, "customName", "/CustomName");
+	produce(inverter, "hostName", "/Mgmt/Connection");
 
 	QString processName = QCoreApplication::arguments()[0];
 	// The values of the items below will not change after creation, so we don't
 	// need an update mechanism.
-	produce(connection, "/Mgmt/ProcessName", processName);
-	produce(connection, "/Mgmt/ProcessVersion", VERSION);
-	produce(connection, "/ProductName", inverter->productName());
-	produce(connection, "/ProductId", VE_PROD_ID_PV_INVERTER_FRONIUS);
-	produce(connection, "/FroniusDeviceType", inverter->deviceType());
-	produce(connection, "/Serial", inverter->uniqueId());
+	produce("/Mgmt/ProcessName", processName);
+	produce("/Mgmt/ProcessVersion", VERSION);
+	produce("/ProductName", inverter->productName());
+	produce("/ProductId", VE_PROD_ID_PV_INVERTER_FRONIUS);
+	produce("/FroniusDeviceType", inverter->deviceType());
+	produce("/Serial", inverter->uniqueId());
 
-	QLOG_INFO() << "Registering service" << mServiceName;
-	if (!connection.registerService(mServiceName)) {
-		QLOG_FATAL() << "RegisterService failed";
-	}
-}
-
-DBusInverterBridge::~DBusInverterBridge()
-{
-	QDBusConnection connection = VBusItems::getConnection(mServiceName);
-	QLOG_INFO() << "Unregistering service" << mServiceName;
-	if (!connection.unregisterService(mServiceName)) {
-		QLOG_FATAL() << "UnregisterService failed";
-	}
+	registerService();
 }
 
 bool DBusInverterBridge::toDBus(const QString &path, QVariant &value)
@@ -80,7 +64,7 @@ bool DBusInverterBridge::toDBus(const QString &path, QVariant &value)
 			value = mInverter->productName();
 	}
 	if (value.type() == QVariant::Double && !std::isfinite(value.toDouble()))
-		value = qVariantFromValue(QStringList());
+		value = QVariant();
 	return true;
 }
 
@@ -100,13 +84,12 @@ bool DBusInverterBridge::fromDBus(const QString &path, QVariant &value)
 	return true;
 }
 
-void DBusInverterBridge::addBusItems(QDBusConnection &connection, PowerInfo *pi,
-									const QString &path)
+void DBusInverterBridge::addBusItems(PowerInfo *pi, const QString &path)
 {
-	produce(connection, pi, "current", path + "/Current", "A", 1);
-	produce(connection, pi, "voltage", path + "/Voltage", "V", 0);
-	produce(connection, pi, "power", path + "/Power", "W", 0);
-	produce(connection, pi, "totalEnergy", path + "/Energy/Forward", "kWh", 2);
+	produce(pi, "current", path + "/Current", "A", 1);
+	produce(pi, "voltage", path + "/Voltage", "V", 0);
+	produce(pi, "power", path + "/Power", "W", 0);
+	produce(pi, "totalEnergy", path + "/Energy/Forward", "kWh", 2);
 }
 
 QString DBusInverterBridge::fixServiceNameFragment(const QString &s)

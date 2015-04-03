@@ -22,8 +22,6 @@ class DBusGatewayBridge : public DBusBridge
 public:
 	explicit DBusGatewayBridge(InverterGateway *gateway, QObject *parent = 0);
 
-	~DBusGatewayBridge();
-
 protected:
 	virtual bool toDBus(const QString &path, QVariant &value);
 

@@ -1,31 +1,15 @@
-#include <QDBusConnection>
 #include <QsLog.h>
-#include <velib/qt/v_busitems.h>
 #include "dbus_gateway_bridge.h"
 #include "inverter_gateway.h"
 
 static const QString ServiceName = "com.victronenergy.fronius";
 
 DBusGatewayBridge::DBusGatewayBridge(InverterGateway *gateway, QObject *parent):
-	DBusBridge(parent)
+	DBusBridge(ServiceName, parent)
 {
-	QDBusConnection connection = VBusItems::getConnection(ServiceName);
-	produce(connection, gateway, "autoDetect", "/AutoDetect");
-	produce(connection, gateway, "scanProgress", "/ScanProgress", "%");
-
-	QLOG_INFO() << "Registering service" << ServiceName;
-	if (!connection.registerService(ServiceName)) {
-		QLOG_FATAL() << "RegisterService failed";
-	}
-}
-
-DBusGatewayBridge::~DBusGatewayBridge()
-{
-	QDBusConnection connection = VBusItems::getConnection(ServiceName);
-	QLOG_INFO() << "Unregistering service" << ServiceName;
-	if (!connection.unregisterService(ServiceName)) {
-		QLOG_FATAL() << "UnregisterService failed";
-	}
+	produce(gateway, "autoDetect", "/AutoDetect");
+	produce(gateway, "scanProgress", "/ScanProgress", "%");
+	registerService();
 }
 
 bool DBusGatewayBridge::toDBus(const QString &path, QVariant &value)

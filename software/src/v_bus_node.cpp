@@ -1,12 +1,16 @@
-#include <QDebug>
+#include <QList>
 #include <velib/qt/v_busitem.h>
 #include "v_bus_node.h"
 
-static QString combine(QString lhs, QString rhs) {
-	if (!lhs.isEmpty() && !lhs.endsWith('/'))
-		lhs.append('/');
-	lhs.append(rhs);
-	return lhs;
+Q_DECLARE_METATYPE(QList<int>)
+
+static QString combine(const QString &lhs, const QString &rhs)
+{
+	QString r = lhs;
+	if (!r.isEmpty() && !r.endsWith('/'))
+		r.append('/');
+	r.append(rhs);
+	return r;
 }
 
 VBusNode::VBusNode(QDBusConnection &connection, const QString &path,
@@ -145,7 +149,10 @@ void VBusNode::addToMap(const QString &prefix, QVariantMap &map)
 	for (QMap<QString, VBusItem *>::iterator it = mLeafs.begin();
 		 it != mLeafs.end();
 		 ++it) {
-		map[combine(prefix, it.key())] = it.value()->getValue();
+		QVariant v = it.value()->getValue();
+		if (!v.isValid())
+			v = QVariant::fromValue(QList<int>());
+		map[combine(prefix, it.key())] = v;
 	}
 	for (QMap<QString, VBusNode *>::iterator it = mNodes.begin();
 		 it != mNodes.end();
