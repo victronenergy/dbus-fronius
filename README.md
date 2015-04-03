@@ -29,8 +29,10 @@ The application consists of 3 layers:
 		the data model (_Inverter_).
 	-	_InverterGateway_ is reponsible for device detection.
 * Data model
-	-	_Settings_ Persistent settings objects.
-	-	_Inverter_ Contains measured data
+    -	_Settings_ Persistent inverter independent settings, such as the list
+        of IP addresses where data cards have been found.
+    -   _InverterSettings_ Persistent inverter settings.
+    -	_Inverter_ Contains the latest measurements taken from an inverter.
 * D-Bus layer
 	-	_DBusInverterBridge_ Publishes realtime inverter data on the D-Bus. Each
 		inverter has a dedicated service.
