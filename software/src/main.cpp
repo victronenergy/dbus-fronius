@@ -22,10 +22,9 @@ void initLogger(QsLogging::Level logLevel)
 	logger.setLoggingLevel(logLevel);
 }
 
-void initDBus()
+void initDBus(const QString &dbusAddress)
 {
-#if TARGET_ccgx
-	VBusItems::setDBusAddress("system");
+	VBusItems::setDBusAddress(dbusAddress);
 
 	QLOG_INFO() << "Wait for local settings on DBus... ";
 	VBusItem settings;
@@ -35,11 +34,10 @@ void initDBus()
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 		if (reply.isValid())
 			break;
-		usleep(2000000);
+		usleep(500000);
 		QLOG_INFO() << "Waiting...";
 	}
 	QLOG_INFO() << "Local settings found";
-#endif
 }
 
 int main(int argc, char *argv[])
@@ -48,13 +46,11 @@ int main(int argc, char *argv[])
 
 	initLogger(QsLogging::InfoLevel);
 
-#if TARGET_ccgx
-	VBusItems::setConnectionType(QDBusConnection::SystemBus);
-#endif
-
-	bool findVerbosity = false;
+	bool expectVerbosity = false;
+	bool expectDBusAddress = false;
+	QString dbusAddress = "system";
 	foreach (QString arg, a.arguments()) {
-		if (findVerbosity) {
+		if (expectVerbosity) {
 			QsLogging::Logger &logger = QsLogging::Logger::instance();
 			int logLevel = arg.toInt();
 			if (logLevel < 0)
@@ -62,7 +58,10 @@ int main(int argc, char *argv[])
 			if (logLevel >= QsLogging::FatalLevel)
 				logLevel = static_cast<int>(QsLogging::FatalLevel);
 			logger.setLoggingLevel(static_cast<QsLogging::Level>(logLevel));
-			findVerbosity = false;
+			expectVerbosity = false;
+		} else if (expectDBusAddress) {
+			dbusAddress = arg;
+			expectDBusAddress = false;
 		}
 		if (arg == "-h" || arg == "--help") {
 			qDebug() << a.arguments().first();
@@ -72,20 +71,24 @@ int main(int argc, char *argv[])
 			qDebug() << "\t Show the application version.";
 			qDebug() << "\t-d level, --debug level";
 			qDebug() << "\t Set log level";
+			qDebug() << "\t-b, --dbus";
+			qDebug() << "\t dbus address or 'session' or 'system'";
 			return 0;
 		}
 		if (arg == "-V" || arg == "--version") {
 			qDebug() << VERSION << "("REVISION")";
 			return 0;
 		} else if (arg == "-d" || arg == "--debug") {
-			findVerbosity = true;
+			expectVerbosity = true;
 		} else if (arg == "-t" || arg == "--timestamp") {
 			QsLogging::Logger &logger = QsLogging::Logger::instance();
 			logger.setIncludeTimestamp(true);
+		} else if (arg == "-b" || arg == "--dbus") {
+			expectDBusAddress = true;
 		}
 	}
 
-	initDBus();
+	initDBus(dbusAddress);
 
 	DBusFronius test(&a);
 
