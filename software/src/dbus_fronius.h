@@ -5,9 +5,9 @@
 
 class DBusGatewayBridge;
 class DBusSettingsBridge;
-class InverterGateway;
-class InverterUpdater;
 class Inverter;
+class InverterGateway;
+class InverterMediator;
 class Settings;
 
 class DBusFronius : public QObject
@@ -21,20 +21,12 @@ private slots:
 
 	void onInverterFound(Inverter *inverter);
 
-	void onInverterSettingsInitialized();
-
-	void onInverterInitialized();
-
-	void onIsConnectedChanged();
-
 private:
-	Inverter *findInverter(int deviceType, const QString &uniqueId);
-
 	Settings *mSettings;
 	InverterGateway *mGateway;
 	DBusSettingsBridge *mSettingsBridge;
 	DBusGatewayBridge *mGatewayBridge;
-	QList<Inverter *> mInverters;
+	QList<InverterMediator *> mMediators;
 };
 
 #endif // DBUS_TEST2_H

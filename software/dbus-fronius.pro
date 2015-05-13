@@ -78,7 +78,8 @@ SOURCES += \
     src/dbus_gateway_bridge.cpp \
     src/fronius_data_processor.cpp \
     src/fronius_device_info.cpp \
-    src/v_bus_node.cpp
+    src/v_bus_node.cpp \
+    src/inverter_mediator.cpp
 
 HEADERS += \
     $$VELIB_SRC/v_busitem_adaptor.h \
@@ -105,4 +106,5 @@ HEADERS += \
     src/defines.h \
     src/fronius_data_processor.h \
     src/fronius_device_info.h \
-    src/v_bus_node.h
+    src/v_bus_node.h \
+    src/inverter_mediator.h

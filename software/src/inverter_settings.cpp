@@ -10,6 +10,7 @@ InverterSettings::InverterSettings(int deviceType, const QString &uniqueId,
 	mDeviceInstance(InvalidDeviceInstance),
 	mPhase(PhaseL1),
 	mPosition(Input1),
+	mIsActive(true),
 	mL1Energy(0),
 	mL2Energy(0),
 	mL3Energy(0)
@@ -77,6 +78,19 @@ void InverterSettings::setCustomName(const QString &n)
 		return;
 	mCustomName	= n;
 	emit customNameChanged();
+}
+
+bool InverterSettings::isActive() const
+{
+	return mIsActive;
+}
+
+void InverterSettings::setActive(bool b)
+{
+	if (mIsActive == b)
+		return;
+	mIsActive = b;
+	emit isActiveChanged();
 }
 
 double InverterSettings::l1Energy() const
@@ -147,5 +161,6 @@ void InverterSettings::setEnergy(InverterPhase phase, double value)
 		break;
 	default:
 		QLOG_ERROR() <<"Incorrect phase:" << phase;
+		break;
 	}
 }

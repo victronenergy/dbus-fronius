@@ -20,6 +20,8 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 			QVariant(InvalidDeviceInstance), path + "/DeviceInstance");
 	consume(Service, settings, "customName",
 			QVariant(""), path + "/CustomName");
+	consume(Service, settings, "isActive",
+			1, path + "/IsActive");
 	consume(Service, settings, "l1Energy",
 			0.0, 0.0, 1e6, path + "/L1Energy");
 	consume(Service, settings, "l2Energy",
