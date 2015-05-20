@@ -1,18 +1,15 @@
 #ifndef FRONIUSSOLAR_API_H
 #define FRONIUSSOLAR_API_H
 
+#include <QByteArray>
 #include <QObject>
 #include <QList>
 #include <QString>
 #include <QUrl>
-#include <QSharedPointer>
 #include <QVariantMap>
-#include <QWeakPointer>
 
-class QNetworkAccessManager;
-class QNetworkReply;
+class QHttp;
 class QTimer;
-class QValueMap;
 
 /*!
  * @brief Base class for all data packages returned by FroniusSolarApi.
@@ -143,9 +140,7 @@ class FroniusSolarApi : public QObject
 {
 	Q_OBJECT
 public:
-	FroniusSolarApi(QString hostName, int port, QObject *parent = 0);
-
-	~FroniusSolarApi();
+	FroniusSolarApi(const QString &hostName, int port, QObject *parent = 0);
 
 	QString hostName() const;
 
@@ -221,25 +216,29 @@ signals:
 	void systemDataFound(const CumulationInverterData &data);
 
 private slots:
-	void onReply();
+	void onDone(bool error);
 
-	void OnTimeout();
+	void onTimeout();
 
 private:
-	void sendGetRequest(QUrl url, const QString &id);
+	void sendGetRequest(const QUrl &request, const QString &id);
 
-	void processConverterInfo(QNetworkReply *reply);
+	void processRequest(const QString &networkError);
 
-	void processCumulationData(QNetworkReply *reply);
+	void processConverterInfo(const QString &networkError);
 
-	void processCommonData(QNetworkReply *reply);
+	void processCumulationData(const QString &networkError);
 
-	void processThreePhasesData(QNetworkReply *reply);
+	void processCommonData(const QString &networkError);
 
-	void processSystemData(QNetworkReply *reply);
+	void processThreePhasesData(const QString &networkError);
 
-	void processReply(QNetworkReply *reply, SolarApiReply &apiReply,
+	void processSystemData(const QString &networkError);
+
+	void processReply(const QString &networkError, SolarApiReply &apiReply,
 					  QVariantMap &map);
+
+	void updateHttpClient();
 
 	/*!
 	 * @brief Retrieves a nested value from the specified map.
@@ -250,11 +249,10 @@ private:
 	 */
 	static QVariant getByPath(const QVariant &map, const QString &path);
 
-	static QWeakPointer<QNetworkAccessManager> mStaticNam;
-	QSharedPointer<QNetworkAccessManager> mNam;
+	QHttp *mHttp;
 	QString mHostName;
 	int mPort;
-	QNetworkReply *mReply;
+	QString mRequestType;
 	QTimer *mTimeoutTimer;
 };
 

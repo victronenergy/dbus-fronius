@@ -1,34 +1,22 @@
+#include <QHttp>
 #include <QUrl>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
 #include <QsLog.h>
 #include <QStringList>
 #include <QTimer>
 #include "froniussolar_api.h"
 #include "json/json.h"
 
-QWeakPointer<QNetworkAccessManager> FroniusSolarApi::mStaticNam;
-
-FroniusSolarApi::FroniusSolarApi(QString hostName, int port, QObject *parent) :
+FroniusSolarApi::FroniusSolarApi(const QString &hostName, int port,
+								 QObject *parent) :
 	QObject(parent),
-	mNam(mStaticNam.toStrongRef()),
+	mHttp(0),
 	mHostName(hostName),
 	mPort(port),
-	mReply(0),
 	mTimeoutTimer(new QTimer(this))
 {
-	if (mNam == 0) {
-		mNam = QSharedPointer<QNetworkAccessManager>(new QNetworkAccessManager());
-		mStaticNam = mNam.toWeakRef();
-	}
 	mTimeoutTimer->setInterval(5000);
-	connect(mTimeoutTimer, SIGNAL(timeout()), this, SLOT(OnTimeout()));
-}
-
-FroniusSolarApi::~FroniusSolarApi()
-{
-	// If we do not have this function, the default destructor will call the
-	// destructor of mNam while QNetworkManager is undefined.
+	connect(mTimeoutTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+	updateHttpClient();
 }
 
 QString FroniusSolarApi::hostName() const
@@ -38,7 +26,10 @@ QString FroniusSolarApi::hostName() const
 
 void FroniusSolarApi::setHostName(const QString &h)
 {
+	if (mHostName == h)
+		return;
 	mHostName = h;
+	updateHttpClient();
 }
 
 int FroniusSolarApi::port() const
@@ -48,7 +39,10 @@ int FroniusSolarApi::port() const
 
 void FroniusSolarApi::setPort(int port)
 {
+	if (mPort == port)
+		return;
 	mPort = port;
+	updateHttpClient();
 }
 
 void FroniusSolarApi::getConverterInfoAsync()
@@ -96,40 +90,22 @@ void FroniusSolarApi::getSystemDataAsync()
 	sendGetRequest(url, "getSystemData");
 }
 
-void FroniusSolarApi::onReply()
+void FroniusSolarApi::onDone(bool error)
 {
-	mTimeoutTimer->stop();
-	mReply = 0;
-	QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
-	Q_ASSERT(reply != 0);
-	QString id = reply->request().attribute(QNetworkRequest::User).toString();
-	if (id == "getInverterInfo") {
-		processConverterInfo(reply);
-	} else if (id == "getCommonData") {
-		processCommonData(reply);
-	} else if (id == "getThreePhasesInverterData") {
-		processThreePhasesData(reply);
-	} else if (id == "getCumulationData") {
-		processCumulationData(reply);
-	} else if (id == "getSystemData") {
-		processCumulationData(reply);
-	}
-	reply->deleteLater();
+	processRequest(error ? mHttp->errorString() : QString());
 }
 
-void FroniusSolarApi::OnTimeout()
+void FroniusSolarApi::onTimeout()
 {
-	if (mReply != 0) {
-		mReply->abort();
-		mReply = 0;
-	}
+	// During call to abort onRequestFinished will be called.
+	mHttp->abort();
 }
 
-void FroniusSolarApi::processConverterInfo(QNetworkReply *reply)
+void FroniusSolarApi::processConverterInfo(const QString &networkError)
 {
 	InverterListData data;
 	QVariantMap map;
-	processReply(reply, data, map);
+	processReply(networkError, data, map);
 	QVariantMap devices = getByPath(map, "Body/Data").toMap();
 	for (QVariantMap::Iterator it = devices.begin();
 		 it != devices.end();
@@ -147,11 +123,11 @@ void FroniusSolarApi::processConverterInfo(QNetworkReply *reply)
 	emit converterInfoFound(data);
 }
 
-void FroniusSolarApi::processCumulationData(QNetworkReply *reply)
+void FroniusSolarApi::processCumulationData(const QString &networkError)
 {
 	CumulationInverterData data;
 	QVariantMap map;
-	processReply(reply, data, map);
+	processReply(networkError, data, map);
 	QVariant d = getByPath(map, "Body/Data");
 	data.acPower = getByPath(d, "PAC/Value").toDouble();
 	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toDouble();
@@ -160,11 +136,11 @@ void FroniusSolarApi::processCumulationData(QNetworkReply *reply)
 	emit cumulationDataFound(data);
 }
 
-void FroniusSolarApi::processCommonData(QNetworkReply *reply)
+void FroniusSolarApi::processCommonData(const QString &networkError)
 {
 	CommonInverterData data;
 	QVariantMap map;
-	processReply(reply, data, map);
+	processReply(networkError, data, map);
 	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").toString();
 	QVariant d = getByPath(map, "Body/Data");
 	data.acPower = getByPath(d, "PAC/Value").toDouble();
@@ -181,13 +157,12 @@ void FroniusSolarApi::processCommonData(QNetworkReply *reply)
 	emit commonDataFound(data);
 }
 
-void FroniusSolarApi::processThreePhasesData(QNetworkReply *reply)
+void FroniusSolarApi::processThreePhasesData(const QString &networkError)
 {
 	ThreePhasesInverterData data;
 	QVariantMap map;
-	processReply(reply, data, map);
-	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").
-					toString();
+	processReply(networkError, data, map);
+	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").toString();
 	QVariant d = getByPath(map, "Body/Data");
 	data.acCurrentPhase1 = getByPath(d, "IAC_L1/Value").toDouble();
 	data.acVoltagePhase1 = getByPath(d, "UAC_L1/Value").toDouble();
@@ -198,11 +173,11 @@ void FroniusSolarApi::processThreePhasesData(QNetworkReply *reply)
 	emit threePhasesDataFound(data);
 }
 
-void FroniusSolarApi::processSystemData(QNetworkReply *reply)
+void FroniusSolarApi::processSystemData(const QString &networkError)
 {
 	CumulationInverterData data;
 	QVariantMap map;
-	processReply(reply, data, map);
+	processReply(networkError, data, map);
 	QVariant d = getByPath(map, "Body/Data");
 	data.acPower = getByPath(d, "PAC/Value").toDouble();
 	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toDouble();
@@ -211,35 +186,49 @@ void FroniusSolarApi::processSystemData(QNetworkReply *reply)
 	emit systemDataFound(data);
 }
 
-void FroniusSolarApi::sendGetRequest(QUrl url, const QString &id)
+void FroniusSolarApi::sendGetRequest(const QUrl &request, const QString &id)
 {
-	url.setScheme("http");
-	url.setPort(mPort);
-	url.setHost(mHostName);
-	QNetworkRequest r(url);
-	// Add the ID to the request so we can emit the correct signal when the
-	// request has been handled.
-	r.setAttribute(QNetworkRequest::User, id);
-	mReply = mNam->get(r);
-	QObject::connect(mReply, SIGNAL(finished()), this, SLOT(onReply()));
+	Q_ASSERT(mRequestType.isEmpty());
+	mHttp->get(request.toString());
+	mRequestType = id;
 	mTimeoutTimer->start();
 }
 
-void FroniusSolarApi::processReply(QNetworkReply *reply, SolarApiReply &apiReply,
-								 QVariantMap &map)
+void FroniusSolarApi::processRequest(const QString &networkError)
 {
+	if (mRequestType == "getInverterInfo") {
+		processConverterInfo(networkError);
+	} else if (mRequestType == "getCommonData") {
+		processCommonData(networkError);
+	} else if (mRequestType == "getThreePhasesInverterData") {
+		processThreePhasesData(networkError);
+	} else if (mRequestType == "getCumulationData") {
+		processCumulationData(networkError);
+	} else if (mRequestType == "getSystemData") {
+		processCumulationData(networkError);
+	}
+}
+
+void FroniusSolarApi::processReply(const QString &networkError,
+								   SolarApiReply &apiReply,
+								   QVariantMap &map)
+{
+	mRequestType.clear();
+	mTimeoutTimer->stop();
 	// Some error will be logged with QLOG_DEBUG because they occur often during
 	// a device scan and would fill the log with a lot of useless information.
-	if (reply->error() != QNetworkReply::NoError) {
+	if (!networkError.isEmpty()) {
 		apiReply.error = SolarApiReply::NetworkError;
-		apiReply.errorMessage = reply->errorString();
-		QLOG_DEBUG() << "Network error:" << apiReply.errorMessage << reply->url();
+		apiReply.errorMessage = mHttp->errorString();
+		QLOG_DEBUG() << "Network error:" << apiReply.errorMessage << mHostName;
 		return;
 	}
-	QByteArray bytes = reply->readAll();
+	QByteArray bytes = mHttp->readAll();
 	QString result(QString::fromLocal8Bit(bytes));
-	if (result.size() > 0) {
-		QLOG_TRACE() << result;
+	// CCGX does not receive reply from subsequent requests if we don't do this.
+	mHttp->close();
+	QLOG_TRACE() << result;
+	if (!result.isEmpty()) {
 		map = JSON::instance().parse(result).toMap();
 	}
 	QVariantMap status = getByPath(map, "Head/Status").toMap();
@@ -248,7 +237,7 @@ void FroniusSolarApi::processReply(QNetworkReply *reply, SolarApiReply &apiReply
 		apiReply.errorMessage = "Reply message has no status "
 								"(we're probably talking to a device "
 								"that does not support the Fronius Solar API)";
-		QLOG_DEBUG() << "Network error:" << apiReply.errorMessage << reply->url();
+		QLOG_DEBUG() << "Network error:" << apiReply.errorMessage << mHostName;
 		return;
 	}
 	int errorCode = status["Code"].toInt();
@@ -260,6 +249,14 @@ void FroniusSolarApi::processReply(QNetworkReply *reply, SolarApiReply &apiReply
 		return;
 	}
 	apiReply.error = SolarApiReply::NoError;
+}
+
+void FroniusSolarApi::updateHttpClient()
+{
+	delete mHttp;
+	mHttp = new QHttp(mHostName, QHttp::ConnectionModeHttp, mPort, this);
+	connect(mHttp, SIGNAL(done(bool)),
+			this, SLOT(onDone(bool)));
 }
 
 QVariant FroniusSolarApi::getByPath(const QVariant &variant,
