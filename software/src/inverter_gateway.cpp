@@ -18,6 +18,7 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	mFullScanRequested(false),
 	mFullScanIfNoDeviceFound(false)
 {
+	mAddressGenerator.setNetMaskLimit(QHostAddress(0xFFFFF000));
 	Q_ASSERT(settings != 0);
 	connect(settings, SIGNAL(portNumberChanged()),
 			this, SLOT(onSettingsChanged()));

@@ -8,6 +8,7 @@ LocalIpAddressGenerator::LocalIpAddressGenerator():
 	mCurrent(0),
 	mLast(0),
 	mLocalHost(0),
+	mNetMaskLimit(0u),
 	mPriorityIndex(0)
 {
 	reset();
@@ -21,6 +22,7 @@ LocalIpAddressGenerator::LocalIpAddressGenerator(
 	mLast(0),
 	mLocalHost(0),
 	mPriorityAddresses(priorityAddresses),
+	mNetMaskLimit(0u),
 	mPriorityIndex(0)
 {
 	reset();
@@ -72,6 +74,7 @@ void LocalIpAddressGenerator::reset()
 					QLOG_INFO() << "IP Address:" << address
 								<< "Netmask:" << entry.netmask();
 					quint32 netMask = entry.netmask().toIPv4Address();
+					netMask |= mNetMaskLimit.toIPv4Address();
 					mLocalHost = address.toIPv4Address();
 					mCurrent = mLocalHost & netMask;
 					mFirst = mCurrent;
@@ -131,4 +134,14 @@ void LocalIpAddressGenerator::setPriorityAddresses(
 			mPriorityIndex >= mPriorityAddresses.size();
 	mPriorityAddresses = addresses;
 	mPriorityIndex = atEnd ? mPriorityAddresses.size() : 0;
+}
+
+QHostAddress LocalIpAddressGenerator::netMaskLimit() const
+{
+	return mNetMaskLimit;
+}
+
+void LocalIpAddressGenerator::setNetMaskLimit(const QHostAddress &limit)
+{
+	mNetMaskLimit = limit;
 }

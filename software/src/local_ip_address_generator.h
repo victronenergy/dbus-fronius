@@ -66,6 +66,10 @@ public:
 
 	void setPriorityAddresses(const QList<QHostAddress> &addresses);
 
+	QHostAddress netMaskLimit() const;
+
+	void setNetMaskLimit(const QHostAddress &limit);
+
 private:
 	bool mPriorityOnly;
 	quint32 mFirst;
@@ -73,6 +77,7 @@ private:
 	quint32 mLast;
 	quint32 mLocalHost;
 	QList<QHostAddress> mPriorityAddresses;
+	QHostAddress mNetMaskLimit;
 	int mPriorityIndex;
 };
 
