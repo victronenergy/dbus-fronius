@@ -116,7 +116,7 @@ void InverterGateway::updateDetection()
 		if (autoDetect) {
 			mAddressGenerator.setPriorityOnly(false);
 			mAddressGenerator.reset();
-			for (int i=0; i<MaxSimultaneousRequests; ++i)
+			for (int i=mApis.size(); i<MaxSimultaneousRequests; ++i)
 				updateDetection();
 		}
 		scanProgressChanged();
