@@ -16,7 +16,8 @@ TEST(DBusSettingsBridgeTest2, addObjects)
 {
 	DBusSettings settingsClient;
 	checkValue(QVariant(), settingsClient.getValue("/Settings/Fronius/PortNumber"));
-	DBusSettingsBridge::addDBusObjects();
+	Settings settings;
+	DBusSettingsBridge bridge(&settings);
 	checkValue(QVariant(80), settingsClient.getValue("/Settings/Fronius/PortNumber"));
 	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/IPAddresses"));
 	checkValue(QVariant(""), settingsClient.getValue("/Settings/Fronius/KnownIPAddresses"));
@@ -71,7 +72,6 @@ TEST_F(DBusSettingsBridgeTest, changeKnownIPAddressesRemote)
 void DBusSettingsBridgeTest::SetUp()
 {
 	mSettingsClient.reset(new DBusSettings());
-	DBusSettingsBridge::addDBusObjects();
 	mSettings.reset(new Settings());
 	mBridge.reset(new DBusSettingsBridge(mSettings.data(), 0));
 	// Wait for DBusSettingsBridge to fill settings object with default values

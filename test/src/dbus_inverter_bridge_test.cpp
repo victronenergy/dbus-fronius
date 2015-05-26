@@ -1,4 +1,6 @@
+#include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <QCoreApplication>
 #include <QStringList>
 #include <unistd.h>
@@ -19,6 +21,7 @@ TEST_F(DBusInverterBridgeTest, constructor)
 	mInverter->l2PowerInfo()->setCurrent(1.7);
 	mInverter->l2PowerInfo()->setPower(138);
 	mInverter->l2PowerInfo()->setVoltage(344);
+	mInverter->l2PowerInfo()->setTotalEnergy(0);
 	mSettings->setDeviceInstance(22);
 
 	SetUpBridge();
@@ -47,8 +50,6 @@ TEST_F(DBusInverterBridgeTest, constructor)
 	checkValue(QVariant(1.4), mDBusClient->getValue(mServiceName, "/Ac/Current"));
 	checkValue(QVariant(342.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
 	checkValue(QVariant(137.0), mDBusClient->getValue(mServiceName, "/Ac/Power"));
-
-	checkValue(QVariant(QStringList()), mDBusClient->getValue(mServiceName, "/Ac/L1/Power"));
 
 	checkValue(QVariant(1.7), mDBusClient->getValue(mServiceName, "/Ac/L2/Current"));
 	checkValue(QVariant(344.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Voltage"));
@@ -107,6 +108,13 @@ TEST_F(DBusInverterBridgeTest, acPower)
 			   "power");
 }
 
+TEST_F(DBusInverterBridgeTest, acPowerNaN)
+{
+	SetUpBridge();
+	checkValue(mInverter->meanPowerInfo(), "/Ac/Power", 3412, std::numeric_limits<double>::quiet_NaN(), "",
+			   "power");
+}
+
 DBusInverterBridgeTest::DBusInverterBridgeTest():
 	mServiceName("com.victronenergy.pvinverter.fronius_123_756")
 {
@@ -121,6 +129,10 @@ void DBusInverterBridgeTest::SetUpTestCase()
 void DBusInverterBridgeTest::SetUp()
 {
 	mInverter.reset(new Inverter("10.0.1.4", 80, "3", 123, "756", "cn"));
+	setupPowerInfo(mInverter->meanPowerInfo());
+	setupPowerInfo(mInverter->l1PowerInfo());
+	setupPowerInfo(mInverter->l2PowerInfo());
+	setupPowerInfo(mInverter->l3PowerInfo());
 	mSettings.reset(new InverterSettings(mInverter->deviceType(),
 										 mInverter->uniqueId()));
 	mSettings->setPosition(Input2);
@@ -144,6 +156,14 @@ void DBusInverterBridgeTest::SetUpBridge()
 	}
 }
 
+void DBusInverterBridgeTest::setupPowerInfo(PowerInfo *pi)
+{
+	pi->setVoltage(0);
+	pi->setCurrent(0);
+	pi->setPower(0);
+	pi->setTotalEnergy(0);
+}
+
 void DBusInverterBridgeTest::checkValue(PowerInfo *pi, const QString &path,
 										double v0, double v1,
 										const QString &text,
@@ -155,7 +175,10 @@ void DBusInverterBridgeTest::checkValue(PowerInfo *pi, const QString &path,
 
 	pi->setProperty(property, v1);
 	qWait(100);
-	checkValue(QVariant(v1), mDBusClient->getValue(mServiceName, path));
+	QVariant vv1;
+	if (!std::isnan(v1))
+		vv1 = QVariant(v1);
+	checkValue(vv1, mDBusClient->getValue(mServiceName, path));
 	EXPECT_EQ(text, mDBusClient->getText(mServiceName, path));
 }
 

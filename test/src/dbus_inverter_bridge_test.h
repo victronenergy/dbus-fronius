@@ -25,6 +25,8 @@ protected:
 
 	void SetUpBridge();
 
+	void setupPowerInfo(PowerInfo *pi);
+
 	void checkValue(PowerInfo *pi, const QString &path,
 					double v0, double v1, const QString &text,
 					const char *property);
