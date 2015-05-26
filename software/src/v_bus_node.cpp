@@ -115,33 +115,28 @@ QDBusVariant VBusNode::GetValue()
 	return QDBusVariant(result);
 }
 
-void VBusNode::onItemDeleted() {
-	for (QMap<QString, VBusItem *>::iterator it = mLeafs.begin();
-		 it != mLeafs.end();
-		 ++it) {
-		if (it.value() == sender())
-		{
-			mLeafs.remove(it.key());
-			if (mLeafs.empty() && mNodes.empty()) {
-				deleteLater();
-			}
-		}
+void VBusNode::onItemDeleted()
+{
+	for (;;) {
+		QString key = mLeafs.key(static_cast<VBusItem *>(sender()));
+		if (key.isEmpty())
+			break;
+		mLeafs.remove(key);
 	}
+	if (mLeafs.empty() && mNodes.empty())
+		deleteLater();
 }
 
 void VBusNode::onNodeDeleted()
 {
-	for (QMap<QString, VBusNode *>::iterator it = mNodes.begin();
-		 it != mNodes.end();
-		 ++it) {
-		if (it.value() == sender())
-		{
-			mNodes.remove(it.key());
-			if (mLeafs.empty() && mNodes.empty()) {
-				deleteLater();
-			}
-		}
+	for (;;) {
+		QString key = mNodes.key(static_cast<VBusNode *>(sender()));
+		if (key.isEmpty())
+			break;
+		mLeafs.remove(key);
 	}
+	if (mLeafs.empty() && mNodes.empty())
+		deleteLater();
 }
 
 void VBusNode::addToMap(const QString &prefix, QVariantMap &map)
