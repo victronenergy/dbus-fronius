@@ -1,10 +1,11 @@
-#include <QHttp>
-#include <QUrl>
+#include <qhttp.h>
+#include <QJsonDocument>
 #include <QsLog.h>
 #include <QStringList>
 #include <QTimer>
+#include <QUrl>
+#include <QUrlQuery>
 #include "froniussolar_api.h"
-#include "json/json.h"
 
 FroniusSolarApi::FroniusSolarApi(const QString &hostName, int port,
 								 QObject *parent) :
@@ -56,9 +57,11 @@ void FroniusSolarApi::getCumulationDataAsync(int deviceId)
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
-	url.addQueryItem("Scope", "Device");
-	url.addQueryItem("DeviceId", QString::number(deviceId));
-	url.addQueryItem("DataCollection", "CumulationInverterData");
+	QUrlQuery query;
+	query.addQueryItem("Scope", "Device");
+	query.addQueryItem("DeviceId", QString::number(deviceId));
+	query.addQueryItem("DataCollection", "CumulationInverterData");
+	url.setQuery(query);
 	sendGetRequest(url, "getCumulationData");
 }
 
@@ -66,9 +69,11 @@ void FroniusSolarApi::getCommonDataAsync(int deviceId)
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
-	url.addQueryItem("Scope", "Device");
-	url.addQueryItem("DeviceId", QString::number(deviceId));
-	url.addQueryItem("DataCollection", "CommonInverterData");
+	QUrlQuery query;
+	query.addQueryItem("Scope", "Device");
+	query.addQueryItem("DeviceId", QString::number(deviceId));
+	query.addQueryItem("DataCollection", "CommonInverterData");
+	url.setQuery(query);
 	sendGetRequest(url, "getCommonData");
 }
 
@@ -76,9 +81,11 @@ void FroniusSolarApi::getThreePhasesInverterDataAsync(int deviceId)
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
-	url.addQueryItem("Scope", "Device");
-	url.addQueryItem("DeviceId", QString::number(deviceId));
-	url.addQueryItem("DataCollection", "3PInverterData");
+	QUrlQuery query;
+	query.addQueryItem("Scope", "Device");
+	query.addQueryItem("DeviceId", QString::number(deviceId));
+	query.addQueryItem("DataCollection", "3PInverterData");
+	url.setQuery(query);
 	sendGetRequest(url, "getThreePhasesInverterData");
 }
 
@@ -86,7 +93,9 @@ void FroniusSolarApi::getSystemDataAsync()
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
-	url.addQueryItem("Scope", "System");
+	QUrlQuery query;
+	query.addQueryItem("Scope", "System");
+	url.setQuery(query);
 	sendGetRequest(url, "getSystemData");
 }
 
@@ -104,15 +113,15 @@ void FroniusSolarApi::onTimeout()
 void FroniusSolarApi::processConverterInfo(const QString &networkError)
 {
 	InverterListData data;
-	QVariantMap map;
+	QJsonObject map;
 	processReply(networkError, data, map);
-	QVariantMap devices = getByPath(map, "Body/Data").toMap();
-	for (QVariantMap::Iterator it = devices.begin();
+	QJsonObject devices = getChild(map, "Body/Data");
+	for (QJsonObject::Iterator it = devices.begin();
 		 it != devices.end();
 		 ++it) {
 		InverterInfo ii;
 		ii.id = it.key().toInt();
-		QVariantMap di = it.value().toMap();
+		QJsonObject di = it.value().toObject();
 		ii.deviceType = di["DT"].toInt();
 		ii.uniqueId = di["UniqueID"].toString();
 		ii.customName = di["CustomName"].toString();
@@ -126,9 +135,9 @@ void FroniusSolarApi::processConverterInfo(const QString &networkError)
 void FroniusSolarApi::processCumulationData(const QString &networkError)
 {
 	CumulationInverterData data;
-	QVariantMap map;
+	QJsonObject map;
 	processReply(networkError, data, map);
-	QVariant d = getByPath(map, "Body/Data");
+	QJsonObject d = getChild(map, "Body/Data");
 	data.acPower = getByPath(d, "PAC/Value").toDouble();
 	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toDouble();
 	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toDouble();
@@ -139,10 +148,10 @@ void FroniusSolarApi::processCumulationData(const QString &networkError)
 void FroniusSolarApi::processCommonData(const QString &networkError)
 {
 	CommonInverterData data;
-	QVariantMap map;
+	QJsonObject map;
 	processReply(networkError, data, map);
 	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").toString();
-	QVariant d = getByPath(map, "Body/Data");
+	QJsonObject d = getChild(map, "Body/Data");
 	data.acPower = getByPath(d, "PAC/Value").toDouble();
 	data.acCurrent = getByPath(d, "IAC/Value").toDouble();
 	data.acVoltage = getByPath(d, "UAC/Value").toDouble();
@@ -160,10 +169,10 @@ void FroniusSolarApi::processCommonData(const QString &networkError)
 void FroniusSolarApi::processThreePhasesData(const QString &networkError)
 {
 	ThreePhasesInverterData data;
-	QVariantMap map;
+	QJsonObject map;
 	processReply(networkError, data, map);
 	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").toString();
-	QVariant d = getByPath(map, "Body/Data");
+	QJsonObject d = getChild(map, "Body/Data");
 	data.acCurrentPhase1 = getByPath(d, "IAC_L1/Value").toDouble();
 	data.acVoltagePhase1 = getByPath(d, "UAC_L1/Value").toDouble();
 	data.acCurrentPhase2 = getByPath(d, "IAC_L2/Value").toDouble();
@@ -176,9 +185,9 @@ void FroniusSolarApi::processThreePhasesData(const QString &networkError)
 void FroniusSolarApi::processSystemData(const QString &networkError)
 {
 	CumulationInverterData data;
-	QVariantMap map;
+	QJsonObject map;
 	processReply(networkError, data, map);
-	QVariant d = getByPath(map, "Body/Data");
+	QJsonObject d = getChild(map, "Body/Data");
 	data.acPower = getByPath(d, "PAC/Value").toDouble();
 	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toDouble();
 	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toDouble();
@@ -211,7 +220,7 @@ void FroniusSolarApi::processRequest(const QString &networkError)
 
 void FroniusSolarApi::processReply(const QString &networkError,
 								   SolarApiReply &apiReply,
-								   QVariantMap &map)
+								   QJsonObject &map)
 {
 	mRequestType.clear();
 	mTimeoutTimer->stop();
@@ -224,14 +233,12 @@ void FroniusSolarApi::processReply(const QString &networkError,
 		return;
 	}
 	QByteArray bytes = mHttp->readAll();
-	QString result(QString::fromLocal8Bit(bytes));
-	// CCGX does not receive reply from subsequent requests if we don't do this.
-	mHttp->close();
-	QLOG_TRACE() << result;
-	if (!result.isEmpty()) {
-		map = JSON::instance().parse(result).toMap();
+	if (!bytes.isEmpty()) {
+		QLOG_TRACE() << QString::fromLocal8Bit(bytes);
+		QJsonDocument doc = QJsonDocument::fromJson(bytes);
+		map = doc.object();
 	}
-	QVariantMap status = getByPath(map, "Head/Status").toMap();
+	QJsonObject status = getChild(map, "Head/Status");
 	if (!status.contains("Code")) {
 		apiReply.error = SolarApiReply::NetworkError;
 		apiReply.errorMessage = "Reply message has no status "
@@ -259,14 +266,20 @@ void FroniusSolarApi::updateHttpClient()
 			this, SLOT(onDone(bool)));
 }
 
-QVariant FroniusSolarApi::getByPath(const QVariant &variant,
-									const QString &path)
+QJsonValue FroniusSolarApi::getByPath(const QJsonObject &obj, const QString &path)
 {
-	QVariant m = variant;
+	int i = path.lastIndexOf('/');
+	if (i == -1)
+		return obj[path];
+	QJsonObject o = getChild(obj, path.left(i));
+	return o[path.mid(i + 1)];
+}
+
+QJsonObject FroniusSolarApi::getChild(const QJsonObject &obj, const QString &path)
+{
+	QJsonObject o = obj;
 	QStringList spl = path.split('/');
 	for (QStringList::Iterator it = spl.begin(); it != spl.end(); ++it)
-	{
-		m = m.toMap()[*it];
-	}
-	return m;
+		o = o[*it].toObject();
+	return o;
 }

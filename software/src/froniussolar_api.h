@@ -1,12 +1,12 @@
 #ifndef FRONIUSSOLAR_API_H
 #define FRONIUSSOLAR_API_H
 
-#include <QByteArray>
+#include <QJsonObject>
+#include <QJsonValue>
 #include <QObject>
 #include <QList>
 #include <QString>
 #include <QUrl>
-#include <QVariantMap>
 
 class QHttp;
 class QTimer;
@@ -236,18 +236,20 @@ private:
 	void processSystemData(const QString &networkError);
 
 	void processReply(const QString &networkError, SolarApiReply &apiReply,
-					  QVariantMap &map);
+					  QJsonObject &map);
 
 	void updateHttpClient();
 
 	/*!
 	 * @brief Retrieves a nested value from the specified map.
-	 * @param map
+	 * @param obj
 	 * @param path A list of id's separated by slashes ('/').
 	 * @return The nested value or an empty variant of the value could not be
 	 * found.
 	 */
-	static QVariant getByPath(const QVariant &map, const QString &path);
+	static QJsonValue getByPath(const QJsonObject &obj, const QString &path);
+
+	static QJsonObject getChild(const QJsonObject &obj, const QString &path);
 
 	QHttp *mHttp;
 	QString mHostName;

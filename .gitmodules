@@ -14,3 +14,6 @@
 	path = software/ext/googletest
 	url = https://github.com/google/googletest
 	branch = master
+[submodule "software/ext/qthttp"]
+	path = software/ext/qthttp
+	url = http://code.qt.io/cgit/qt/qthttp.git

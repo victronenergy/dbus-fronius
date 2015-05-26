@@ -21,9 +21,7 @@ unix {
 MOC_DIR=.moc
 OBJECTS_DIR=.obj
 
-# Note: we need the script module to parse JSON fragments as part of the
-# fronius solar API.
-QT += core network dbus script xml
+QT += core network dbus xml
 QT -= gui
 
 TARGET = dbus-fronius
@@ -33,20 +31,23 @@ DEFINES += VERSION=\\\"$${VERSION}\\\"
 
 TEMPLATE = app
 
-include(src/json/json.pri)
 include(ext/qslog/QsLog.pri)
 include(ext/velib/src/qt/ve_qitems.pri)
 
 VELIB_INC = ext/velib/inc/velib/qt
 VELIB_SRC = ext/velib/src/qt
+QTHTTP_SRC = ext/qthttp/src/qhttp
 
 INCLUDEPATH += \
     ext/qslog \
     ext/velib/inc \
+    ext/qthttp/src/qhttp \
     src \
     src/modbus_tcp_client
 
 SOURCES += \
+    $$QTHTTP_SRC/qhttpauthenticator.cpp \
+    $$QTHTTP_SRC/qhttp.cpp \
     src/main.cpp \
     src/froniussolar_api.cpp \
     src/inverter.cpp \
@@ -74,6 +75,9 @@ SOURCES += \
     src/data_processor.cpp
 
 HEADERS += \
+    $$QTHTTP_SRC/qhttp.h \
+    $$QTHTTP_SRC/qringbuffer_p.h \
+    $$QTHTTP_SRC/qhttpauthenticator_p.h \
     src/froniussolar_api.h \
     src/inverter.h \
     src/power_info.h \
