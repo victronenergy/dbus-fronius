@@ -16,6 +16,7 @@ Inverter::Inverter(const QString &hostName, int port, const QString &id,
 	mDeviceType(deviceType),
 	mUniqueId(uniqueId),
 	mCustomName(customName),
+	mDeviceInstance(InvalidDeviceInstance),
 	mDeviceInfo(FroniusDeviceInfo::find(deviceType)),
 	mMeanPowerInfo(new PowerInfo(this)),
 	mL1PowerInfo(new PowerInfo(this)),
@@ -121,6 +122,19 @@ QString Inverter::productName() const
 {
 	return mDeviceInfo == 0 ? QString(tr("Unknown Fronius Inverter")) :
 							  mDeviceInfo->name;
+}
+
+int Inverter::deviceInstance() const
+{
+	return mDeviceInstance;
+}
+
+void Inverter::setDeviceInstance(int instance)
+{
+	if (mDeviceInstance == instance)
+		return;
+	mDeviceInstance = instance;
+	emit deviceInstanceChanged();
 }
 
 PowerInfo *Inverter::meanPowerInfo()

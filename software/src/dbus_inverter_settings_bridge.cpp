@@ -16,8 +16,6 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 			QVariant(static_cast<int>(settings->phase())), path + "/Phase");
 	consume(Service, settings, "position",
 			QVariant(static_cast<int>(settings->position())), path + "/Position");
-	consume(Service, settings, "deviceInstance",
-			QVariant(InvalidDeviceInstance), path + "/DeviceInstance");
 	consume(Service, settings, "customName",
 			QVariant(""), path + "/CustomName");
 	consume(Service, settings, "isActive",

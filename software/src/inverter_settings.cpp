@@ -7,7 +7,6 @@ InverterSettings::InverterSettings(int deviceType, const QString &uniqueId,
 	QObject(parent),
 	mUniqueId(uniqueId),
 	mDeviceType(deviceType),
-	mDeviceInstance(InvalidDeviceInstance),
 	mPhase(PhaseL1),
 	mPosition(Input1),
 	mIsActive(true),
@@ -51,20 +50,6 @@ void InverterSettings::setPosition(InverterPosition position)
 		return;
 	mPosition = position;
 	emit positionChanged();
-	emit deviceInstanceChanged();
-}
-
-int InverterSettings::deviceInstance() const
-{
-	return mDeviceInstance;
-}
-
-void InverterSettings::setDeviceInstance(int instance)
-{
-	if (mDeviceInstance == instance)
-		return;
-	mDeviceInstance = instance;
-	emit deviceInstanceChanged();
 }
 
 QString InverterSettings::customName() const

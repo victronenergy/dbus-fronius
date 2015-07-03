@@ -21,6 +21,7 @@ class Inverter : public QObject
 	Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
 	Q_PROPERTY(int phaseCount READ phaseCount)
 	Q_PROPERTY(QString productName READ productName)
+	Q_PROPERTY(int deviceInstance READ deviceInstance WRITE setDeviceInstance NOTIFY deviceInstanceChanged)
 public:
 	Inverter(const QString &hostName, int port, const QString &id,
 			 int deviceType, const QString &uniqueId,
@@ -69,6 +70,10 @@ public:
 
 	QString productName() const;
 
+	int deviceInstance() const;
+
+	void setDeviceInstance(int instance);
+
 	PowerInfo *meanPowerInfo();
 
 	PowerInfo *l1PowerInfo();
@@ -97,6 +102,8 @@ signals:
 
 	void statusCodeChanged();
 
+	void deviceInstanceChanged();
+
 private:
 	bool mIsConnected;
 	QString mStatus;
@@ -108,6 +115,7 @@ private:
 	int mDeviceType;
 	QString mUniqueId;
 	QString mCustomName;
+	int mDeviceInstance;
 	const FroniusDeviceInfo *mDeviceInfo;
 	PowerInfo *mMeanPowerInfo;
 	PowerInfo *mL1PowerInfo;

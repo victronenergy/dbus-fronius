@@ -33,7 +33,7 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 	addBusItems(inverter->l3PowerInfo(), "/Ac/L3");
 
 	produce(settings, "position", "/Position");
-	produce(settings, "deviceInstance", "/DeviceInstance");
+	produce(inverter, "deviceInstance", "/DeviceInstance");
 	produce(settings, "customName", "/CustomName");
 	produce(inverter, "hostName", "/Mgmt/Connection");
 

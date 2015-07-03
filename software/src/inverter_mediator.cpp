@@ -69,14 +69,6 @@ void InverterMediator::onSettingsInitialized()
 	}
 	if (mInverter == 0)
 		return;
-	mSettings->registerInverter(mInverter->deviceType(), mInverter->uniqueId());
-	if (mInverterSettings->deviceInstance() == InvalidDeviceInstance) {
-		int deviceInstance = mSettings->getDeviceInstance(
-								 mInverter->deviceType(), mInverter->uniqueId());
-		QLOG_INFO() << "Assigning device instance" << deviceInstance << "to"
-					<< mInverter->uniqueId();
-		mInverterSettings->setDeviceInstance(deviceInstance);
-	}
 	startAcquisition();
 }
 
@@ -126,6 +118,15 @@ bool InverterMediator::inverterMatches(Inverter *inverter)
 
 void InverterMediator::startAcquisition()
 {
+	mSettings->registerInverter(mInverter->deviceType(), mInverter->uniqueId());
+	int deviceInstance = mSettings->getDeviceInstance(
+							 mInverter->deviceType(), mInverter->uniqueId());
+	if (deviceInstance != mInverter->deviceInstance()) {
+		QLOG_INFO() << "Assigning device instance on" << mInverter->uniqueId()
+					<< "from" << mInverter->deviceInstance()
+					<< "to" << deviceInstance;
+		mInverter->setDeviceInstance(deviceInstance);
+	}
 	if (mInverter->phaseCount() > 1) {
 		mInverterSettings->setPhase(MultiPhase);
 	} else if (mInverterSettings->phase() == MultiPhase) {
