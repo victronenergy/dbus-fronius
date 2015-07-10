@@ -150,8 +150,9 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 		for (QList<InverterInfo>::const_iterator it = data.inverters.begin();
 			 it != data.inverters.end();
 			 ++it) {
+			QString uniqueId = fixUniqueId(it->uniqueId, it->id);
 			Inverter *inverter = new Inverter(hostName, port, it->id,
-											  it->deviceType, it->uniqueId,
+											  it->deviceType, uniqueId,
 											  it->customName, this);
 			emit inverterFound(inverter);
 			if (inverter->parent() == this) {
@@ -224,4 +225,22 @@ void InverterGateway::updateAddressGenerator()
 		mAddressGenerator.reset();
 	}
 	emit scanProgressChanged();
+}
+
+QString InverterGateway::fixUniqueId(const QString &uniqueId, const QString &id)
+{
+	bool isOk = false;
+	QString result;
+	foreach (QChar c, uniqueId) {
+		c = c.toAscii();
+		if (!c.isLetterOrNumber()) {
+			c = '_';
+		} else {
+			isOk = true;
+		}
+		result += c;
+	}
+	if (!isOk)
+		result = QString("T%1").arg(id);
+	return result;
 }
