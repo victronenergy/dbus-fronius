@@ -27,11 +27,6 @@ QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 target.path = /opt/color-control/dbus-fronius
 INSTALLS += target
 
-machine=$$(MACHINE)
-contains(machine,ccgx) {
-    DEFINES += TARGET_ccgx
-}
-
 # Note: we need the script module to parse JSON fragments as part of the
 # fronius solar API.
 QT += core network dbus script

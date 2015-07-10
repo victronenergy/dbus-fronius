@@ -61,8 +61,6 @@ private:
 
 	void updateDetection();
 
-	void setAutoDetectInternal(bool b);
-
 	static QString fixUniqueId(const QString &uniqueId, const QString &id);
 
 	QPointer<Settings> mSettings;

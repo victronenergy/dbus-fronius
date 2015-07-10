@@ -3,8 +3,6 @@
 #include "froniussolar_api.h"
 #include "inverter.h"
 #include "inverter_gateway.h"
-#include "inverter_settings.h"
-#include "inverter_updater.h"
 #include "settings.h"
 
 static const int MaxSimultaneousRequests = 64;
@@ -61,74 +59,6 @@ void InverterGateway::startDetection()
 	setAutoDetect(true);
 	mSettingsBusy = false;
 	updateAddressGenerator();
-}
-
-void InverterGateway::updateDetection()
-{
-	QString hostName;
-	while (hostName.isEmpty() && mAddressGenerator.hasNext()) {
-		hostName = mAddressGenerator.next().toString();
-		foreach (FroniusSolarApi *api, mApis) {
-			if (api->hostName() == hostName) {
-				// There's already a web request send to this host.
-				hostName.clear();
-			}
-		}
-	}
-	if (hostName.isEmpty()) {
-		if (!mApis.isEmpty()) {
-			// Wait for pending requests to return
-			return;
-		}
-		bool autoDetect = false;
-		if (mAddressGenerator.priorityOnly()) {
-			// We scanned all known addresses. Have we found what we needed?
-			QList<QHostAddress> addresses = mAddressGenerator.priorityAddresses();
-			int count = 0;
-			foreach (QHostAddress a, addresses) {
-				if (mDevicesFound.contains(a)) {
-					++count;
-					break;
-				}
-			}
-			if (mFullScanRequested) {
-				QLOG_INFO() << "Full scan requested, starting auto IP scan";
-				autoDetect = true;
-				mFullScanRequested = false;
-			} else if (!mFullScanIfNoDeviceFound) {
-				QLOG_DEBUG() << "No auto IP scan requested. Detection finished";
-			} else if (count < addresses.size() || mDevicesFound.isEmpty()) {
-				/// @todo EV We may get here when auto detect is disabled manually
-				/// *before* any inverter have been found.
-				// Some devices were missing or no devices were found at all.
-				// Start auto scan.
-				QLOG_INFO() << "Not all devices found, starting auto IP scan";
-				autoDetect = true;
-			} else {
-				QLOG_DEBUG() << "Auto IP scan disabled, all devices found";
-			}
-		} else {
-			QLOG_INFO() << "Auto IP scan completed. Detection finished";
-		}
-		mSettingsBusy = true;
-		setAutoDetect(autoDetect);
-		mSettingsBusy = false;
-		if (autoDetect) {
-			mAddressGenerator.setPriorityOnly(false);
-			mAddressGenerator.reset();
-			for (int i=mApis.size(); i<MaxSimultaneousRequests; ++i)
-				updateDetection();
-		}
-		scanProgressChanged();
-		return;
-	}
-	int portNumber = mSettings->portNumber();
-	QLOG_TRACE() << "Scanning at" << hostName << ':' << portNumber;
-	FroniusSolarApi *api = new FroniusSolarApi(hostName, portNumber, this);
-	mApis.append(api);
-	connect(api, SIGNAL(converterInfoFound(InverterListData)),
-			this, SLOT(onConverterInfoFound(InverterListData)));
-	api->getConverterInfoAsync();
 }
 
 void InverterGateway::onConverterInfoFound(const InverterListData &data)
@@ -225,6 +155,74 @@ void InverterGateway::updateAddressGenerator()
 		mAddressGenerator.reset();
 	}
 	emit scanProgressChanged();
+}
+
+void InverterGateway::updateDetection()
+{
+	QString hostName;
+	while (hostName.isEmpty() && mAddressGenerator.hasNext()) {
+		hostName = mAddressGenerator.next().toString();
+		foreach (FroniusSolarApi *api, mApis) {
+			if (api->hostName() == hostName) {
+				// There's already a web request send to this host.
+				hostName.clear();
+			}
+		}
+	}
+	if (hostName.isEmpty()) {
+		if (!mApis.isEmpty()) {
+			// Wait for pending requests to return
+			return;
+		}
+		bool autoDetect = false;
+		if (mAddressGenerator.priorityOnly()) {
+			// We scanned all known addresses. Have we found what we needed?
+			QList<QHostAddress> addresses = mAddressGenerator.priorityAddresses();
+			int count = 0;
+			foreach (QHostAddress a, addresses) {
+				if (mDevicesFound.contains(a)) {
+					++count;
+					break;
+				}
+			}
+			if (mFullScanRequested) {
+				QLOG_INFO() << "Full scan requested, starting auto IP scan";
+				autoDetect = true;
+				mFullScanRequested = false;
+			} else if (!mFullScanIfNoDeviceFound) {
+				QLOG_DEBUG() << "No auto IP scan requested. Detection finished";
+			} else if (count < addresses.size() || mDevicesFound.isEmpty()) {
+				/// @todo EV We may get here when auto detect is disabled manually
+				/// *before* any inverter have been found.
+				// Some devices were missing or no devices were found at all.
+				// Start auto scan.
+				QLOG_INFO() << "Not all devices found, starting auto IP scan";
+				autoDetect = true;
+			} else {
+				QLOG_DEBUG() << "Auto IP scan disabled, all devices found";
+			}
+		} else {
+			QLOG_INFO() << "Auto IP scan completed. Detection finished";
+		}
+		mSettingsBusy = true;
+		setAutoDetect(autoDetect);
+		mSettingsBusy = false;
+		if (autoDetect) {
+			mAddressGenerator.setPriorityOnly(false);
+			mAddressGenerator.reset();
+			for (int i=mApis.size(); i<MaxSimultaneousRequests; ++i)
+				updateDetection();
+		}
+		scanProgressChanged();
+		return;
+	}
+	int portNumber = mSettings->portNumber();
+	QLOG_TRACE() << "Scanning at" << hostName << ':' << portNumber;
+	FroniusSolarApi *api = new FroniusSolarApi(hostName, portNumber, this);
+	mApis.append(api);
+	connect(api, SIGNAL(converterInfoFound(InverterListData)),
+			this, SLOT(onConverterInfoFound(InverterListData)));
+	api->getConverterInfoAsync();
 }
 
 QString InverterGateway::fixUniqueId(const QString &uniqueId, const QString &id)
