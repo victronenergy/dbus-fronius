@@ -34,8 +34,22 @@ InverterMediator::InverterMediator(Inverter *inverter, InverterGateway *gateway,
 
 bool InverterMediator::processNewInverter(Inverter *inverter)
 {
-	if (!inverterMatches(inverter))
+	if (!inverterMatches(inverter)) {
+		if (mInverter != 0 &&
+			mInverter->hostName() == inverter->hostName() &&
+			mInverter->id() == inverter->id()) {
+			QLOG_INFO() << "Another inverter found @"
+						<< inverter->hostName()
+						<< ':' << inverter->id()
+						<< "closing down" << inverter->uniqueId();
+			// So we found an inverter whose communication settings matches ours.
+			// We can only assume this inverter is no longer available there, so
+			// we give up and hope it will return somewhere else.
+			delete mInverter;
+			mInverter = 0;
+		}
 		return false;
+	}
 	if (mInverter != 0) {
 		if (mInverter->hostName() != inverter->hostName() ||
 			mInverter->port() != inverter->port()) {
