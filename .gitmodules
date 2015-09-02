@@ -12,5 +12,5 @@
 	branch = release-0.12
 [submodule "software/ext/googletest"]
 	path = software/ext/googletest
-	url = http://git.chromium.org/external/googletest.git
+	url = https://github.com/google/googletest
 	branch = master

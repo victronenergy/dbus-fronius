@@ -48,15 +48,15 @@ include(../software/src/json/json.pri)
 include(../software/ext/qslog/QsLog.pri)
 
 SRCDIR = ../software/src
-EXTDIR = ../software/ext
+EXTDIR = ../software/ext/
 VELIB_INC = ../software/ext/velib/inc/velib/qt
 VELIB_SRC = ../software/ext/velib/src/qt
 
 INCLUDEPATH += \
     ../software/ext/velib/inc \
     ../software/ext/velib/lib/Qvelib \
-    ../software/ext/googletest/include \
-    ../software/ext/googletest \
+    ../software/ext/googletest/googletest/include \
+    ../software/ext/googletest/googletest \
     ../software/src
 
 HEADERS += \
@@ -118,7 +118,7 @@ SOURCES += \
     $$SRCDIR/fronius_data_processor.cpp \
     $$SRCDIR/fronius_device_info.cpp \
     $$SRCDIR/v_bus_node.cpp \
-    $$EXTDIR/googletest/src/gtest-all.cc \
+    $$EXTDIR/googletest/googletest/src/gtest-all.cc \
     src/main.cpp \
     src/dbus_observer.cpp \
     src/dbus_service_observer.cpp \
