@@ -85,7 +85,7 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		scheduleRetrieval();
 		break;
 	case SolarApiReply::ApiError:
-		QLOG_ERROR() << "Fronius CommonInverterData retrieval error:"
+		QLOG_DEBUG() << "Fronius CommonInverterData retrieval error:"
 					 << data.errorMessage;
 		handleError();
 		scheduleRetrieval();
@@ -108,7 +108,7 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 		handleError();
 		break;
 	case SolarApiReply::ApiError:
-		QLOG_ERROR() << "Fronius 3Phase inverter data retrieval error:"
+		QLOG_DEBUG() << "Fronius 3Phase inverter data retrieval error:"
 					 << data.errorMessage;
 		handleError();
 		break;

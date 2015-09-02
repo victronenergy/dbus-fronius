@@ -245,7 +245,7 @@ void FroniusSolarApi::processReply(const QString &networkError,
 	{
 		apiReply.error = SolarApiReply::ApiError;
 		apiReply.errorMessage = status["Reason"].toString();
-		QLOG_ERROR() << "Fronius solar API error:" << apiReply.errorMessage;
+		QLOG_DEBUG() << "Fronius solar API error:" << apiReply.errorMessage;
 		return;
 	}
 	apiReply.error = SolarApiReply::NoError;
