@@ -22,7 +22,7 @@ TEST_F(DBusInverterBridgeTest, constructor)
 	mInverter->l2PowerInfo()->setPower(138);
 	mInverter->l2PowerInfo()->setVoltage(344);
 	mInverter->l2PowerInfo()->setTotalEnergy(0);
-	mSettings->setDeviceInstance(22);
+	mInverter->setDeviceInstance(22);
 
 	SetUpBridge();
 
@@ -82,7 +82,7 @@ TEST_F(DBusInverterBridgeTest, deviceInstance)
 	SetUpBridge();
 
 	checkValue(QVariant(-1), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
-	mSettings->setDeviceInstance(21);
+	mInverter->setDeviceInstance(21);
 	qWait(100);
 	checkValue(QVariant(21), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
 }
