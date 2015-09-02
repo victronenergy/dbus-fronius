@@ -80,6 +80,14 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 		for (QList<InverterInfo>::const_iterator it = data.inverters.begin();
 			 it != data.inverters.end();
 			 ++it) {
+			// Sometimes (during startup?) PV inverters will send 255 as device
+			// type instead of the real type. We have only seen this in a test
+			// setup with a Fronius IG Plus 50 V-1.
+			if (it->deviceType == 255) {
+				QLOG_WARN() << "PV inverter reported type 255. Serial:"
+							<< it->uniqueId;
+				continue;
+			}
 			QString uniqueId = fixUniqueId(it->uniqueId, it->id);
 			Inverter *inverter = new Inverter(hostName, port, it->id,
 											  it->deviceType, uniqueId,
