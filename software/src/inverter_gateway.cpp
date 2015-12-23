@@ -84,17 +84,19 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 			// type instead of the real type. We have only seen this in a test
 			// setup with a Fronius IG Plus 50 V-1.
 			if (it->deviceType == 255) {
-				QLOG_WARN() << "PV inverter reported type 255. Serial:"
-							<< it->uniqueId;
-				continue;
-			}
-			QString uniqueId = fixUniqueId(it->uniqueId, it->id);
-			Inverter *inverter = new Inverter(hostName, port, it->id,
-											  it->deviceType, uniqueId,
-											  it->customName, this);
-			emit inverterFound(inverter);
-			if (inverter->parent() == this) {
-				delete inverter;
+				if (!mInvalidDevices.contains(it->uniqueId)) {
+					mInvalidDevices.append(it->uniqueId);
+					QLOG_WARN() << "PV inverter reported type 255. Serial:" << it->uniqueId;
+				}
+			} else {
+				QString uniqueId = fixUniqueId(it->uniqueId, it->id);
+				Inverter *inverter = new Inverter(hostName, port, it->id,
+												  it->deviceType, uniqueId,
+												  it->customName, this);
+				emit inverterFound(inverter);
+				if (inverter->parent() == this) {
+					delete inverter;
+				}
 			}
 		}
 	}

@@ -4,6 +4,7 @@
 #include <QHostAddress>
 #include <QObject>
 #include <QPointer>
+#include <QStringList>
 #include "local_ip_address_generator.h"
 
 class FroniusSolarApi;
@@ -65,6 +66,7 @@ private:
 
 	QPointer<Settings> mSettings;
 	QList<QHostAddress> mDevicesFound;
+	QStringList mInvalidDevices;
 	QList<FroniusSolarApi *> mApis;
 	LocalIpAddressGenerator mAddressGenerator;
 	QTimer *mTimer;
