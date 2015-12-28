@@ -24,8 +24,15 @@ QMAKE_CXXFLAGS += -Wno-psabi
 QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 
 # Add more folders to ship with the application here
-target.path = /opt/color-control/dbus-fronius
-INSTALLS += target
+unix {
+    bindir = $$(bindir)
+    DESTDIR = $$(DESTDIR)
+    isEmpty(bindir) {
+        bindir = /usr/local/bin
+    }
+    INSTALLS += target
+    target.path = $${DESTDIR}$${bindir}
+}
 
 # Note: we need the script module to parse JSON fragments as part of the
 # fronius solar API.
