@@ -6,21 +6,21 @@ publishes it on the D-Bus. It is designed to run on the color control CX.
 The color control gui application contains several pages to change the behaviour
 of this application, especially settings on how to detect the inverters.
 
-In order to build the application for the color control you need a recent
-version of QT creator and the ccgx SDK.
-
-You can find the SDK here:
+In order to build the application for the color control you need a linux system and
+a recent version of QT creator and the ccgx SDK. You can find the SDK here:
 
 https://www.victronenergy.com/live/open_source:ccgx:setup_development_environment
 
 This page also contains information on how to configure QT creator to use the CCGX cross compiler.
+Next you can load the project file software/dbus-fronius.pro in QT creator and create the
+CCGX binary.
 
 Testing on a linux PC
 =====================
 
-To compile on a (linux) PC you will also need a QT SDK (version 4.8.x), including QT D-Bus support.
-Because you do not have access to the system D-Bus (unless you run as root or adjust the D-Bus
-configuration) you should start the fronius application with: 'dbus-fronius --dbus session'
+To compile and run on a (linux) PC you will also need a QT SDK (version 4.8.x), including QT D-Bus 
+support. Because you do not have access to the system D-Bus (unless you run as root or adjust the
+D-Bus configuration) you should start the fronius application with: 'dbus-fronius --dbus session'
 Note that QT for windows does not support D-Bus, so you cannot build a windows executable.
 
 The dbus-fronius executable expects the CCGX settings manager (localsettings) to be running.
