@@ -110,3 +110,6 @@ HEADERS += \
     src/fronius_device_info.h \
     src/v_bus_node.h \
     src/inverter_mediator.h
+
+DISTFILES += \
+	../README.md
