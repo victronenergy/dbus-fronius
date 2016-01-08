@@ -1,13 +1,13 @@
 dbus-fronius
 ============
 This application reads data from Fronius photoelectric voltage inverters, and
-publishes it on the D-Bus. It is designed to run on the color control CX.
+publishes it on the D-Bus. It is designed to run on the Color Control (CCGX).
 
 The color control gui application contains several pages to change the behaviour
 of this application, especially settings on how to detect the inverters.
 
-In order to build the application for the color control you need a linux system and
-a recent version of QT creator and the ccgx SDK. You can find the SDK here:
+In order to build the application for the color control you need a linux system,
+a recent version of QT creator and the CCGX SDK. You can find the SDK here:
 
 https://www.victronenergy.com/live/open_source:ccgx:setup_development_environment
 
@@ -28,15 +28,7 @@ localsettings is available on github:
 
 https://github.com/victronenergy/localsettings
 
-The localsettings script needs python dbus support, gobject and xml support (for python 2.7). On a
-debian system install python-dbus, python-gobject and python-lxml.
-
-Note that localsettings assumes that a writable directory /data/conf exists on your system, which is
-not available on most (all) linux systems, so you have to create it manually. Make sure the user
-running the localsettings script has write access to the directory. Alternatively, you can also
-adjust the script in order to set a different directory. In localsettings.py look for:
-
-pathSettings = '/data/conf/'
+The README.md of localsettings contains some information on how to run localsettings on your PC.
 
 Unit tests
 ==========
