@@ -11,7 +11,7 @@ QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 target.path = /opt/dbus_fronius_test
 INSTALLS += target
 
-QT += core network script
+QT += core network
 QT -= gui
 
 TARGET = dbus_fronius_test
@@ -23,11 +23,9 @@ TEMPLATE = app
 
 SRCDIR = ../software/src
 EXTDIR = ../software/ext
-VELIB_INC = $$EXTDIR/velib/inc/velib/qt
-VELIB_SRC = $$EXTDIR/velib/src/qt
+QTHTTP_SRC = ../software/ext/qthttp/src/qhttp
 
 include($$EXTDIR/qslog/QsLog.pri)
-include($$SRCDIR/json/json.pri)
 include($$EXTDIR/velib/src/qt/ve_qitems.pri)
 
 INCLUDEPATH += \
@@ -38,6 +36,9 @@ INCLUDEPATH += \
     $$SRCDIR
 
 HEADERS += \
+    $$QTHTTP_SRC/qhttp.h \
+    $$QTHTTP_SRC/qringbuffer_p.h \
+    $$QTHTTP_SRC/qhttpauthenticator_p.h \
     $$SRCDIR/froniussolar_api.h \
     $$SRCDIR/gateway_interface.h \
     $$SRCDIR/inverter.h \
@@ -56,6 +57,8 @@ HEADERS += \
     src/data_processor_test.h
 
 SOURCES += \
+    $$QTHTTP_SRC/qhttpauthenticator.cpp \
+    $$QTHTTP_SRC/qhttp.cpp \
     $$SRCDIR/froniussolar_api.cpp \
     $$SRCDIR/gateway_interface.cpp \
     $$SRCDIR/inverter.cpp \
