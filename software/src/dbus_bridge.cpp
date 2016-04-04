@@ -1,5 +1,6 @@
 #include <QDBusVariant>
 #include <QsLog.h>
+#include <QTimer>
 #include <velib/qt/v_busitem.h>
 #include <velib/qt/v_busitems.h>
 #include "v_bus_node.h"
@@ -10,7 +11,8 @@ Q_DECLARE_METATYPE(QList<int>)
 DBusBridge::DBusBridge(QObject *parent) :
 	QObject(parent),
 	mServiceRegistered(false),
-	mUpdateBusy(false)
+	mUpdateBusy(false),
+	mUpdateTimer(0)
 {
 }
 
@@ -18,7 +20,8 @@ DBusBridge::DBusBridge(const QString &serviceName, QObject *parent):
 	QObject(parent),
 	mServiceName(serviceName),
 	mServiceRegistered(false),
-	mUpdateBusy(false)
+	mUpdateBusy(false),
+	mUpdateTimer(0)
 {
 }
 
@@ -31,6 +34,23 @@ DBusBridge::~DBusBridge()
 	if (!connection.unregisterService(mServiceName)) {
 		QLOG_FATAL() << "UnregisterService failed";
 	}
+}
+
+void DBusBridge::setUpdateInterval(int interval)
+{
+	if (interval <= 0) {
+		if (mUpdateTimer != 0) {
+			delete mUpdateTimer;
+			mUpdateTimer = 0;
+		}
+		return;
+	}
+	if (mUpdateTimer == 0) {
+		mUpdateTimer = new QTimer(this);
+		connect(mUpdateTimer, SIGNAL(timeout()), this, SLOT(onUpdateTimer()));
+	}
+	mUpdateTimer->setInterval(interval);
+	mUpdateTimer->start();
 }
 
 void DBusBridge::produce(QObject *src, const char *property,
@@ -167,25 +187,14 @@ void DBusBridge::onPropertyChanged()
 {
 	QObject *src = sender();
 	int signalIndex = senderSignalIndex();
-	const QMetaObject *mo = src->metaObject();
-	for (int i=0; i<mo->propertyCount(); ++i) {
-		QMetaProperty mp = mo->property(i);
-		if (mp.hasNotifySignal() && mp.notifySignalIndex() == signalIndex) {
-			foreach (BusItemBridge bib, mBusItems) {
-				if (bib.src == src &&
-					bib.property.isValid() &&
-					strcmp(bib.property.name(), mp.name()) == 0) {
-					QVariant value = src->property(mp.name());
-					if (toDBus(bib.path, value)) {
-						if (!value.isValid())
-							value = QVariant::fromValue(QList<int>());
-						mUpdateBusy = true;
-						bib.item->setValue(value);
-						mUpdateBusy = false;
-					}
-					break;
-				}
-			}
+	for (QList<BusItemBridge>::iterator it = mBusItems.begin(); it != mBusItems.end(); ++it) {
+		if (it->src == src && it->property.isValid() &&
+				it->property.notifySignalIndex() == signalIndex) {
+			if (mUpdateTimer == 0)
+				publishValue(*it);
+			else
+				it->changed = true;
+			break;
 		}
 	}
 }
@@ -230,6 +239,16 @@ void DBusBridge::onVBusItemChanged()
 	}
 }
 
+void DBusBridge::onUpdateTimer()
+{
+	for (QList<BusItemBridge>::iterator it = mBusItems.begin(); it != mBusItems.end(); ++it) {
+		if (it->changed) {
+			publishValue(*it);
+			it->changed = false;
+		}
+	}
+}
+
 void DBusBridge::connectItem(VBusItem *busItem, QObject *src,
 							 const char *property, const QString &path)
 {
@@ -238,6 +257,7 @@ void DBusBridge::connectItem(VBusItem *busItem, QObject *src,
 	bib.src = src;
 	bib.path = path;
 	bib.initialized = false;
+	bib.changed = false;
 	if (src == 0) {
 		if (property != 0) {
 			QLOG_ERROR() << "Property specified (" << property
@@ -278,4 +298,16 @@ void DBusBridge::addVBusNodes(const QString &path, VBusItem *vbi)
 		mServiceRoot = new VBusNode(connection, "/", this);
 	}
 	mServiceRoot->addChild(path, vbi);
+}
+
+void DBusBridge::publishValue(DBusBridge::BusItemBridge &item)
+{
+	QVariant value = item.src->property(item.property.name());
+	if (!toDBus(item.path, value))
+		return;
+	if (!value.isValid())
+		value = QVariant::fromValue(QList<int>());
+	mUpdateBusy = true;
+	item.item->setValue(value);
+	mUpdateBusy = false;
 }

@@ -9,6 +9,7 @@
 
 class QDBusConnection;
 class QDBusVariant;
+class QTimer;
 class VBusItem;
 class VBusNode;
 
@@ -32,6 +33,8 @@ public:
 	DBusBridge(const QString &serviceName, QObject *parent);
 
 	~DBusBridge();
+
+	void setUpdateInterval(int interval);
 
 	/*!
 	 * \brief Connects a QT property to a DBus object, and registers the object.
@@ -128,6 +131,8 @@ private slots:
 
 	void onVBusItemChanged();
 
+	void onUpdateTimer();
+
 private:
 	void connectItem(VBusItem *item, QObject *src, const char *property,
 					 const QString &path);
@@ -141,12 +146,17 @@ private:
 		QMetaProperty property;
 		QString path;
 		bool initialized;
+		bool changed;
 	};
+
+	void publishValue(BusItemBridge &item);
+
 	QList<BusItemBridge> mBusItems;
 	QPointer<VBusNode> mServiceRoot;
 	QString mServiceName;
 	bool mServiceRegistered;
 	bool mUpdateBusy;
+	QTimer *mUpdateTimer;
 };
 
 #endif // DBUS_BRIDGE_H
