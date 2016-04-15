@@ -2,7 +2,6 @@
 #include "dbus_settings.h"
 #include "dbus_settings_bridge.h"
 #include "dbus_settings_bridge_test.h"
-#include "json/json.h"
 #include "settings.h"
 #include "test_helper.h"
 

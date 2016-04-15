@@ -32,10 +32,7 @@ contains(machine,ccgx) {
     DEFINES += TARGET_ccgx
 }
 
-# suppress the mangling of va_arg has changed for gcc 4.4
-QMAKE_CXXFLAGS += -Wno-psabi
-
-QT += core dbus network script xml
+QT += core network dbus script xml
 QT -= gui
 
 TARGET = dbus_fronius_test
@@ -44,19 +41,20 @@ CONFIG -= app_bundle
 
 TEMPLATE = app
 
-include(../software/src/json/json.pri)
 include(../software/ext/qslog/QsLog.pri)
+include(../software/src/json/json.pri)
 
 SRCDIR = ../software/src
-EXTDIR = ../software/ext/
-VELIB_INC = ../software/ext/velib/inc/velib/qt
-VELIB_SRC = ../software/ext/velib/src/qt
+EXTDIR = ../software/ext
+VELIB_INC = $$EXTDIR/velib/inc/velib/qt
+VELIB_SRC = $$EXTDIR/velib/src/qt
 
 INCLUDEPATH += \
     ../software/ext/velib/inc \
     ../software/ext/velib/lib/Qvelib \
     ../software/ext/googletest/googletest/include \
     ../software/ext/googletest/googletest \
+    ../software/ext/qthttp/src/qhttp \
     ../software/src
 
 HEADERS += \
