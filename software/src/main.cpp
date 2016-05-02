@@ -6,7 +6,6 @@
 #include <velib/qt/v_busitems.h>
 #include "dbus_fronius.h"
 #include "dbus_settings_bridge.h"
-#include "version.h"
 
 void initLogger(QsLogging::Level logLevel)
 {
@@ -16,7 +15,7 @@ void initLogger(QsLogging::Level logLevel)
 	logger.addDestination(debugDestination);
 	logger.setIncludeTimestamp(false);
 
-	QLOG_INFO() << "dbus_fronius" << "v"VERSION << "started" << "("REVISION")";
+	QLOG_INFO() << "dbus_fronius" << "v" VERSION << "started";
 	QLOG_INFO() << "Built with Qt" << QT_VERSION_STR << "running on" << qVersion();
 	QLOG_INFO() << "Built on" << __DATE__ << "at" << __TIME__;
 	logger.setLoggingLevel(logLevel);
@@ -76,7 +75,7 @@ int main(int argc, char *argv[])
 			return 0;
 		}
 		if (arg == "-V" || arg == "--version") {
-			qDebug() << VERSION << "("REVISION")";
+			qDebug() << VERSION;
 			return 0;
 		} else if (arg == "-d" || arg == "--debug") {
 			expectVerbosity = true;

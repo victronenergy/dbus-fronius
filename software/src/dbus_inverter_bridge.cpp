@@ -8,7 +8,6 @@
 #include "inverter.h"
 #include "inverter_settings.h"
 #include "power_info.h"
-#include "version.h"
 
 DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
 									   InverterSettings *settings,

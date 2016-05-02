@@ -1,21 +1,5 @@
 # Application version and revision
 VERSION = 0.0.1
-REVISION = $$system(git --git-dir $$PWD/../.git --work-tree $$PWD describe --always --dirty --tags)
-
-# Create a include file with VERION / REVISION
-version_rule.target = $$OUT_PWD/version.h
-version_rule.commands = @echo \"updating file $$revtarget.target\"; \
-    printf \"/* generated file (do not edit) */\\n \
-    $${LITERAL_HASH}ifndef VERSION_H\\n \
-    $${LITERAL_HASH}define VERSION_H\\n \
-    $${LITERAL_HASH}define VERSION \\\"$${VERSION}\\\"\\n \
-    $${LITERAL_HASH}define REVISION \\\"$${REVISION}\\\"\\n \
-    $${LITERAL_HASH}endif\" > $$version_rule.target
-version_rule.depends = FORCE
-QMAKE_DISTCLEAN += $$version_rule.target
-
-QMAKE_EXTRA_TARGETS += version_rule
-PRE_TARGETDEPS += $$OUT_PWD/version.h
 
 # suppress the mangling of va_arg has changed for gcc 4.4
 QMAKE_CXXFLAGS += -Wno-psabi
@@ -38,6 +22,7 @@ QT -= gui
 TARGET = dbus_fronius_test
 CONFIG += console
 CONFIG -= app_bundle
+DEFINES += VERSION=\\\"$${VERSION}\\\"
 
 TEMPLATE = app
 
