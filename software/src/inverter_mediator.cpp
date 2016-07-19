@@ -4,6 +4,7 @@
 #include "inverter.h"
 #include "inverter_gateway.h"
 #include "inverter_mediator.h"
+#include "inverter_modbus_updater.h"
 #include "inverter_settings.h"
 #include "inverter_updater.h"
 #include "settings.h"
@@ -149,5 +150,6 @@ void InverterMediator::startAcquisition()
 		mInverterSettings->setPhase(PhaseL1);
 	}
 	InverterUpdater *iu = new InverterUpdater(mInverter, mInverterSettings, mInverter);
+	new InverterModbusUpdater(mInverter, mInverter);
 	connect(iu, SIGNAL(initialized()), this, SLOT(onInverterInitialized()));
 }

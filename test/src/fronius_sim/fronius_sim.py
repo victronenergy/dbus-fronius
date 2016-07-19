@@ -27,6 +27,10 @@ class PowerInfo:
 		return p
 
 	@property
+	def nominal_power(self):
+		return 2000
+
+	@property
 	def energy(self):
 		p = self.power
 		return self._lastEnergy

@@ -1,3 +1,4 @@
+#include <qnumeric.h>
 #include <QsLog.h>
 #include "fronius_device_info.h"
 #include "inverter.h"
@@ -21,7 +22,11 @@ Inverter::Inverter(const QString &hostName, int port, const QString &id,
 	mMeanPowerInfo(new PowerInfo(this)),
 	mL1PowerInfo(new PowerInfo(this)),
 	mL2PowerInfo(new PowerInfo(this)),
-	mL3PowerInfo(new PowerInfo(this))
+	mL3PowerInfo(new PowerInfo(this)),
+	mPowerLimit(qQNaN()),
+	mPowerLimitStepSize(qQNaN()),
+	mMinPowerLimit(qQNaN()),
+	mMaxPower(qQNaN())
 {
 	if (mDeviceInfo == 0) {
 		QLOG_WARN() << "Unknow inverter type:" << deviceType;
@@ -172,6 +177,43 @@ PowerInfo *Inverter::getPowerInfo(InverterPhase phase)
 		QLOG_ERROR() << "Incorrect phase:" << phase;
 		return 0;
 	}
+}
+
+void Inverter::setPowerLimit(double p)
+{
+//	if (mPowerLimit == p)
+//		return;
+	mPowerLimit = p;
+	emit powerLimitChanged();
+}
+
+void Inverter::setRequestedPowerLimit(double p)
+{
+	emit powerLimitRequested(p);
+}
+
+void Inverter::setPowerLimitStepSize(double p)
+{
+	if (mPowerLimitStepSize == p)
+		return;
+	mPowerLimitStepSize = p;
+	emit powerLimitStepSizeChanged();
+}
+
+void Inverter::setMinPowerLimit(double p)
+{
+	if (mMinPowerLimit == p)
+		return;
+	mMinPowerLimit = p;
+	emit minPowerLimitChanged();
+}
+
+void Inverter::setMaxPower(double p)
+{
+	if (mMaxPower == p)
+		return;
+	mMaxPower = p;
+	emit maxPowerChanged();
 }
 
 void Inverter::resetValues()

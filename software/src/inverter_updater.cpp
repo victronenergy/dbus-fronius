@@ -81,14 +81,17 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		mInverter->setErrorCode(data.errorCode);
 		break;
 	case SolarApiReply::NetworkError:
+		QLOG_DEBUG() << "[Solar API] Network error: " << data.errorMessage;
 		handleError();
 		scheduleRetrieval();
 		break;
 	case SolarApiReply::ApiError:
-		QLOG_DEBUG() << "Fronius CommonInverterData retrieval error:"
-					 << data.errorMessage;
+		QLOG_DEBUG() << "[Solar API] CommonInverterData retrieval error:" << data.errorMessage;
 		handleError();
 		scheduleRetrieval();
+		break;
+	default:
+		QLOG_DEBUG() << "[Solar API] Unknown error" << data.error << data.errorMessage;
 		break;
 	}
 }
@@ -105,12 +108,16 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 		setInitialized();
 		break;
 	case SolarApiReply::NetworkError:
+		QLOG_DEBUG() << "[Solar API] Network error: " << data.errorMessage;
 		handleError();
 		break;
 	case SolarApiReply::ApiError:
-		QLOG_DEBUG() << "Fronius 3Phase inverter data retrieval error:"
+		QLOG_DEBUG() << "[Solar API] Fronius 3Phase inverter data retrieval error:"
 					 << data.errorMessage;
 		handleError();
+		break;
+	default:
+		QLOG_DEBUG() << "[Solar API] Unknown error" << data.error << data.errorMessage;
 		break;
 	}
 	scheduleRetrieval();

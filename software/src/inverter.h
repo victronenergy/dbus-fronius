@@ -22,6 +22,10 @@ class Inverter : public QObject
 	Q_PROPERTY(int phaseCount READ phaseCount)
 	Q_PROPERTY(QString productName READ productName)
 	Q_PROPERTY(int deviceInstance READ deviceInstance WRITE setDeviceInstance NOTIFY deviceInstanceChanged)
+	Q_PROPERTY(double powerLimit READ powerLimit WRITE setPowerLimit NOTIFY powerLimitChanged)
+	Q_PROPERTY(double minPowerLimit READ minPowerLimit WRITE setMinPowerLimit NOTIFY minPowerLimitChanged)
+	Q_PROPERTY(double powerLimitStepSize READ powerLimitStepSize WRITE setPowerLimitStepSize NOTIFY powerLimitStepSizeChanged)
+	Q_PROPERTY(double maxPower READ maxPower WRITE setMaxPower NOTIFY maxPowerChanged)
 public:
 	Inverter(const QString &hostName, int port, const QString &id,
 			 int deviceType, const QString &uniqueId,
@@ -84,6 +88,36 @@ public:
 
 	PowerInfo *getPowerInfo(InverterPhase phase);
 
+	double powerLimit() const
+	{
+		return mPowerLimit;
+	}
+
+	void setPowerLimit(double p);
+
+	void setRequestedPowerLimit(double p);
+
+	double powerLimitStepSize() const
+	{
+		return mPowerLimitStepSize;
+	}
+
+	void setPowerLimitStepSize(double p);
+
+	double minPowerLimit() const
+	{
+		return mMinPowerLimit;
+	}
+
+	void setMinPowerLimit(double p);
+
+	double maxPower() const
+	{
+		return mMaxPower;
+	}
+
+	void setMaxPower(double p);
+
 	/*!
 	 * @brief Reset all measured values to NaN
 	 */
@@ -104,6 +138,16 @@ signals:
 
 	void deviceInstanceChanged();
 
+	void powerLimitChanged();
+
+	void powerLimitRequested(double value);
+
+	void powerLimitStepSizeChanged();
+
+	void minPowerLimitChanged();
+
+	void maxPowerChanged();
+
 private:
 	bool mIsConnected;
 	QString mStatus;
@@ -121,6 +165,10 @@ private:
 	PowerInfo *mL1PowerInfo;
 	PowerInfo *mL2PowerInfo;
 	PowerInfo *mL3PowerInfo;
+	double mPowerLimit;
+	double mPowerLimitStepSize;
+	double mMinPowerLimit;
+	double mMaxPower;
 };
 
 #endif // INVERTER_H

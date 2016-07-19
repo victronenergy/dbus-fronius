@@ -7,6 +7,7 @@ bottle_dir = os.path.normpath(os.path.join(app_dir, '..', '..', 'software', 'ext
 sys.path.extend([bottle_dir, app_dir])
 
 import bottle
+import modbus_tcp_sim
 from fronius_sim import FroniusSim
 
 application = bottle.default_app()
@@ -153,4 +154,5 @@ def create_head(args, error_code=0, error_message=''):
 
 if __name__ == '__main__':
 	# host='0.0.0.0': accept connections from all sources
+	modbus_tcp_sim.start_server(inverters[0])
 	bottle.run(host='0.0.0.0', port=8080, debug=True)

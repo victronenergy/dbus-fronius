@@ -1,4 +1,4 @@
-#include <cmath>
+#include <qnumeric.h>
 #include <QCoreApplication>
 #include <QHostAddress>
 #include <QsLog.h>
@@ -22,6 +22,10 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter, InverterSettings *set
 	produce(inverter, "isConnected", "/Connected");
 	produce(inverter, "errorCode", "/ErrorCode");
 	produce(inverter, "statusCode", "/StatusCode");
+	produce(inverter, "powerLimit", "/Ac/PowerLimit", QString(), -1, true);
+	produce(inverter, "powerLimitStepSize", "/Ac/PowerLimitStepSize");
+	produce(inverter, "minPowerLimit", "/Ac/MinPowerLimit");
+	produce(inverter, "maxPower", "/Ac/MaxPower");
 
 	addBusItems(inverter->meanPowerInfo(), "/Ac");
 	addBusItems(inverter->l1PowerInfo(), "/Ac/L1");
@@ -59,25 +63,22 @@ bool DBusInverterBridge::toDBus(const QString &path, QVariant &value)
 		if (name.isEmpty())
 			value = mInverter->productName();
 	}
-	if (value.type() == QVariant::Double && !std::isfinite(value.toDouble()))
+	if (value.type() == QVariant::Double && !qIsFinite(value.toDouble()))
 		value = QVariant();
 	return true;
 }
 
 bool DBusInverterBridge::fromDBus(const QString &path, QVariant &value)
 {
-	if (path == "/Connected") {
-		value = QVariant(value.toInt() != 0);
-	} else if (path == "/Position") {
-		value = QVariant(static_cast<InverterPosition>(value.toInt()));
-	} else if (path == "/Mgmt/Connection") {
-		return false;
-	} else if (path == "/CustomName") {
+	if (path == "/CustomName") {
 		QString name = value.toString();
 		if (name == mInverter->productName())
 			value = "";
+		return true;
+	} else if (path == "/Ac/PowerLimit") {
+		mInverter->setRequestedPowerLimit(value.isValid() ? value.toDouble() : qQNaN());
 	}
-	return true;
+	return false;
 }
 
 void DBusInverterBridge::addBusItems(PowerInfo *pi, const QString &path)
@@ -90,5 +91,6 @@ void DBusInverterBridge::addBusItems(PowerInfo *pi, const QString &path)
 
 QString DBusInverterBridge::fixServiceNameFragment(const QString &s)
 {
-	return ((QString)s).remove('.').remove('_');
+	QString tmp = s;
+	return tmp.remove('.').remove('_');
 }

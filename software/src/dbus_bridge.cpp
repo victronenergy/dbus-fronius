@@ -48,11 +48,11 @@ void DBusBridge::setUpdateInterval(int interval)
 }
 
 void DBusBridge::produce(QObject *src, const char *property, const QString &path,
-						 const QString &unit, int precision)
+						 const QString &unit, int precision, bool alwaysNotify)
 {
 	Q_ASSERT(mIsProducer);
 	VeQItem *vbi = mServiceRoot->itemGetOrCreate(path);
-	BusItemBridge &b = connectItem(vbi, src, property, path, unit, precision, true);
+	BusItemBridge &b = connectItem(vbi, src, property, path, unit, precision, true, alwaysNotify);
 	publishValue(b);
 }
 
@@ -61,7 +61,7 @@ void DBusBridge::produce(const QString &path, const QVariant &value,
 {
 	Q_ASSERT(mIsProducer);
 	VeQItem *vbi = mServiceRoot->itemGetOrCreate(path);
-	BusItemBridge &b = connectItem(vbi, 0, 0, path, unit, precision, true);
+	BusItemBridge &b = connectItem(vbi, 0, 0, path, unit, precision, true, false);
 	publishValue(b, value);
 }
 
@@ -107,6 +107,12 @@ int DBusBridge::updateValue(BridgeItem *item, QVariant &value)
 		return -1;
 	setValue(*bridge, value);
 	return 0;
+}
+
+bool DBusBridge::alwaysNotify(BridgeItem *item)
+{
+	BusItemBridge *bridge = findBridge(item);
+	return bridge != 0 && bridge->alwaysNotify;
 }
 
 bool DBusBridge::toDBus(const QString &, QVariant &)
@@ -241,8 +247,9 @@ void DBusBridge::onUpdateTimer()
 DBusBridge::BusItemBridge & DBusBridge::connectItem(VeQItem *busItem, QObject *src,
 													const char *property, const QString &path,
 													const QString &unit, int precision,
-													bool produce)
+													bool produce, bool alwaysNotify)
 {
+	Q_ASSERT(produce || !alwaysNotify);
 	BusItemBridge bib;
 	bib.item = busItem;
 	bib.src = src;
@@ -252,6 +259,7 @@ DBusBridge::BusItemBridge & DBusBridge::connectItem(VeQItem *busItem, QObject *s
 	bib.unit = unit;
 	bib.precision = precision;
 	bib.busy = false;
+	bib.alwaysNotify = alwaysNotify;
 	if (produce) {
 		BridgeItem *bi = qobject_cast<BridgeItem *>(busItem);
 		if (bi != 0)
@@ -332,4 +340,18 @@ DBusBridge::BusItemBridge *DBusBridge::findBridge(VeQItem *item)
 			return &*it;
 	}
 	return 0;
+}
+
+void BridgeItem::produceValue(QVariant value, VeQItem::State state)
+{
+	bool stateIsChanged = mState != state;
+	bool valueIsChanged = mValue != value || (mBridge != 0 && mBridge->alwaysNotify(this));
+
+	mState = state;
+	mValue = value;
+
+	if (stateIsChanged)
+		emit stateChanged(this, state);
+	if (valueIsChanged)
+		emit valueChanged(this, value);
 }

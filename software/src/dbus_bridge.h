@@ -50,7 +50,7 @@ public:
 	 * if the property has a floating point value.
 	 */
 	void produce(QObject *src, const char *property, const QString &path,
-				 const QString &unit = QString(), int precision = -1);
+				 const QString &unit = QString(), int precision = -1, bool alwaysNotify = false);
 
 	/*!
 	 * \brief Pushes a constant value to the DBus, and registers the object.
@@ -97,6 +97,8 @@ public:
 	void registerService();
 
 	int updateValue(BridgeItem *prodItem, QVariant &value);
+
+	bool alwaysNotify(BridgeItem *item);
 
 	bool addSetting(const QString &path, const QVariant &defaultValue,
 					const QVariant &minValue, const QVariant &maxValue);
@@ -158,7 +160,7 @@ private:
 
 	BusItemBridge &connectItem(VeQItem *item, QObject *src, const char *property,
 							   const QString &path, const QString &unit, int precision,
-							   bool publish);
+							   bool publish, bool alwaysNotify);
 
 	void publishValue(BusItemBridge &item);
 
@@ -179,7 +181,8 @@ class BridgeItem : public VeQItem
 	Q_OBJECT
 public:
 	explicit BridgeItem(VeQItemProducer *producer, QObject *parent = 0):
-		VeQItem(producer, parent)
+		VeQItem(producer, parent),
+		mBridge(0)
 	{
 	}
 
@@ -196,6 +199,8 @@ public:
 		}
 		return VeQItem::setValue(value);
 	}
+
+	virtual void produceValue(QVariant value, State state = Synchronized);
 
 private:
 	DBusBridge *mBridge;
