@@ -6,12 +6,12 @@
 #include <QObject>
 #include <QPointer>
 #include <QString>
+#include <velib/qt/ve_qitem.hpp>
 
+class BridgeItem;
 class QDBusConnection;
-class QDBusVariant;
 class QTimer;
-class VBusItem;
-class VBusNode;
+class VeQItem;
 
 /*!
  * \brief Synchronizes QT properties with DBus objects.
@@ -28,9 +28,9 @@ class DBusBridge : public QObject
 {
 	Q_OBJECT
 public:
-	explicit DBusBridge(QObject *parent);
+	DBusBridge(const QString &serviceName, bool isProducer, QObject *parent = 0);
 
-	DBusBridge(const QString &serviceName, QObject *parent);
+	DBusBridge(VeQItem *serviceRoot, bool isProducer, QObject *parent = 0);
 
 	~DBusBridge();
 
@@ -76,25 +76,30 @@ public:
 	 * \param property
 	 * \param path
 	 */
-	void consume(const QString &service,
-				 QObject *src, const char *property, const QString &path);
+	void consume(QObject *src, const char *property, const QString &path);
 
-	void consume(const QString &service,
-				 QObject *src, const char *property,
+	void consume(QObject *src, const char *property,
 				 const QVariant &defaultValue, const QString &path);
 
-	void consume(const QString &service,
-				 QObject *src, const char *property, double defaultValue,
+	void consume(QObject *src, const char *property, double defaultValue,
 				 double minValue, double maxValue, const QString &path);
 
-	QString serviceName() const;
+	VeQItem *service() const
+	{
+		return mServiceRoot.data();
+	}
 
-	void setServiceName(const QString &sn);
+	QString serviceName() const
+	{
+		return mServiceRoot ? mServiceRoot->id() : QString();
+	}
 
 	void registerService();
 
-	static bool addSetting(const QString &path, const QVariant &defaultValue,
-						   const QVariant &minValue, const QVariant &maxValue);
+	int updateValue(BridgeItem *prodItem, QVariant &value);
+
+	bool addSetting(const QString &path, const QVariant &defaultValue,
+					const QVariant &minValue, const QVariant &maxValue);
 
 signals:
 	void initialized();
@@ -126,37 +131,89 @@ protected:
 	 */
 	virtual bool fromDBus(const QString &path, QVariant &v);
 
+	virtual QString toText(const QString &path, const QVariant &value, const QString &unit,
+						   int precision);
+
 private slots:
 	void onPropertyChanged();
 
-	void onVBusItemChanged();
+	void onVBusItemChanged(VeQItem *item);
 
 	void onUpdateTimer();
 
 private:
-	void connectItem(VBusItem *item, QObject *src, const char *property,
-					 const QString &path);
-
-	void addVBusNodes(const QString &path, VBusItem *vbi);
-
 	struct BusItemBridge
 	{
-		VBusItem *item;
+		VeQItem *item;
 		QObject *src;
 		QMetaProperty property;
 		QString path;
+		QString unit;
+		int precision;
+		bool busy;
 		bool initialized;
 		bool changed;
+		bool alwaysNotify;
 	};
+
+	BusItemBridge &connectItem(VeQItem *item, QObject *src, const char *property,
+							   const QString &path, const QString &unit, int precision,
+							   bool publish);
 
 	void publishValue(BusItemBridge &item);
 
+	void publishValue(BusItemBridge &item, QVariant value);
+
+	void setValue(BusItemBridge &bridge, QVariant &value);
+
+	BusItemBridge *findBridge(VeQItem *item);
+
 	QList<BusItemBridge> mBusItems;
-	QPointer<VBusNode> mServiceRoot;
-	QString mServiceName;
-	bool mServiceRegistered;
-	bool mUpdateBusy;
+	QPointer<VeQItem> mServiceRoot;
 	QTimer *mUpdateTimer;
+	bool mIsProducer;
+};
+
+class BridgeItem : public VeQItem
+{
+	Q_OBJECT
+public:
+	explicit BridgeItem(VeQItemProducer *producer, QObject *parent = 0):
+		VeQItem(producer, parent)
+	{
+	}
+
+	void setBridge(DBusBridge *bridge)
+	{
+		mBridge = bridge;
+	}
+
+	virtual int setValue(QVariant const &value)
+	{
+		if (mBridge != 0) {
+			QVariant v = value;
+			return mBridge->updateValue(this, v);
+		}
+		return VeQItem::setValue(value);
+	}
+
+private:
+	DBusBridge *mBridge;
+};
+
+class BridgeItemProducer: public VeQItemProducer
+{
+	Q_OBJECT
+public:
+	BridgeItemProducer(VeQItem *root, QString id, QObject *parent = 0):
+		VeQItemProducer(root, id, parent)
+	{
+	}
+
+	virtual VeQItem *createItem()
+	{
+		return new BridgeItem(this);
+	}
 };
 
 #endif // DBUS_BRIDGE_H

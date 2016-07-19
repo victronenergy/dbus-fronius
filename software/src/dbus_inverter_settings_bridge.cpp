@@ -3,29 +3,24 @@
 #include "settings.h"
 #include "inverter_settings.h"
 
-static const QString Service = "com.victronenergy.settings";
+static const QString Service = "sub/com.victronenergy.settings";
 static const QString BasePath = "/Settings/Fronius/Inverters/";
 
 DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 	InverterSettings *settings, QObject *parent) :
-	DBusBridge(parent)
+	DBusBridge(Service, false, parent)
 {
 	QString path = BasePath + Settings::createInverterId(settings->deviceType(),
 														 settings->uniqueId());
-	consume(Service, settings, "phase",
+	consume(settings, "phase",
 			QVariant(static_cast<int>(settings->phase())), path + "/Phase");
-	consume(Service, settings, "position",
+	consume(settings, "position",
 			QVariant(static_cast<int>(settings->position())), path + "/Position");
-	consume(Service, settings, "customName",
-			QVariant(""), path + "/CustomName");
-	consume(Service, settings, "isActive",
-			1, path + "/IsActive");
-	consume(Service, settings, "l1Energy",
-			0.0, 0.0, 1e6, path + "/L1Energy");
-	consume(Service, settings, "l2Energy",
-			0.0, 0.0, 1e6, path + "/L2Energy");
-	consume(Service, settings, "l3Energy",
-			0.0, 0.0, 1e6, path + "/L3Energy");
+	consume(settings, "customName", QVariant(""), path + "/CustomName");
+	consume(settings, "isActive", 1, path + "/IsActive");
+	consume(settings, "l1Energy", 0.0, 0.0, 1e6, path + "/L1Energy");
+	consume(settings, "l2Energy", 0.0, 0.0, 1e6, path + "/L2Energy");
+	consume(settings, "l3Energy", 0.0, 0.0, 1e6, path + "/L3Energy");
 }
 
 bool DBusInverterSettingsBridge::toDBus(const QString &path, QVariant &v)

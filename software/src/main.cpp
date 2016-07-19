@@ -1,9 +1,10 @@
 #include <QCoreApplication>
 #include <QsLog.h>
 #include <QStringList>
-#include <unistd.h>
-#include <velib/qt/v_busitem.h>
-#include <velib/qt/v_busitems.h>
+#include <velib/qt/ve_qitem.hpp>
+#include <velib/qt/ve_qitems_dbus.hpp>
+#include <velib/qt/ve_qitem_dbus_publisher.hpp>
+#include "dbus_bridge.h"
 #include "dbus_fronius.h"
 #include "dbus_settings_bridge.h"
 
@@ -19,24 +20,6 @@ void initLogger(QsLogging::Level logLevel)
 	QLOG_INFO() << "Built with Qt" << QT_VERSION_STR << "running on" << qVersion();
 	QLOG_INFO() << "Built on" << __DATE__ << "at" << __TIME__;
 	logger.setLoggingLevel(logLevel);
-}
-
-void initDBus(const QString &dbusAddress)
-{
-	VBusItems::setDBusAddress(dbusAddress);
-
-	QLOG_INFO() << "Wait for local settings on DBus... ";
-	VBusItem settings;
-	settings.consume("com.victronenergy.settings", "/Settings/Vrmlogger/Url");
-	for (;;) {
-		QVariant reply = settings.getValue();
-		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-		if (reply.isValid())
-			break;
-		usleep(500000);
-		QLOG_INFO() << "Waiting...";
-	}
-	QLOG_INFO() << "Local settings found";
 }
 
 int main(int argc, char *argv[])
@@ -87,7 +70,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	initDBus(dbusAddress);
+	VeQItemDbusProducer producer(VeQItems::getRoot(), "sub", false, false);
+	producer.open(dbusAddress);
+
+	BridgeItemProducer dbusExportProducer(VeQItems::getRoot(), "pub");
+	dbusExportProducer.open();
+	VeQItemDbusPublisher publisher(dbusExportProducer.services());
+	publisher.open(dbusAddress);
 
 	DBusFronius test(&a);
 

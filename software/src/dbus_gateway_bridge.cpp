@@ -2,10 +2,10 @@
 #include "dbus_gateway_bridge.h"
 #include "inverter_gateway.h"
 
-static const QString ServiceName = "com.victronenergy.fronius";
+static const QString ServiceName = "pub/com.victronenergy.fronius";
 
 DBusGatewayBridge::DBusGatewayBridge(InverterGateway *gateway, QObject *parent):
-	DBusBridge(ServiceName, parent)
+	DBusBridge(ServiceName, true, parent)
 {
 	produce(gateway, "autoDetect", "/AutoDetect");
 	produce(gateway, "scanProgress", "/ScanProgress", "%");

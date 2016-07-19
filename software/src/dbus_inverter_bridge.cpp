@@ -9,19 +9,16 @@
 #include "inverter_settings.h"
 #include "power_info.h"
 
-DBusInverterBridge::DBusInverterBridge(Inverter *inverter,
-									   InverterSettings *settings,
+DBusInverterBridge::DBusInverterBridge(Inverter *inverter, InverterSettings *settings,
 									   QObject *parent) :
-	DBusBridge(parent),
+	DBusBridge(
+		QString("pub/com.victronenergy.pvinverter.fronius_%1_%2").
+			arg(inverter->deviceType()).
+			arg(fixServiceNameFragment(inverter->uniqueId())),
+		true,
+		parent),
 	mInverter(inverter)
 {
-	Q_ASSERT(inverter != 0);
-	connect(inverter, SIGNAL(destroyed()), this, SLOT(deleteLater()));
-
-	setServiceName(QString("com.victronenergy.pvinverter.fronius_%1_%2").
-			arg(inverter->deviceType()).
-			arg(fixServiceNameFragment(inverter->uniqueId())));
-
 	produce(inverter, "isConnected", "/Connected");
 	produce(inverter, "errorCode", "/ErrorCode");
 	produce(inverter, "statusCode", "/StatusCode");

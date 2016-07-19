@@ -3,21 +3,21 @@
 #include "dbus_settings_bridge.h"
 #include "settings.h"
 
-static const QString Service = "com.victronenergy.settings";
+static const QString Service = "sub/com.victronenergy.settings";
 static const QString PortNumberPath = "/Settings/Fronius/PortNumber";
 static const QString IpAddressesPath = "/Settings/Fronius/IPAddresses";
 static const QString KnownIpAddressesPath = "/Settings/Fronius/KnownIPAddresses";
 static const QString InverterIdsPath = "/Settings/Fronius/InverterIds";
 
 DBusSettingsBridge::DBusSettingsBridge(Settings *settings, QObject *parent):
-	DBusBridge(parent)
+	DBusBridge(Service, false, parent)
 {
 	Q_ASSERT(settings != 0);
 
-	consume(Service, settings, "portNumber", QVariant(80), PortNumberPath);
-	consume(Service, settings, "ipAddresses", QVariant(""), IpAddressesPath);
-	consume(Service, settings, "knownIpAddresses", QVariant(""), KnownIpAddressesPath);
-	consume(Service, settings, "inverterIds", QVariant(""), InverterIdsPath);
+	consume(settings, "portNumber", QVariant(80), PortNumberPath);
+	consume(settings, "ipAddresses", QVariant(""), IpAddressesPath);
+	consume(settings, "knownIpAddresses", QVariant(""), KnownIpAddressesPath);
+	consume(settings, "inverterIds", QVariant(""), InverterIdsPath);
 }
 
 bool DBusSettingsBridge::toDBus(const QString &path, QVariant &value)
