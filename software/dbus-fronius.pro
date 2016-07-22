@@ -39,7 +39,9 @@ VELIB_SRC = ext/velib/src/qt
 INCLUDEPATH += \
     ext/qslog \
     ext/velib/inc \
-    ext/velib/lib/Qvelib
+    ext/velib/src/qt \
+    src \
+    src/modbus_tcp_client
 
 SOURCES += \
     $$VELIB_SRC/v_busitem.cpp \
@@ -94,7 +96,10 @@ HEADERS += \
     src/fronius_data_processor.h \
     src/fronius_device_info.h \
     src/v_bus_node.h \
-    src/inverter_mediator.h
+    src/inverter_mediator.h \
+    src/velib/velib_config_app.h \
+    src/modbus_tcp_client/modbus_tcp_client.h \
+    src/inverter_modbus_updater.h
 
 DISTFILES += \
 	../README.md
