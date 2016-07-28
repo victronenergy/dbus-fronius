@@ -49,18 +49,10 @@ void FroniusSolarApiTest::onThreePhasesDataFound(const ThreePhasesInverterData &
 void FroniusSolarApiTest::SetUpTestCase()
 {
 	mProcess = new QProcess();
-	// We assume that the location of the current executable is located in
-	// a sub directory of the project root. We use this path to reconstruct
-	// the path of the fronius simulator script.
-	// We also assume that a python interpreter is present (version 2.7+ or
-	// 3.0+).
-	QFileInfo fi(QCoreApplication::arguments()[0]);
-	fi.makeAbsolute();
-	fi = QFileInfo(fi.dir().canonicalPath());
-	QString p = fi.path() + "/test/src/fronius_sim/app.py";
-
+	// We use this PRJ_DIR macro set by the project to reconstruct the path of the fronius
+	// simulator script.We also assume that a python interpreter is present (version 2.7+ or 3.0+).
 	QStringList arguments;
-	arguments << p;
+	arguments << PRJ_DIR "/src/fronius_sim/app.py";
 	// If the ccgx sdk is installed, the python interpreter in the sdk will be
 	// used when starting python without using its full path. This version does
 	// not contain all modules needed by our simulation script, so we assume

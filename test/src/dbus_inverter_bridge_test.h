@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 #include <QScopedPointer>
+#include <QString>
 
 class DBusInverterBridge;
 class DBusObserver;
@@ -10,6 +11,7 @@ class Inverter;
 class InverterSettings;
 class PowerInfo;
 class QVariant;
+class VeQItemProducer;
 
 class DBusInverterBridgeTest : public testing::Test
 {
@@ -27,6 +29,10 @@ protected:
 
 	void setupPowerInfo(PowerInfo *pi);
 
+	static QVariant getValue(const QString &service, const QString &path);
+
+	static QString getText(const QString &service, const QString &path);
+
 	void checkValue(PowerInfo *pi, const QString &path,
 					double v0, double v1, const QString &text,
 					const char *property);
@@ -37,7 +43,7 @@ protected:
 	QScopedPointer<Inverter> mInverter;
 	QScopedPointer<InverterSettings> mSettings;
 	QScopedPointer<DBusInverterBridge> mBridge;
-	QScopedPointer<DBusObserver> mDBusClient;
+	QScopedPointer<VeQItemProducer> mItemProducer;
 };
 
 #endif // DBUS_INVERTER_BRIDGE_TEST

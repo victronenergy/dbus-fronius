@@ -1,3 +1,4 @@
+#include "dbus_bridge.h"
 #include "dbus_gateway_bridge.h"
 #include "dbus_gateway_bridge_test.h"
 #include "dbus_service_observer.h"
@@ -9,42 +10,49 @@ TEST_F(DBusGatewayBridgeTest, changeAutoDetect)
 {
 	// Check default value from DBus
 	EXPECT_FALSE(mGateway->autoDetect());
-	mDBusObserver->resetChangedPaths();
 	mGateway->setAutoDetect(true);
-	qWait(100);
-	// Check new value
-	QVariant autoDetect = mDBusObserver->getValue("/AutoDetect");
+
+	QVariant autoDetect = getValue("/AutoDetect");
 	EXPECT_TRUE(autoDetect.isValid());
 	EXPECT_EQ(1, autoDetect.toInt());
-	// Check DBus signal
-	const QStringList &cp = mDBusObserver->changedPaths();
-	EXPECT_TRUE(cp.contains("/AutoDetect"));
+
+	mGateway->setAutoDetect(false);
+	autoDetect = getValue("/AutoDetect");
+	EXPECT_TRUE(autoDetect.isValid());
+	EXPECT_EQ(0, autoDetect.toInt());
 }
 
 TEST_F(DBusGatewayBridgeTest, changeAutoDetectRemote)
 {
 	EXPECT_FALSE(mGateway->autoDetect());
 	// Set new value on DBus
-	mDBusObserver->setValue("/AutoDetect", 1);
-	// Allow value form DBus to trickle to our settings object
-	qWait(100);
+	setValue("/AutoDetect", 1);
 	EXPECT_TRUE(mGateway->autoDetect());
 }
 
 void DBusGatewayBridgeTest::SetUp()
 {
+	mItemProducer.reset(new BridgeItemProducer(VeQItems::getRoot(), "pub"));
+	mItemProducer->open();
 	mGateway.reset(new InverterGateway(new Settings()));
 	mBridge.reset(new DBusGatewayBridge(mGateway.data()));
-	mDBusObserver.reset(new DBusServiceObserver("com.victronenergy.fronius"));
-	mDBusObserver->setLogChangedPaths(true);
-	// Wait for DBusSettingsBridge to fill settings object with default values
-	// specified by DBusSettingsBridge::addDBusObjects
-	qWait(300);
 }
 
 void DBusGatewayBridgeTest::TearDown()
 {
-	mDBusObserver.reset();
 	mBridge.reset();
 	mGateway.reset();
+	mItemProducer.reset();
+}
+
+QVariant DBusGatewayBridgeTest::getValue(const QString &path)
+{
+	VeQItem *item = VeQItems::getRoot()->itemGetOrCreate("pub/com.victronenergy.fronius" + path, true);
+	return item->getValue();
+}
+
+void DBusGatewayBridgeTest::setValue(const QString &path, const QVariant &v)
+{
+	VeQItem *item = VeQItems::getRoot()->itemGetOrCreate("pub/com.victronenergy.fronius" + path, true);
+	item->setValue(v);
 }

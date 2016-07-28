@@ -20,17 +20,17 @@ public:
 
 	~DBusSettings();
 
-	void loadSettings();
+//	void loadSettings();
 
-	void storeSettings();
+//	void storeSettings();
 
 	bool trackChanges() const;
 
 	void setTrackChanges(bool b);
 
-	bool autoSave() const;
+//	bool autoSave() const;
 
-	void setAutoSave(bool s);
+//	void setAutoSave(bool s);
 
 	QVariant getValue(const QString &path) const;
 

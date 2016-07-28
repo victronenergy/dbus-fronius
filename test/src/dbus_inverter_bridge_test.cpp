@@ -1,9 +1,8 @@
 #include <cmath>
 #include <gtest/gtest.h>
-#include <limits>
 #include <QCoreApplication>
 #include <QStringList>
-#include <unistd.h>
+#include <velib/qt/ve_qitem.hpp>
 #include "dbus_observer.h"
 #include "dbus_inverter_bridge.h"
 #include "dbus_inverter_bridge_test.h"
@@ -11,7 +10,6 @@
 #include "inverter_settings.h"
 #include "power_info.h"
 #include "test_helper.h"
-#include "version.h"
 
 TEST_F(DBusInverterBridgeTest, constructor)
 {
@@ -26,34 +24,34 @@ TEST_F(DBusInverterBridgeTest, constructor)
 
 	SetUpBridge();
 
-	checkValue(QVariant(0), mDBusClient->getValue(mServiceName, "/Connected"));
+	checkValue(QVariant(0), getValue(mServiceName, "/Connected"));
 
 	checkValue(QCoreApplication::arguments()[0],
-			   mDBusClient->getValue(mServiceName, "/Mgmt/ProcessName"));
+			   getValue(mServiceName, "/Mgmt/ProcessName"));
 	checkValue(QString(VERSION),
-			   mDBusClient->getValue(mServiceName, "/Mgmt/ProcessVersion"));
+			   getValue(mServiceName, "/Mgmt/ProcessVersion"));
 	checkValue(QString("10.0.1.4 - 3"),
-			   mDBusClient->getValue(mServiceName, "/Mgmt/Connection"));
+			   getValue(mServiceName, "/Mgmt/Connection"));
 	checkValue(QVariant(2),
-			   mDBusClient->getValue(mServiceName, "/Position"));
+			   getValue(mServiceName, "/Position"));
 	// Note: we don't take the product ID from VE_PROD_ID_PV_INVERTER_FRONIUS,
 	// because we want this test to fail if someone changes the define.
 	checkValue(QString::number(0xA142),
-			   mDBusClient->getValue(mServiceName, "/ProductId").toString());
+			   getValue(mServiceName, "/ProductId").toString());
 	checkValue(QString("Fronius Symo 8.2-3-M"),
-			   mDBusClient->getValue(mServiceName, "/ProductName"));
+			   getValue(mServiceName, "/ProductName"));
 	checkValue(QString("Fronius Symo 8.2-3-M"),
-			   mDBusClient->getValue(mServiceName, "/CustomName"));
+			   getValue(mServiceName, "/CustomName"));
 	checkValue(QVariant(22),
-			   mDBusClient->getValue(mServiceName, "/DeviceInstance"));
+			   getValue(mServiceName, "/DeviceInstance"));
 
-	checkValue(QVariant(1.4), mDBusClient->getValue(mServiceName, "/Ac/Current"));
-	checkValue(QVariant(342.0), mDBusClient->getValue(mServiceName, "/Ac/Voltage"));
-	checkValue(QVariant(137.0), mDBusClient->getValue(mServiceName, "/Ac/Power"));
+	checkValue(QVariant(1.4), getValue(mServiceName, "/Ac/Current"));
+	checkValue(QVariant(342.0), getValue(mServiceName, "/Ac/Voltage"));
+	checkValue(QVariant(137.0), getValue(mServiceName, "/Ac/Power"));
 
-	checkValue(QVariant(1.7), mDBusClient->getValue(mServiceName, "/Ac/L2/Current"));
-	checkValue(QVariant(344.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Voltage"));
-	checkValue(QVariant(138.0), mDBusClient->getValue(mServiceName, "/Ac/L2/Power"));
+	checkValue(QVariant(1.7), getValue(mServiceName, "/Ac/L2/Current"));
+	checkValue(QVariant(344.0), getValue(mServiceName, "/Ac/L2/Voltage"));
+	checkValue(QVariant(138.0), getValue(mServiceName, "/Ac/L2/Power"));
 }
 
 TEST_F(DBusInverterBridgeTest, isConnected)
@@ -61,30 +59,30 @@ TEST_F(DBusInverterBridgeTest, isConnected)
 	SetUpBridge();
 
 	EXPECT_FALSE(mInverter->isConnected());
-	checkValue(QVariant(0), mDBusClient->getValue(mServiceName, "/Connected"));
+	checkValue(QVariant(0), getValue(mServiceName, "/Connected"));
 	mInverter->setIsConnected(true);
 	qWait(100);
-	checkValue(QVariant(1), mDBusClient->getValue(mServiceName, "/Connected"));
+	checkValue(QVariant(1), getValue(mServiceName, "/Connected"));
 }
 
 TEST_F(DBusInverterBridgeTest, position)
 {
 	SetUpBridge();
 
-	checkValue(QVariant(2), mDBusClient->getValue(mServiceName, "/Position"));
+	checkValue(QVariant(2), getValue(mServiceName, "/Position"));
 	mSettings->setPosition(Output);
 	qWait(100);
-	checkValue(QVariant(1), mDBusClient->getValue(mServiceName, "/Position"));
+	checkValue(QVariant(1), getValue(mServiceName, "/Position"));
 }
 
 TEST_F(DBusInverterBridgeTest, deviceInstance)
 {
 	SetUpBridge();
 
-	checkValue(QVariant(-1), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
+	checkValue(QVariant(-1), getValue(mServiceName, "/DeviceInstance"));
 	mInverter->setDeviceInstance(21);
 	qWait(100);
-	checkValue(QVariant(21), mDBusClient->getValue(mServiceName, "/DeviceInstance"));
+	checkValue(QVariant(21), getValue(mServiceName, "/DeviceInstance"));
 }
 
 TEST_F(DBusInverterBridgeTest, acCurrent)
@@ -116,7 +114,7 @@ TEST_F(DBusInverterBridgeTest, acPowerNaN)
 }
 
 DBusInverterBridgeTest::DBusInverterBridgeTest():
-	mServiceName("com.victronenergy.pvinverter.fronius_123_756")
+	mServiceName("pub/com.victronenergy.pvinverter.fronius_123_756")
 {
 }
 
@@ -128,6 +126,8 @@ void DBusInverterBridgeTest::SetUpTestCase()
 
 void DBusInverterBridgeTest::SetUp()
 {
+	mItemProducer.reset(new VeQItemProducer(VeQItems::getRoot(), "pub"));
+	mItemProducer->open();
 	mInverter.reset(new Inverter("10.0.1.4", 80, "3", 123, "756", "cn"));
 	setupPowerInfo(mInverter->meanPowerInfo());
 	setupPowerInfo(mInverter->l1PowerInfo());
@@ -141,19 +141,19 @@ void DBusInverterBridgeTest::SetUp()
 
 void DBusInverterBridgeTest::TearDown()
 {
-	mDBusClient.reset();
 	mBridge.reset();
 	mInverter.reset();
 	mSettings.reset();
+	mItemProducer.reset();
 }
 
 void DBusInverterBridgeTest::SetUpBridge()
 {
 	mBridge.reset(new DBusInverterBridge(mInverter.data(), mSettings.data()));
-	mDBusClient.reset(new DBusObserver(mServiceName));
-	while (!mDBusClient->isInitialized(mServiceName)) {
-		QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-	}
+//	mDBusClient.reset(new DBusObserver(mServiceName));
+//	while (!mDBusClient->isInitialized(mServiceName)) {
+//		QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+//	}
 }
 
 void DBusInverterBridgeTest::setupPowerInfo(PowerInfo *pi)
@@ -164,6 +164,18 @@ void DBusInverterBridgeTest::setupPowerInfo(PowerInfo *pi)
 	pi->setTotalEnergy(0);
 }
 
+QVariant DBusInverterBridgeTest::getValue(const QString &service, const QString &path)
+{
+	VeQItem *item = VeQItems::getRoot()->itemGetOrCreate(service + path, true);
+	return item->getValue();
+}
+
+QString DBusInverterBridgeTest::getText(const QString &service, const QString &path)
+{
+	VeQItem *item = VeQItems::getRoot()->itemGetOrCreate(service + path, true);
+	return item->getText();
+}
+
 void DBusInverterBridgeTest::checkValue(PowerInfo *pi, const QString &path,
 										double v0, double v1,
 										const QString &text,
@@ -171,15 +183,15 @@ void DBusInverterBridgeTest::checkValue(PowerInfo *pi, const QString &path,
 {
 	pi->setProperty(property, v0);
 	qWait(100);
-	checkValue(QVariant(v0), mDBusClient->getValue(mServiceName, path));
+	checkValue(QVariant(v0), getValue(mServiceName, path));
 
 	pi->setProperty(property, v1);
 	qWait(100);
 	QVariant vv1;
 	if (!std::isnan(v1))
 		vv1 = QVariant(v1);
-	checkValue(vv1, mDBusClient->getValue(mServiceName, path));
-	EXPECT_EQ(text, mDBusClient->getText(mServiceName, path));
+	checkValue(vv1, getValue(mServiceName, path));
+	EXPECT_EQ(text, getText(mServiceName, path));
 }
 
 void DBusInverterBridgeTest::checkValue(const QVariant &expected,

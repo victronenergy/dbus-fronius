@@ -4,10 +4,10 @@
 #include <gtest/gtest.h>
 #include <QScopedPointer>
 
-class DBusSettings;
 class DBusSettingsBridge;
 class QVariant;
 class Settings;
+class VeQItemProducer;
 
 class DBusSettingsBridgeTest : public testing::Test
 {
@@ -20,9 +20,13 @@ protected:
 
 	void changeIPAddressesRemote(const char *property, const char *path);
 
+	static QVariant getValue(const QString &path);
+
+	static void setValue(const QString &path, const QVariant &v);
+
+	QScopedPointer<VeQItemProducer> mItemProducer;
 	QScopedPointer<Settings> mSettings;
 	QScopedPointer<DBusSettingsBridge> mBridge;
-	QScopedPointer<DBusSettings> mSettingsClient;
 };
 
 #endif // DBUS_SETTINGS_BRIDGE_TEST_H

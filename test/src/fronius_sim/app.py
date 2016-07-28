@@ -154,5 +154,5 @@ def create_head(args, error_code=0, error_message=''):
 
 if __name__ == '__main__':
 	# host='0.0.0.0': accept connections from all sources
-	modbus_tcp_sim.start_server(inverters[0])
+	# modbus_tcp_sim.start_server(inverters[0])
 	bottle.run(host='0.0.0.0', port=8080, debug=True)
