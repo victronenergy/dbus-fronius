@@ -22,10 +22,10 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter, InverterSettings *set
 	produce(inverter, "isConnected", "/Connected");
 	produce(inverter, "errorCode", "/ErrorCode");
 	produce(inverter, "statusCode", "/StatusCode");
-	produce(inverter, "powerLimit", "/Ac/PowerLimit", QString(), -1, true);
-	produce(inverter, "powerLimitStepSize", "/Ac/PowerLimitStepSize");
-	produce(inverter, "minPowerLimit", "/Ac/MinPowerLimit");
-	produce(inverter, "maxPower", "/Ac/MaxPower");
+	produce(inverter, "powerLimit", "/Ac/PowerLimit", "W", 0, true);
+	produce(inverter, "powerLimitStepSize", "/Ac/PowerLimitStepSize", "W", 0);
+	produce(inverter, "minPowerLimit", "/Ac/MinPowerLimit", "W", 0);
+	produce(inverter, "maxPower", "/Ac/MaxPower", "W", 0);
 
 	addBusItems(inverter->meanPowerInfo(), "/Ac");
 	addBusItems(inverter->l1PowerInfo(), "/Ac/L1");
