@@ -7,7 +7,7 @@ bottle_dir = os.path.normpath(os.path.join(app_dir, '..', '..', 'software', 'ext
 sys.path.extend([bottle_dir, app_dir])
 
 import bottle
-import modbus_tcp_sim
+# import modbus_tcp_sim
 from fronius_sim import FroniusSim
 
 application = bottle.default_app()

@@ -1,12 +1,32 @@
 #include <QCoreApplication>
 #include <QsLog.h>
 #include <QStringList>
+#include <unistd.h>
 #include <velib/qt/ve_qitem.hpp>
 #include <velib/qt/ve_qitems_dbus.hpp>
 #include <velib/qt/ve_qitem_dbus_publisher.hpp>
 #include "dbus_bridge.h"
 #include "dbus_fronius.h"
 #include "dbus_settings_bridge.h"
+
+void initDBus()
+{
+	// Wait for localsettings. We need this because later on we might need the call 'AddSetting'
+	// on localsettings, which will cause problems if the settings are not there yet.
+	VeQItem *item = VeQItems::getRoot()->itemGetOrCreate(
+		"sub/com.victronenergy.settings/Settings/Vrmlogger/Url", true);
+	item->getValue();
+
+	QLOG_INFO() << "Wait for local settings on DBus... ";
+	for (;;) {
+		if (item->getState() == VeQItem::Synchronized)
+			break;
+		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+		usleep(500000);
+		QLOG_INFO() << "Waiting...";
+	}
+	QLOG_INFO() << "Local settings found";
+}
 
 void initLogger(QsLogging::Level logLevel)
 {
@@ -77,6 +97,8 @@ int main(int argc, char *argv[])
 	dbusExportProducer.open();
 	VeQItemDbusPublisher publisher(dbusExportProducer.services());
 	publisher.open(dbusAddress);
+
+	initDBus();
 
 	DBusFronius test(&a);
 
