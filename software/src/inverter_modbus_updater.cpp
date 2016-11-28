@@ -10,6 +10,7 @@
 // the power of the inverter to increase (or stay at its current value), so a large value for the
 // timeout is pretty safe.
 static const int PowerLimitTimeout = 120;
+static const int MinPowerLimitScale = 10000;
 
 InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, QObject *parent):
 	QObject(parent),
@@ -52,6 +53,9 @@ void InverterModbusUpdater::startNextAction(ModbusState state)
 	case ReadMaxPower:
 		mModbusClient->readHoldingRegisters(unitId, 40124, 2);
 		break;
+	case ReadPowerLimitScale:
+		mModbusClient->readHoldingRegisters(unitId, 40250, 1);
+		break;
 	case ReadPowerLimit:
 		mModbusClient->readHoldingRegisters(unitId, 40232, 5);
 		break;
@@ -61,12 +65,12 @@ void InverterModbusUpdater::startNextAction(ModbusState state)
 	case WritePowerLimit:
 	{
 		QList<quint16> values;
-		quint16 pct = 100;
+		quint16 pct = mPowerLimitScale;
 		if (qIsFinite(mPowerLimit)) {
 			pct = static_cast<quint16>(
-				qBound(0, qRound(100 * mPowerLimit / mInverter->maxPower()), 100));
+				qBound(0, qRound(mPowerLimitScale * mPowerLimit / mInverter->maxPower()), mPowerLimitScale));
 		}
-		if (pct < 100) {
+		if (pct < mPowerLimitScale) {
 			values.append(pct);
 			values.append(0); // unused
 			values.append(PowerLimitTimeout);
@@ -104,8 +108,15 @@ void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values
 		if (values.size() == 2 && (values[0] != 0 || values[1] != 0)) {
 			double maxPower = getScaledValue(values);
 			mInverter->setMaxPower(maxPower);
-			mInverter->setPowerLimitStepSize(maxPower / 100);
 			mInverter->setMinPowerLimit(maxPower / 10);
+			nextState = ReadPowerLimitScale;
+		}
+		break;
+	case ReadPowerLimitScale:
+		if (values.size() == 1) {
+			mPowerLimitScale = 100;
+			for (qint16 scale = static_cast<qint16>(values[0]); scale < 0; ++scale)
+				mPowerLimitScale *= 10;
 			nextState = Start;
 		}
 		break;
@@ -119,10 +130,16 @@ void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values
 		break;
 	case ReadPowerLimit:
 		if (values.size() == 5) {
-			if (values[4] == 1)
-				mInverter->setPowerLimit(values[0] * mInverter->maxPower() / 100.0);
-			else
-				mInverter->setPowerLimit(mInverter->maxPower());
+			if (mPowerLimitScale >= MinPowerLimitScale) {
+				if (values[4] == 1)
+					mInverter->setPowerLimit((values[0] * mInverter->maxPower()) / mPowerLimitScale);
+				else
+					mInverter->setPowerLimit(mInverter->maxPower());
+			} else {
+				/// Make the power limit invalid, so the users of the value (eg. hub4control) know
+				/// that setting the value is not supported.
+				mInverter->setPowerLimit(qQNaN());
+			}
 			nextState = ReadCurrentPower;
 		}
 		break;
@@ -152,6 +169,8 @@ void InverterModbusUpdater::onError(quint8 functionCode, quint8 unitId, quint8 e
 
 void InverterModbusUpdater::onPowerLimitRequested(double value)
 {
+	if (mPowerLimitScale < MinPowerLimitScale)
+		return;
 	mPowerLimit = value;
 	if (mTimer->isActive()) {
 		mTimer->stop();
@@ -183,13 +202,11 @@ void InverterModbusUpdater::onTimer()
 // static
 double InverterModbusUpdater::getScaledValue(const QList<quint16> &values, int offset)
 {
-	double power = values[offset];
-	qint16 e = static_cast<qint16>(values[offset + 1]);
-	for (;e > 0; --e) {
-		power *= 10;
-	}
-	for (;e < 0; ++e) {
-		power /= 10;
-	}
-	return power;
+	double v = values[offset];
+	qint16 s = static_cast<qint16>(values[offset + 1]);
+	for (;s > 0; --s)
+		v *= 10;
+	for (;s < 0; ++s)
+		v /= 10;
+	return v;
 }

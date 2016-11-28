@@ -24,7 +24,6 @@ class Inverter : public QObject
 	Q_PROPERTY(int deviceInstance READ deviceInstance WRITE setDeviceInstance NOTIFY deviceInstanceChanged)
 	Q_PROPERTY(double powerLimit READ powerLimit WRITE setPowerLimit NOTIFY powerLimitChanged)
 	Q_PROPERTY(double minPowerLimit READ minPowerLimit WRITE setMinPowerLimit NOTIFY minPowerLimitChanged)
-	Q_PROPERTY(double powerLimitStepSize READ powerLimitStepSize WRITE setPowerLimitStepSize NOTIFY powerLimitStepSizeChanged)
 	Q_PROPERTY(double maxPower READ maxPower WRITE setMaxPower NOTIFY maxPowerChanged)
 public:
 	Inverter(const QString &hostName, int port, const QString &id,
@@ -97,13 +96,6 @@ public:
 
 	void setRequestedPowerLimit(double p);
 
-	double powerLimitStepSize() const
-	{
-		return mPowerLimitStepSize;
-	}
-
-	void setPowerLimitStepSize(double p);
-
 	double minPowerLimit() const
 	{
 		return mMinPowerLimit;
@@ -142,8 +134,6 @@ signals:
 
 	void powerLimitRequested(double value);
 
-	void powerLimitStepSizeChanged();
-
 	void minPowerLimitChanged();
 
 	void maxPowerChanged();
@@ -166,7 +156,6 @@ private:
 	PowerInfo *mL2PowerInfo;
 	PowerInfo *mL3PowerInfo;
 	double mPowerLimit;
-	double mPowerLimitStepSize;
 	double mMinPowerLimit;
 	double mMaxPower;
 };

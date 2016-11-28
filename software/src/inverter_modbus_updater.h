@@ -31,6 +31,7 @@ private slots:
 private:
 	enum ModbusState {
 		ReadMaxPower,
+		ReadPowerLimitScale,
 		ReadPowerLimit,
 		ReadCurrentPower,
 		WritePowerLimit,
@@ -49,6 +50,7 @@ private:
 	ModbusTcpClient *mModbusClient;
 	ModbusState mCurrentState;
 	double mPowerLimit;
+	int mPowerLimitScale;
 	bool mWritePowerLimitRequested;
 	QTimer *mTimer;
 };

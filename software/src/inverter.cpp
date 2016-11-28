@@ -24,7 +24,6 @@ Inverter::Inverter(const QString &hostName, int port, const QString &id,
 	mL2PowerInfo(new PowerInfo(this)),
 	mL3PowerInfo(new PowerInfo(this)),
 	mPowerLimit(qQNaN()),
-	mPowerLimitStepSize(qQNaN()),
 	mMinPowerLimit(qQNaN()),
 	mMaxPower(qQNaN())
 {
@@ -190,14 +189,6 @@ void Inverter::setPowerLimit(double p)
 void Inverter::setRequestedPowerLimit(double p)
 {
 	emit powerLimitRequested(p);
-}
-
-void Inverter::setPowerLimitStepSize(double p)
-{
-	if (mPowerLimitStepSize == p)
-		return;
-	mPowerLimitStepSize = p;
-	emit powerLimitStepSizeChanged();
 }
 
 void Inverter::setMinPowerLimit(double p)
