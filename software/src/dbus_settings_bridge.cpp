@@ -14,6 +14,8 @@ DBusSettingsBridge::DBusSettingsBridge(Settings *settings, QObject *parent):
 {
 	Q_ASSERT(settings != 0);
 
+	setUpdateInterval(1000);
+
 	consume(settings, "portNumber", QVariant(80), PortNumberPath);
 	consume(settings, "ipAddresses", QVariant(""), IpAddressesPath);
 	consume(settings, "knownIpAddresses", QVariant(""), KnownIpAddressesPath);

@@ -9,7 +9,8 @@
 DBusBridge::DBusBridge(const QString &serviceName, bool isProducer, QObject *parent):
 	QObject(parent),
 	mUpdateTimer(0),
-	mIsProducer(isProducer)
+	mIsProducer(isProducer),
+	mIsInitialized(false)
 {
 	mServiceRoot = VeQItems::getRoot()->itemGetOrCreate(serviceName);
 }
@@ -224,14 +225,7 @@ void DBusBridge::onVBusItemChanged(VeQItem *item)
 		return;
 	QVariant value = item->getValue();
 	setValue(*bridge, value);
-	if (bridge->initialized)
-		return;
-	bridge->initialized = true;
-	foreach (const BusItemBridge &bib, mBusItems) {
-		if (!bib.initialized)
-			return;
-	}
-	emit initialized();
+	updateIsInitialized();
 }
 
 void DBusBridge::onUpdateTimer()
@@ -254,7 +248,6 @@ DBusBridge::BusItemBridge & DBusBridge::connectItem(VeQItem *busItem, QObject *s
 	bib.item = busItem;
 	bib.src = src;
 	bib.path = path;
-	bib.initialized = false;
 	bib.changed = false;
 	bib.unit = unit;
 	bib.precision = precision;
@@ -331,6 +324,19 @@ void DBusBridge::setValue(BusItemBridge &bridge, QVariant &value)
 		if (fromDBus(bridge.path, value))
 			bridge.src->setProperty(bridge.property.name(), value);
 	}
+}
+
+void DBusBridge::updateIsInitialized()
+{
+	if (mIsInitialized)
+		return;
+	foreach (const BusItemBridge &bib, mBusItems) {
+		Q_ASSERT(bib.item->getState() != VeQItem::Idle);
+		if (bib.item->getState() == VeQItem::Requested)
+			return;
+	}
+	mIsInitialized = true;
+	emit initialized();
 }
 
 DBusBridge::BusItemBridge *DBusBridge::findBridge(VeQItem *item)

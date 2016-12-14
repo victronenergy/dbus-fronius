@@ -28,6 +28,7 @@ DBusFronius::DBusFronius(QObject *parent) :
 			this, SLOT(onInverterFound(Inverter *)));
 	connect(mSettingsBridge, SIGNAL(initialized()),
 			this, SLOT(onSettingsInitialized()));
+	mSettingsBridge->updateIsInitialized();
 }
 
 void DBusFronius::onSettingsInitialized()

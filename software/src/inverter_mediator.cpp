@@ -31,6 +31,7 @@ InverterMediator::InverterMediator(Inverter *inverter, InverterGateway *gateway,
 	QLOG_INFO() << "New inverter:"
 				<< inverter->uniqueId() << "@" << inverter->hostName()
 				<< ':' << inverter->id();
+	bridge->updateIsInitialized();
 }
 
 bool InverterMediator::processNewInverter(Inverter *inverter)

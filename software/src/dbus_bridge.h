@@ -96,6 +96,8 @@ public:
 
 	void registerService();
 
+	void updateIsInitialized();
+
 	int updateValue(BridgeItem *prodItem, QVariant &value);
 
 	bool alwaysNotify(BridgeItem *item);
@@ -153,7 +155,6 @@ private:
 		QString unit;
 		int precision;
 		bool busy;
-		bool initialized;
 		bool changed;
 		bool alwaysNotify;
 	};
@@ -174,6 +175,7 @@ private:
 	QPointer<VeQItem> mServiceRoot;
 	QTimer *mUpdateTimer;
 	bool mIsProducer;
+	bool mIsInitialized;
 };
 
 class BridgeItem : public VeQItem
