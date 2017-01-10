@@ -11,6 +11,7 @@
 // timeout is pretty safe.
 static const int PowerLimitTimeout = 120;
 static const int MinPowerLimitScale = 10000;
+static const int MaxInitCount = 10;
 
 InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, QObject *parent):
 	QObject(parent),
@@ -18,6 +19,8 @@ InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, QObject *parent
 	mModbusClient(new ModbusTcpClient),
 	mCurrentState(Idle),
 	mPowerLimit(qQNaN()),
+	mModelType(0),
+	mInitCounter(0),
 	mWritePowerLimitRequested(false),
 	mTimer(new QTimer(this))
 {
@@ -33,6 +36,9 @@ InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, QObject *parent
 		mModbusClient, SIGNAL(errorReceived(quint8, quint8, quint8)),
 		this, SLOT(onError(quint8, quint8, quint8)));
 	connect(
+		mModbusClient, SIGNAL(socketErrorReceived(QAbstractSocket::SocketError)),
+		this, SLOT(onSocketError(QAbstractSocket::SocketError)));
+	connect(
 		mModbusClient, SIGNAL(connected()),
 		this, SLOT(onConnected()));
 	connect(
@@ -45,11 +51,21 @@ InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, QObject *parent
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
 }
 
-void InverterModbusUpdater::startNextAction(ModbusState state)
+void InverterModbusUpdater::startNextAction(ModbusState state, bool checkReInit)
 {
+	if (checkReInit) {
+		++mInitCounter;
+		if (mInitCounter >= MaxInitCount) {
+			state = Init;
+			mInitCounter = 0;
+		}
+	}
 	mCurrentState = state;
 	quint8 unitId = static_cast<quint8>(mInverter->id().toInt());
 	switch (mCurrentState) {
+	case ReadModelType:
+		mModbusClient->readHoldingRegisters(unitId, 215, 1);
+		break;
 	case ReadMaxPower:
 		mModbusClient->readHoldingRegisters(unitId, 40124, 2);
 		break;
@@ -83,6 +99,7 @@ void InverterModbusUpdater::startNextAction(ModbusState state)
 		}
 		break;
 	}
+	case WaitForModelType:
 	case Idle:
 		startIdleTimer();
 		break;
@@ -94,8 +111,25 @@ void InverterModbusUpdater::startNextAction(ModbusState state)
 
 void InverterModbusUpdater::startIdleTimer()
 {
-	mTimer->setInterval(mInverter->isConnected() ? 1000 : 30000);
+	mTimer->setInterval((mInverter->isConnected() && mCurrentState != WaitForModelType) ? 1000 : 30000);
 	mTimer->start();
+}
+
+void InverterModbusUpdater::resetValues()
+{
+	// Do not reset ac power itself, it will be replaced later the common inverter data is retrieved
+	// using the http api.
+	mInverter->setMaxPower(qQNaN());
+	mInverter->setMinPowerLimit(qQNaN());
+	mInverter->setPowerLimit(qQNaN());
+}
+
+void InverterModbusUpdater::setModelType(int type)
+{
+	if (mModelType == type)
+		return;
+	mModelType = type;
+	QLOG_INFO() << "Modbus TCP mode:" << mModelType;
 }
 
 void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values)
@@ -103,10 +137,22 @@ void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values
 	if (unitId != mInverter->id().toInt())
 		return;
 	ModbusState nextState = mCurrentState;
+	bool checkReInit = false;
 	switch (mCurrentState) {
+	case ReadModelType:
+		if (values.size() == 1) {
+			setModelType(values[0]);
+			if (values[0] == 2) {
+				nextState = ReadMaxPower;
+			} else {
+				resetValues();
+				nextState = WaitForModelType;
+			}
+		}
+		break;
 	case ReadMaxPower:
 		if (values.size() == 2 && (values[0] != 0 || values[1] != 0)) {
-			double maxPower = getScaledValue(values);
+			double maxPower = getScaledValue(values, 0, false);
 			mInverter->setMaxPower(maxPower);
 			mInverter->setMinPowerLimit(maxPower / 10);
 			nextState = ReadPowerLimitScale;
@@ -124,8 +170,13 @@ void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values
 		// Both value set to zero seems to indicate a busy state. If the power is really zero,
 		// values[0] will be zero and values[1] non-zero.
 		if (values.size() == 2 && (values[0] != 0 || values[1] != 0)) {
-			mInverter->meanPowerInfo()->setPower(getScaledValue(values));
-			nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
+			mInverter->meanPowerInfo()->setPower(getScaledValue(values, 0, true));
+			if (mWritePowerLimitRequested) {
+				nextState = WritePowerLimit;
+			} else {
+				nextState = Idle;
+				checkReInit = true;
+			}
 		}
 		break;
 	case ReadPowerLimit:
@@ -148,7 +199,7 @@ void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values
 		nextState = Init;
 		break;
 	}
-	startNextAction(nextState);
+	startNextAction(nextState, checkReInit);
 }
 
 void InverterModbusUpdater::onWriteCompleted(quint8 unitId, quint16 startReg, quint16 regCount)
@@ -158,13 +209,24 @@ void InverterModbusUpdater::onWriteCompleted(quint8 unitId, quint16 startReg, qu
 	if (unitId != mInverter->id().toInt())
 		return;
 	mWritePowerLimitRequested = false;
-	startNextAction(Start);
+	startNextAction(Start, true);
 }
 
 void InverterModbusUpdater::onError(quint8 functionCode, quint8 unitId, quint8 exception)
 {
 	QLOG_TRACE() << "Modbus TCP error" << mCurrentState << functionCode << unitId << exception;
 	startIdleTimer();
+}
+
+void InverterModbusUpdater::onSocketError(QAbstractSocket::SocketError error)
+{
+	Q_UNUSED(error)
+	setModelType(0);
+	resetValues();
+	if (mTimer->isActive())
+		return;
+	mTimer->setInterval(30000);
+	mTimer->start();
 }
 
 void InverterModbusUpdater::onPowerLimitRequested(double value)
@@ -194,15 +256,18 @@ void InverterModbusUpdater::onDisconnected()
 void InverterModbusUpdater::onTimer()
 {
 	if (mModbusClient->isConnected())
-		startNextAction(mCurrentState == Idle ? Start : mCurrentState);
+		startNextAction(mCurrentState == Idle || mCurrentState == WaitForModelType ? Init : mCurrentState);
 	else
 		mModbusClient->connectToServer(mInverter->hostName());
 }
 
 // static
-double InverterModbusUpdater::getScaledValue(const QList<quint16> &values, int offset)
+double InverterModbusUpdater::getScaledValue(const QList<quint16> &values, int offset,
+											 bool isSigned)
 {
-	double v = values[offset];
+	double v = isSigned ?
+		static_cast<double>(static_cast<qint16>(values[offset])) :
+		static_cast<double>(values[offset]);
 	qint16 s = static_cast<qint16>(values[offset + 1]);
 	for (;s > 0; --s)
 		v *= 10;

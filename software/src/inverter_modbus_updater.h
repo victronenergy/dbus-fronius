@@ -2,6 +2,7 @@
 #define INVERTER_MODBUS_UPDATER_H
 
 #include <QObject>
+#include <QAbstractSocket>
 
 class Inverter;
 class ModbusTcpClient;
@@ -20,6 +21,8 @@ private slots:
 
 	void onError(quint8 functionCode, quint8 unitId, quint8 exception);
 
+	void onSocketError(QAbstractSocket::SocketError error);
+
 	void onPowerLimitRequested(double value);
 
 	void onConnected();
@@ -30,27 +33,37 @@ private slots:
 
 private:
 	enum ModbusState {
+		ReadModelType,
 		ReadMaxPower,
 		ReadPowerLimitScale,
 		ReadPowerLimit,
 		ReadCurrentPower,
 		WritePowerLimit,
+		WaitForModelType,
 		Idle,
-		Init = ReadMaxPower,
+		Init = ReadModelType,
 		Start = ReadPowerLimit
 	};
 
-	void startNextAction(ModbusState state);
+	void startNextAction(ModbusState state, bool checkReInit = false);
 
 	void startIdleTimer();
 
-	static double getScaledValue(const QList<quint16> &values, int offset = 0);
+	void resetValues();
+
+	void setModelType(int type);
+
+	static double getScaledValue(const QList<quint16> &values, int offset, bool isSigned);
 
 	Inverter *mInverter;
 	ModbusTcpClient *mModbusClient;
 	ModbusState mCurrentState;
 	double mPowerLimit;
 	int mPowerLimitScale;
+	/// Modbus TCP mode on PV inverter disabled (0), float (1), or int+sf (2).
+	/// We only support int+sf.
+	int mModelType;
+	int mInitCounter;
 	bool mWritePowerLimitRequested;
 	QTimer *mTimer;
 };
