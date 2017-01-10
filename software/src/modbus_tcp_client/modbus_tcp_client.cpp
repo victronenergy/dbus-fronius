@@ -45,7 +45,7 @@ void ModbusTcpClient::writeSingleHoldingRegister(quint8 unitId, quint16 reg, qui
 void ModbusTcpClient::writeMultipleHoldingRegisters(quint8 unitId, quint16 startReg,
 													const QList<quint16> &values)
 {
-	QByteArray frame = createFrame(WriteMultipleRegisters, unitId, 4 + 2 * values.size());
+	QByteArray frame = createFrame(WriteMultipleRegisters, unitId, 5 + 2 * values.size());
 	frame.append(static_cast<char>(msb(startReg)));
 	frame.append(static_cast<char>(lsb(startReg)));
 	frame.append(static_cast<char>(msb(values.size())));
