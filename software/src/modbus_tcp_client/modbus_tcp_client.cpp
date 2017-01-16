@@ -9,6 +9,8 @@ ModbusTcpClient::ModbusTcpClient(QObject *parent):
 	connect(mSocket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
 	connect(mSocket, SIGNAL(connected()), this, SIGNAL(connected()));
 	connect(mSocket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
+	connect(mSocket, SIGNAL(error(QAbstractSocket::SocketError)),
+			this, SIGNAL(socketErrorReceived(QAbstractSocket::SocketError)));
 	mSocket->socketOption(QAbstractSocket::LowDelayOption);
 }
 

@@ -3,8 +3,7 @@
 
 #include <QList>
 #include <QObject>
-
-class QTcpSocket;
+#include <QTcpSocket>
 
 class ModbusTcpClient: public QObject
 {
@@ -67,6 +66,8 @@ signals:
 	void writeMultipleHoldingRegistersCompleted(quint8 unitId, quint16 startReg, quint16 regCount);
 
 	void errorReceived(quint8 functionCode, quint8 unitId, quint8 exception);
+
+	void socketErrorReceived(QAbstractSocket::SocketError error);
 
 	void connected();
 
