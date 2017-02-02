@@ -13,14 +13,14 @@ DBusInverterSettingsBridge::DBusInverterSettingsBridge(
 	QString path = BasePath + Settings::createInverterId(settings->deviceType(),
 														 settings->uniqueId());
 	consume(settings, "phase",
-			QVariant(static_cast<int>(settings->phase())), path + "/Phase");
+			QVariant(static_cast<int>(settings->phase())), path + "/Phase", false);
 	consume(settings, "position",
-			QVariant(static_cast<int>(settings->position())), path + "/Position");
-	consume(settings, "customName", QVariant(""), path + "/CustomName");
-	consume(settings, "isActive", 1, path + "/IsActive");
-	consume(settings, "l1Energy", 0.0, 0.0, 1e6, path + "/L1Energy");
-	consume(settings, "l2Energy", 0.0, 0.0, 1e6, path + "/L2Energy");
-	consume(settings, "l3Energy", 0.0, 0.0, 1e6, path + "/L3Energy");
+			QVariant(static_cast<int>(settings->position())), path + "/Position", false);
+	consume(settings, "customName", QVariant(""), path + "/CustomName", false);
+	consume(settings, "isActive", 1, path + "/IsActive", false);
+	consume(settings, "l1Energy", 0.0, 0.0, 1e6, path + "/L1Energy", true);
+	consume(settings, "l2Energy", 0.0, 0.0, 1e6, path + "/L2Energy", true);
+	consume(settings, "l3Energy", 0.0, 0.0, 1e6, path + "/L3Energy", true);
 }
 
 bool DBusInverterSettingsBridge::toDBus(const QString &path, QVariant &v)

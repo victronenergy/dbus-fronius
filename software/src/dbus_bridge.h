@@ -79,10 +79,10 @@ public:
 	void consume(QObject *src, const char *property, const QString &path);
 
 	void consume(QObject *src, const char *property,
-				 const QVariant &defaultValue, const QString &path);
+				 const QVariant &defaultValue, const QString &path, bool silentSetting);
 
 	void consume(QObject *src, const char *property, double defaultValue,
-				 double minValue, double maxValue, const QString &path);
+				 double minValue, double maxValue, const QString &path, bool silentSetting);
 
 	VeQItem *service() const
 	{
@@ -103,7 +103,7 @@ public:
 	bool alwaysNotify(BridgeItem *item);
 
 	bool addSetting(const QString &path, const QVariant &defaultValue,
-					const QVariant &minValue, const QVariant &maxValue);
+					const QVariant &minValue, const QVariant &maxValue, bool silent);
 
 signals:
 	void initialized();

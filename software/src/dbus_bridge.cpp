@@ -79,16 +79,16 @@ void DBusBridge::consume(QObject *src, const char *property, const QString &path
 }
 
 void DBusBridge::consume(QObject *src, const char *property, const QVariant &defaultValue,
-						 const QString &path)
+						 const QString &path, bool silentSetting)
 {
-	addSetting(path, defaultValue, QVariant(0), QVariant(0));
+	addSetting(path, defaultValue, QVariant(0), QVariant(0), silentSetting);
 	consume(src, property, path);
 }
 
 void DBusBridge::consume(QObject *src, const char *property, double defaultValue,
-						 double minValue, double maxValue, const QString &path)
+						 double minValue, double maxValue, const QString &path, bool silentSetting)
 {
-	addSetting(path, QVariant(defaultValue), QVariant(minValue), QVariant(maxValue));
+	addSetting(path, QVariant(defaultValue), QVariant(minValue), QVariant(maxValue), silentSetting);
 	consume(src, property, path);
 }
 
@@ -144,7 +144,8 @@ QString DBusBridge::toText(const QString &path, const QVariant &value, const QSt
 bool DBusBridge::addSetting(const QString &path,
 							const QVariant &defaultValue,
 							const QVariant &minValue,
-							const QVariant &maxValue)
+							const QVariant &maxValue,
+							bool silent)
 {
 	/// This will call the AddSetting function on com.victronenergy.settings. It should not be done
 	/// here, because this class is supposed to be independent from VeQItem type. But since it is
@@ -191,7 +192,7 @@ bool DBusBridge::addSetting(const QString &path,
 						 "com.victronenergy.settings",
 						 "/Settings",
 						 "com.victronenergy.Settings",
-						 "AddSetting")
+						 silent ? "AddSilentSetting" : "AddSetting")
 					 << group
 					 << name
 					 << QVariant::fromValue(QDBusVariant(defaultValue))

@@ -16,10 +16,10 @@ DBusSettingsBridge::DBusSettingsBridge(Settings *settings, QObject *parent):
 
 	setUpdateInterval(1000);
 
-	consume(settings, "portNumber", QVariant(80), PortNumberPath);
-	consume(settings, "ipAddresses", QVariant(""), IpAddressesPath);
-	consume(settings, "knownIpAddresses", QVariant(""), KnownIpAddressesPath);
-	consume(settings, "inverterIds", QVariant(""), InverterIdsPath);
+	consume(settings, "portNumber", QVariant(80), PortNumberPath, false);
+	consume(settings, "ipAddresses", QVariant(""), IpAddressesPath, false);
+	consume(settings, "knownIpAddresses", QVariant(""), KnownIpAddressesPath, false);
+	consume(settings, "inverterIds", QVariant(""), InverterIdsPath, false);
 }
 
 bool DBusSettingsBridge::toDBus(const QString &path, QVariant &value)
