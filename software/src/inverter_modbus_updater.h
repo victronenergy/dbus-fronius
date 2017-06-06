@@ -8,7 +8,7 @@ class Inverter;
 class ModbusTcpClient;
 class QTimer;
 
-class InverterModbusUpdater: QObject
+class InverterModbusUpdater: public QObject
 {
 	Q_OBJECT
 public:

@@ -16,7 +16,7 @@ static const int MaxInitCount = 10;
 InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, QObject *parent):
 	QObject(parent),
 	mInverter(inverter),
-	mModbusClient(new ModbusTcpClient),
+	mModbusClient(new ModbusTcpClient(this)),
 	mCurrentState(Idle),
 	mPowerLimit(qQNaN()),
 	mModelType(0),
