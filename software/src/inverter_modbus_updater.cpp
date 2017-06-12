@@ -117,8 +117,8 @@ void InverterModbusUpdater::startIdleTimer()
 
 void InverterModbusUpdater::resetValues()
 {
-	// Do not reset ac power itself, it will be replaced later the common inverter data is retrieved
-	// using the http api.
+	// Do not reset ac power itself, it will be replaced later when the common inverter data is
+	// retrieved using the http api.
 	mInverter->setMaxPower(qQNaN());
 	mInverter->setMinPowerLimit(qQNaN());
 	mInverter->setPowerLimit(qQNaN());
