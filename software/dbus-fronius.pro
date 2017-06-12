@@ -18,6 +18,9 @@ unix {
     target.path = $${DESTDIR}$${bindir}
 }
 
+MOC_DIR=.moc
+OBJECTS_DIR=.obj
+
 # Note: we need the script module to parse JSON fragments as part of the
 # fronius solar API.
 QT += core network dbus script xml
