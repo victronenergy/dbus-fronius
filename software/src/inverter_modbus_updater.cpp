@@ -10,7 +10,7 @@
 // the power of the inverter to increase (or stay at its current value), so a large value for the
 // timeout is pretty safe.
 static const int PowerLimitTimeout = 120;
-static const int MinPowerLimitScale = 10000;
+static const int PowerLimitScale = 10000;
 static const int MaxInitCount = 10;
 
 InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, QObject *parent):
@@ -120,7 +120,6 @@ void InverterModbusUpdater::resetValues()
 	// Do not reset ac power itself, it will be replaced later when the common inverter data is
 	// retrieved using the http api.
 	mInverter->setMaxPower(qQNaN());
-	mInverter->setMinPowerLimit(qQNaN());
 	mInverter->setPowerLimit(qQNaN());
 }
 
@@ -154,7 +153,6 @@ void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values
 		if (values.size() == 2 && (values[0] != 0 || values[1] != 0)) {
 			double maxPower = getScaledValue(values, 0, false);
 			mInverter->setMaxPower(maxPower);
-			mInverter->setMinPowerLimit(maxPower / 10);
 			nextState = ReadPowerLimitScale;
 		}
 		break;
@@ -181,7 +179,7 @@ void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values
 		break;
 	case ReadPowerLimit:
 		if (values.size() == 5) {
-			if (mPowerLimitScale >= MinPowerLimitScale) {
+			if (mPowerLimitScale >= PowerLimitScale) {
 				if (values[4] == 1)
 					mInverter->setPowerLimit((values[0] * mInverter->maxPower()) / mPowerLimitScale);
 				else
@@ -231,7 +229,7 @@ void InverterModbusUpdater::onSocketError(QAbstractSocket::SocketError error)
 
 void InverterModbusUpdater::onPowerLimitRequested(double value)
 {
-	if (mPowerLimitScale < MinPowerLimitScale)
+	if (mPowerLimitScale < PowerLimitScale)
 		return;
 	mPowerLimit = value;
 	if (mTimer->isActive()) {

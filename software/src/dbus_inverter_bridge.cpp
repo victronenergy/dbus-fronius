@@ -23,7 +23,6 @@ DBusInverterBridge::DBusInverterBridge(Inverter *inverter, InverterSettings *set
 	produce(inverter, "errorCode", "/ErrorCode");
 	produce(inverter, "statusCode", "/StatusCode");
 	produce(inverter, "powerLimit", "/Ac/PowerLimit", "W", 0);
-	produce(inverter, "minPowerLimit", "/Ac/MinPowerLimit", "W", 0);
 	produce(inverter, "maxPower", "/Ac/MaxPower", "W", 0);
 
 	addBusItems(inverter->meanPowerInfo(), "/Ac");
