@@ -35,6 +35,8 @@ public:
 
 	QString uniqueId() const;
 
+	void invalidateStatusCode();
+
 	QString productName() const;
 
 	QString customName() const;

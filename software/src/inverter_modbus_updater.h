@@ -4,7 +4,10 @@
 #include <QObject>
 #include <QAbstractSocket>
 
+class FroniusDataProcessor;
 class Inverter;
+class InverterSettings;
+class ModbusReply;
 class ModbusTcpClient;
 class QTimer;
 
@@ -12,12 +15,18 @@ class InverterModbusUpdater: public QObject
 {
 	Q_OBJECT
 public:
-	InverterModbusUpdater(Inverter *inverter, QObject *parent = 0);
+	explicit InverterModbusUpdater(Inverter *inverter, InverterSettings *settings,
+								   QObject *parent = 0);
+
+signals:
+	void connectionLost();
+
+	void inverterModelChanged();
 
 private slots:
-	void onReadCompleted(quint8 unitId, QList<quint16> values);
+	void onReadCompleted();
 
-	void onWriteCompleted(quint8 unitId, quint16 startReg, quint16 regCount);
+	void onWriteCompleted();
 
 	void onError(quint8 functionCode, quint8 unitId, quint8 exception);
 
@@ -31,40 +40,45 @@ private slots:
 
 	void onTimer();
 
+	void onPhaseChanged();
+
 private:
 	enum ModbusState {
-		ReadModelType,
-		ReadMaxPower,
-		ReadPowerLimitScale,
 		ReadPowerLimit,
-		ReadCurrentPower,
+		ReadPowerAndVoltage,
 		WritePowerLimit,
 		Idle,
-		Init = ReadModelType,
+		Init = ReadPowerLimitScale,
 		Start = ReadPowerLimit
 	};
 
-	void startNextAction(ModbusState state, bool checkReInit = false);
+	void connectModbusClient();
+
+	void startNextAction(ModbusState state);
 
 	void startIdleTimer();
 
 	void resetValues();
 
-	void setModelType(int type);
+	void setInverterState(int sunSpecState);
 
-	static double getScaledValue(const QList<quint16> &values, int offset, bool isSigned);
+	void readHoldingRegisters(quint16 startRegister, quint16 count);
+
+	void writeMultipleHoldingRegisters(quint16 startReg, const QVector<quint16> &values);
+
+	bool handleModbusError(ModbusReply *reply);
+
+	void handleError();
 
 	Inverter *mInverter;
+	InverterSettings *mSettings;
 	ModbusTcpClient *mModbusClient;
-	ModbusState mCurrentState;
-	double mPowerLimit;
-	int mPowerLimitScale;
-	/// Modbus TCP mode on PV inverter disabled (0), float (1), or int+sf (2).
-	/// We only support int+sf.
-	int mModelType;
-	int mInitCounter;
-	bool mWritePowerLimitRequested;
 	QTimer *mTimer;
+	FroniusDataProcessor *mDataProcessor;
+	ModbusState mCurrentState;
+	double mPowerLimitPct;
+	int mRetryCount;
+	bool mWritePowerLimitRequested;
 };
 
 #endif // INVERTER_MODBUS_UPDATER_H

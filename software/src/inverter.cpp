@@ -33,6 +33,9 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 		QString::number(deviceInfo.productId, 16));
 	produceValue(createItem("Serial"), deviceInfo.uniqueId);
 	produceValue(mDeviceInstance, deviceInstance);
+	setMaxPower(deviceInfo.maxPower);
+	produceValue(createItem("FirmwareVersion"), deviceInfo.firmwareVersion.isEmpty() ?
+		QVariant() : deviceInfo.firmwareVersion);
 	updateConnectionItem();
 	root->produceValue(QVariant(), VeQItem::Synchronized);
 }
@@ -87,6 +90,11 @@ int Inverter::id() const
 QString Inverter::uniqueId() const
 {
 	return mDeviceInfo.uniqueId;
+}
+
+void Inverter::invalidateStatusCode()
+{
+	produceValue(mStatusCode, QVariant(), "");
 }
 
 QString Inverter::productName() const

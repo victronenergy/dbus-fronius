@@ -1,101 +1,75 @@
 #include <qnumeric.h>
 #include <QsLog.h>
 #include <QTimer>
+#include "froniussolar_api.h"
+#include "fronius_data_processor.h"
 #include "inverter.h"
 #include "inverter_modbus_updater.h"
+#include "inverter_settings.h"
 #include "modbus_tcp_client.h"
+#include "modbus_reply.h"
 #include "power_info.h"
+#include "sunspec_tools.h"
 
 // The PV inverter will reset the power limit to maximum after this interval. The reset will cause
 // the power of the inverter to increase (or stay at its current value), so a large value for the
 // timeout is pretty safe.
 static const int PowerLimitTimeout = 120;
-static const int PowerLimitScale = 10000;
-static const int MaxInitCount = 10;
+static const int PowerLimitScale = 100; /// @todo EV This may cause problems with hub4control
 
-InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, QObject *parent):
+InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, InverterSettings *settings,
+											 QObject *parent):
 	QObject(parent),
 	mInverter(inverter),
+	mSettings(settings),
 	mModbusClient(new ModbusTcpClient(this)),
+	mTimer(new QTimer(this)),
+	mDataProcessor(new FroniusDataProcessor(inverter, settings)),
 	mCurrentState(Idle),
-	mPowerLimit(qQNaN()),
-	mModelType(0),
-	mInitCounter(0),
-	mWritePowerLimitRequested(false),
-	mTimer(new QTimer(this))
+	mPowerLimitPct(100),
+	mRetryCount(0),
+	mWritePowerLimitRequested(false)
 {
 	Q_ASSERT(inverter != 0);
+	connectModbusClient();
+	mModbusClient->setTimeout(5000);
 	mModbusClient->connectToServer(inverter->hostName());
-	connect(
-		mModbusClient, SIGNAL(readHoldingRegistersCompleted(quint8, QList<quint16>)),
-		this, SLOT(onReadCompleted(quint8, QList<quint16>)));
-	connect(
-		mModbusClient, SIGNAL(writeMultipleHoldingRegistersCompleted(quint8, quint16, quint16)),
-		this, SLOT(onWriteCompleted(quint8, quint16, quint16)));
-	connect(
-		mModbusClient, SIGNAL(errorReceived(quint8, quint8, quint8)),
-		this, SLOT(onError(quint8, quint8, quint8)));
-	connect(
-		mModbusClient, SIGNAL(socketErrorReceived(QAbstractSocket::SocketError)),
-		this, SLOT(onSocketError(QAbstractSocket::SocketError)));
-	connect(
-		mModbusClient, SIGNAL(connected()),
-		this, SLOT(onConnected()));
-	connect(
-		mModbusClient, SIGNAL(disconnected()),
-		this, SLOT(onDisconnected()));
 	connect(
 		mInverter, SIGNAL(powerLimitRequested(double)),
 		this, SLOT(onPowerLimitRequested(double)));
 	mTimer->setSingleShot(true);
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
+	connect(mSettings, SIGNAL(phaseChanged()), this, SLOT(onPhaseChanged()));
 }
 
-void InverterModbusUpdater::startNextAction(ModbusState state, bool checkReInit)
+void InverterModbusUpdater::startNextAction(ModbusState state)
 {
-	if (checkReInit) {
-		++mInitCounter;
-		if (mInitCounter >= MaxInitCount) {
-			state = Init;
-			mInitCounter = 0;
-		}
-	}
 	mCurrentState = state;
-	quint8 unitId = static_cast<quint8>(mInverter->id().toInt());
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	switch (mCurrentState) {
-	case ReadModelType:
-		mModbusClient->readHoldingRegisters(unitId, 215, 1);
-		break;
-	case ReadMaxPower:
-		mModbusClient->readHoldingRegisters(unitId, 40124, 2);
-		break;
-	case ReadPowerLimitScale:
-		mModbusClient->readHoldingRegisters(unitId, 40250, 1);
-		break;
 	case ReadPowerLimit:
-		mModbusClient->readHoldingRegisters(unitId, 40232, 5);
+		readHoldingRegisters(deviceInfo.immediateControlOffset + 5, 5);
 		break;
-	case ReadCurrentPower:
-		mModbusClient->readHoldingRegisters(unitId, 40083, 2);
+	case ReadPowerAndVoltage:
+		if (deviceInfo.retrievalMode == ProtocolSunSpecFloat)
+			readHoldingRegisters(deviceInfo.inverterModelOffset, 62);
+		else
+			readHoldingRegisters(deviceInfo.inverterModelOffset, 52);
 		break;
 	case WritePowerLimit:
 	{
-		QList<quint16> values;
-		quint16 pct = mPowerLimitScale;
-		if (qIsFinite(mPowerLimit)) {
-			pct = static_cast<quint16>(
-				qBound(0, qRound(mPowerLimitScale * mPowerLimit / mInverter->maxPower()), mPowerLimitScale));
-		}
-		if (pct < mPowerLimitScale) {
+		QVector<quint16> values;
+		if (mPowerLimitPct < 100) {
+			quint16 pct = static_cast<quint16>(qRound(mPowerLimitPct * deviceInfo.powerLimitScale));
 			values.append(pct);
 			values.append(0); // unused
 			values.append(PowerLimitTimeout);
 			values.append(0); // unused
 			values.append(1); // enabled power throttle mode
-			mModbusClient->writeMultipleHoldingRegisters(unitId, 40232, values);
+			writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 5, values);
 		} else {
 			values.append(0);
-			mModbusClient->writeMultipleHoldingRegisters(unitId, 40236, values);
+			writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 9, values);
 		}
 		break;
 	}
@@ -116,79 +90,165 @@ void InverterModbusUpdater::startIdleTimer()
 
 void InverterModbusUpdater::resetValues()
 {
-	// Do not reset ac power itself, it will be replaced later when the common inverter data is
-	// retrieved using the http api.
-	mInverter->setMaxPower(qQNaN());
 	mInverter->setPowerLimit(qQNaN());
 }
 
-void InverterModbusUpdater::setModelType(int type)
+void InverterModbusUpdater::setInverterState(int sunSpecState)
 {
-	if (mModelType == type)
+	int froniusState = 0;
+	switch (sunSpecState) {
+	case 1: // Off
+		froniusState = 0;
+		break;
+	case 2: // Sleeping
+	case 6: // Shutting down
+	case 8: // Standby
+		froniusState = 8;
+		break;
+	case 3: // Starting
+		froniusState = 3;
+		break;
+	case 4: // MPPT
+	case 5: // Throttled
+		froniusState = 7;
+		break;
+	case 7: // Fault
+		froniusState = 10;
+		break;
+	default:
+		mInverter->invalidateStatusCode();
 		return;
-	mModelType = type;
-	QLOG_INFO() << "Modbus TCP mode:" << mModelType;
+	}
+	mInverter->setStatusCode(froniusState);
 }
 
-void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values)
+void InverterModbusUpdater::readHoldingRegisters(quint16 startRegister, quint16 count)
 {
-	if (unitId != mInverter->id().toInt())
+	ModbusReply *reply = mModbusClient->readHoldingRegisters(mInverter->id(), startRegister, count);
+	connect(reply, SIGNAL(finished()), this, SLOT(onReadCompleted()));
+}
+
+void InverterModbusUpdater::writeMultipleHoldingRegisters(quint16 startReg,
+														  const QVector<quint16> &values)
+{
+	ModbusReply *reply = mModbusClient->writeMultipleHoldingRegisters(mInverter->id(), startReg, values);
+	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
+}
+
+bool InverterModbusUpdater::handleModbusError(ModbusReply *reply)
+{
+	if (reply->error() == ModbusReply::NoException) {
+		mRetryCount = 0;
+		return true;
+	}
+	handleError();
+	return false;
+}
+
+void InverterModbusUpdater::handleError()
+{
+	++mRetryCount;
+	if (mRetryCount > 5) {
+		mRetryCount = 0;
+		emit connectionLost();
+	}
+	startIdleTimer();
+}
+
+void InverterModbusUpdater::onReadCompleted()
+{
+	ModbusReply *reply = static_cast<ModbusReply *>(sender());
+	reply->deleteLater();
+	if (!handleModbusError(reply))
 		return;
+
+	QVector<quint16> values = reply->registers();
+
+	mRetryCount = 0;
+
 	ModbusState nextState = mCurrentState;
-	bool checkReInit = false;
 	switch (mCurrentState) {
-	case ReadModelType:
-		if (values.size() == 1) {
-			setModelType(values[0]);
-			if (values[0] == 2) {
-				nextState = ReadMaxPower;
-			} else {
-				resetValues();
-				nextState = WaitForModelType;
+	case ReadPowerAndVoltage:
+	{
+		if (values.isEmpty())
+			break;
+		int modelId = values[0];
+		const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+		ProtocolType retrievalMode = modelId > 103 ? ProtocolSunSpecFloat : ProtocolSunSpecIntSf;
+		int phaseCount = modelId % 10;
+		if (retrievalMode != deviceInfo.retrievalMode || phaseCount != deviceInfo.phaseCount) {
+			emit inverterModelChanged();
+			nextState = Idle;
+			break;
+		}
+		if (mInverter->deviceInfo().retrievalMode == ProtocolSunSpecFloat) {
+			if (values.size() != 62)
+				break;
+			/// @todo EV Value and scale at zero seems to indicate an error state...
+			double power = getFloat(values, 22);
+			if (qIsFinite(power)) {
+				CommonInverterData cid;
+				cid.acCurrent = getFloat(values, 2);
+				cid.acPower = power;
+				cid.acVoltage = getFloat(values, 16); /// @todo EV This is phase 1 voltage
+				cid.totalEnergy = getFloat(values, 32);
+				mDataProcessor->process(cid);
+
+				ThreePhasesInverterData tpid;
+				if (mInverter->phaseCount() > 1) {
+					tpid.acCurrentPhase1 = getFloat(values, 4);
+					tpid.acCurrentPhase2 = getFloat(values, 6);
+					tpid.acCurrentPhase3 = getFloat(values, 8);
+					tpid.acVoltagePhase1 = getFloat(values, 16);
+					tpid.acVoltagePhase2 = getFloat(values, 18);
+					tpid.acVoltagePhase3 = getFloat(values, 20);
+					mDataProcessor->process(tpid);
+				}
 			}
-		}
-		break;
-	case ReadMaxPower:
-		if (values.size() == 2 && (values[0] != 0 || values[1] != 0)) {
-			double maxPower = getScaledValue(values, 0, false);
-			mInverter->setMaxPower(maxPower);
-			nextState = ReadPowerLimitScale;
-		}
-		break;
-	case ReadPowerLimitScale:
-		if (values.size() == 1) {
-			mPowerLimitScale = 100;
-			for (qint16 scale = static_cast<qint16>(values[0]); scale < 0; ++scale)
-				mPowerLimitScale *= 10;
-			nextState = Start;
-		}
-		break;
-	case ReadCurrentPower:
-		// Both value set to zero seems to indicate a busy state. If the power is really zero,
-		// values[0] will be zero and values[1] non-zero.
-		if (values.size() == 2 && (values[0] != 0 || values[1] != 0)) {
-			mInverter->meanPowerInfo()->setPower(getScaledValue(values, 0, true));
-			if (mWritePowerLimitRequested) {
-				nextState = WritePowerLimit;
-			} else {
-				nextState = Idle;
-				checkReInit = true;
+			setInverterState(values[48]);
+		} else {
+			if (values.size() != 52)
+				break;
+			/// @todo EV Value and scale at zero seems to indicate an error state...
+			double power = getScaledValue(values, 14, 1, 15, true);
+			if (qIsFinite(power)) {
+				CommonInverterData cid;
+				cid.acCurrent = getScaledValue(values, 2, 1, 6, false);
+				cid.acPower = power;
+				cid.acVoltage = getScaledValue(values, 10, 1, 13, false); /// @todo EV This is phase 1 voltage
+				cid.totalEnergy = getScaledValue(values, 24, 2, 26, false);
+				mDataProcessor->process(cid);
+
+				ThreePhasesInverterData tpid;
+				if (mInverter->phaseCount() > 1) {
+					tpid.acCurrentPhase1 = getScaledValue(values, 3, 1, 6, false);
+					tpid.acCurrentPhase2 = getScaledValue(values, 4, 1, 6, false);
+					tpid.acCurrentPhase3 = getScaledValue(values, 5, 1, 6, false);
+					tpid.acVoltagePhase1 = getScaledValue(values, 10, 1, 13, false);
+					tpid.acVoltagePhase2 = getScaledValue(values, 11, 1, 13, false);
+					tpid.acVoltagePhase3 = getScaledValue(values, 12, 1, 13, false);
+					mDataProcessor->process(tpid);
+				}
 			}
+			setInverterState(values[38]);
 		}
+		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
 		break;
+	}
 	case ReadPowerLimit:
 		if (values.size() == 5) {
-			if (mPowerLimitScale >= PowerLimitScale) {
-				if (values[4] == 1)
-					mInverter->setPowerLimit((values[0] * mInverter->maxPower()) / mPowerLimitScale);
-				else
-					mInverter->setPowerLimit(mInverter->maxPower());
-			} else {
-				/// Make the power limit invalid, so the users of the value (eg. hub4control) know
-				/// that setting the value is not supported.
-				mInverter->setPowerLimit(qQNaN());
+			double powerLimit = qQNaN();
+			const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+			if (deviceInfo.powerLimitScale >= PowerLimitScale) {
+				if (values[4] == 1) {
+					if (values[0] != 0xFFFF)
+						powerLimit = values[0] * deviceInfo.maxPower / deviceInfo.powerLimitScale;
+				} else {
+					powerLimit = mInverter->maxPower();
+				}
 			}
-			nextState = ReadCurrentPower;
+			mInverter->setPowerLimit(powerLimit);
+			nextState = ReadPowerAndVoltage;
 		}
 		break;
 	default:
@@ -196,17 +256,15 @@ void InverterModbusUpdater::onReadCompleted(quint8 unitId, QList<quint16> values
 		nextState = Init;
 		break;
 	}
-	startNextAction(nextState, checkReInit);
+	startNextAction(nextState);
 }
 
-void InverterModbusUpdater::onWriteCompleted(quint8 unitId, quint16 startReg, quint16 regCount)
+void InverterModbusUpdater::onWriteCompleted()
 {
-	Q_UNUSED(startReg)
-	Q_UNUSED(regCount)
-	if (unitId != mInverter->id().toInt())
-		return;
+	ModbusReply *reply = static_cast<ModbusReply *>(sender());
+	reply->deleteLater();
 	mWritePowerLimitRequested = false;
-	startNextAction(Start, true);
+	startNextAction(Start);
 }
 
 void InverterModbusUpdater::onError(quint8 functionCode, quint8 unitId, quint8 exception)
@@ -218,7 +276,6 @@ void InverterModbusUpdater::onError(quint8 functionCode, quint8 unitId, quint8 e
 void InverterModbusUpdater::onSocketError(QAbstractSocket::SocketError error)
 {
 	Q_UNUSED(error)
-	setModelType(0);
 	resetValues();
 	if (mTimer->isActive())
 		return;
@@ -228,15 +285,23 @@ void InverterModbusUpdater::onSocketError(QAbstractSocket::SocketError error)
 
 void InverterModbusUpdater::onPowerLimitRequested(double value)
 {
-	if (mPowerLimitScale < PowerLimitScale)
+	double powerLimitScale = mInverter->deviceInfo().powerLimitScale;
+	if (powerLimitScale < PowerLimitScale)
 		return;
-	mPowerLimit = value;
+	// An invalid power limit means that power limiting is not supported. So we ignore the request.
+	// See comment in the getInitState function.
+	if (!qIsFinite(mInverter->powerLimit()))
+		return;
+	mPowerLimitPct = qBound(0.0, value / deviceInfo.maxPower, 100.0);
 	if (mTimer->isActive()) {
 		mTimer->stop();
-		startNextAction(mCurrentState == Idle ? WritePowerLimit : mCurrentState);
-	} else {
-		mWritePowerLimitRequested = true;
+		if (mCurrentState == Idle) {
+			startNextAction(WritePowerLimit);
+			return; // Skip setting of mWritePowerLimitRequested
+		}
+		startNextAction(mCurrentState);
 	}
+	mWritePowerLimitRequested = true;
 }
 
 void InverterModbusUpdater::onConnected()
@@ -247,28 +312,29 @@ void InverterModbusUpdater::onConnected()
 void InverterModbusUpdater::onDisconnected()
 {
 	mCurrentState = Init;
-	startIdleTimer();
+	handleError();
 }
 
 void InverterModbusUpdater::onTimer()
 {
+	Q_ASSERT(!mTimer->isActive());
 	if (mModbusClient->isConnected())
 		startNextAction(mCurrentState == Idle ? Start : mCurrentState);
 	else
 		mModbusClient->connectToServer(mInverter->hostName());
 }
 
-// static
-double InverterModbusUpdater::getScaledValue(const QList<quint16> &values, int offset,
-											 bool isSigned)
+void InverterModbusUpdater::onPhaseChanged()
 {
-	double v = isSigned ?
-		static_cast<double>(static_cast<qint16>(values[offset])) :
-		static_cast<double>(values[offset]);
-	qint16 s = static_cast<qint16>(values[offset + 1]);
-	for (;s > 0; --s)
-		v *= 10;
-	for (;s < 0; ++s)
-		v /= 10;
-	return v;
+	if (mInverter->phaseCount() > 1)
+		return;
+	mInverter->l1PowerInfo()->resetValues();
+	mInverter->l2PowerInfo()->resetValues();
+	mInverter->l3PowerInfo()->resetValues();
+}
+
+void InverterModbusUpdater::connectModbusClient()
+{
+	connect(mModbusClient, SIGNAL(connected()), this, SLOT(onConnected()));
+	connect(mModbusClient, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
 }

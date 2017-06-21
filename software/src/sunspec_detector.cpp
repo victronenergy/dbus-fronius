@@ -45,7 +45,6 @@ void SunspecDetector::onConnected()
 
 void SunspecDetector::onDisconnected()
 {
-	// QLOG_WARN() << __func__;
 	ModbusTcpClient *client = static_cast<ModbusTcpClient *>(sender());
 	Reply *di = mClientToReply.value(client);
 	if (di != 0)
