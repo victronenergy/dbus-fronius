@@ -30,6 +30,8 @@ public:
 	void updateEnergySettings();
 
 private:
+	InverterPhase getPhase() const;
+
 	void updateEnergyValue(InverterPhase phase,
 						   double accumulatedEnergy, double energyDelta);
 

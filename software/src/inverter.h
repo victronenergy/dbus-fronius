@@ -1,37 +1,17 @@
 #ifndef INVERTER_H
 #define INVERTER_H
 
-#include <QObject>
 #include "defines.h"
+#include "ve_service.h"
 
 class PowerInfo;
 struct FroniusDeviceInfo;
 
-class Inverter : public QObject
+class Inverter : public VeService
 {
 	Q_OBJECT
-	Q_PROPERTY(bool isConnected READ isConnected WRITE setIsConnected NOTIFY isConnectedChanged)
-	Q_PROPERTY(int statusCode READ statusCode WRITE setStatusCode NOTIFY statusCodeChanged)
-	Q_PROPERTY(int errorCode READ errorCode WRITE setErrorCode NOTIFY errorCodeChanged)
-	Q_PROPERTY(QString id READ id)
-	Q_PROPERTY(int deviceType READ deviceType)
-	Q_PROPERTY(QString uniqueId READ uniqueId)
-	Q_PROPERTY(QString customName READ customName)
-	Q_PROPERTY(QString hostName READ hostName WRITE setHostName NOTIFY hostNameChanged)
-	Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
-	Q_PROPERTY(int phaseCount READ phaseCount)
-	Q_PROPERTY(QString productName READ productName)
-	Q_PROPERTY(int deviceInstance READ deviceInstance WRITE setDeviceInstance NOTIFY deviceInstanceChanged)
-	Q_PROPERTY(double powerLimit READ powerLimit WRITE setPowerLimit NOTIFY powerLimitChanged)
-	Q_PROPERTY(double maxPower READ maxPower WRITE setMaxPower NOTIFY maxPowerChanged)
 public:
-	Inverter(const QString &hostName, int port, const QString &id,
-			 int deviceType, const QString &uniqueId,
-			 const QString &customName, QObject *parent = 0);
-
-	bool isConnected() const;
-
-	void setIsConnected(bool v);
+	Inverter(VeQItem *root, const DeviceInfo &deviceInfo, QObject *parent = 0);
 
 	/*!
 	 * Error code as returned by the fronius inverter
@@ -58,7 +38,11 @@ public:
 
 	QString uniqueId() const;
 
+	QString productName() const;
+
 	QString customName() const;
+
+	void setCustomName(const QString &name);
 
 	QString hostName() const;
 
@@ -68,9 +52,11 @@ public:
 
 	void setPort(int p);
 
-	int phaseCount() const;
+	InverterPosition position() const;
 
-	QString productName() const;
+	void setPosition(InverterPosition p);
+
+	int phaseCount() const;
 
 	int deviceInstance() const;
 
@@ -86,67 +72,50 @@ public:
 
 	PowerInfo *getPowerInfo(InverterPhase phase);
 
-	double powerLimit() const
-	{
-		return mPowerLimit;
-	}
+	double powerLimit() const;
 
 	void setPowerLimit(double p);
 
-	void setRequestedPowerLimit(double p);
-
-	double maxPower() const
-	{
-		return mMaxPower;
-	}
+	double maxPower() const;
 
 	void setMaxPower(double p);
 
-	/*!
-	 * @brief Reset all measured values to NaN
-	 */
-	void resetValues();
+	virtual int handleSetValue(VeQItem *item, const QVariant &variant);
 
 signals:
 	void isConnectedChanged();
 
-	void statusChanged();
+	void customNameChanged();
 
 	void hostNameChanged();
 
 	void portChanged();
 
-	void errorCodeChanged();
-
-	void statusCodeChanged();
-
-	void deviceInstanceChanged();
-
-	void powerLimitChanged();
-
 	void powerLimitRequested(double value);
 
-	void maxPowerChanged();
-
 private:
-	bool mIsConnected;
-	QString mStatus;
-	int mErrorCode;
-	int mStatusCode;
+	void updateConnectionItem();
+
 	QString mHostName;
 	int mPort;
 	QString mId;
 	int mDeviceType;
 	QString mUniqueId;
-	QString mCustomName;
-	int mDeviceInstance;
 	const FroniusDeviceInfo *mDeviceInfo;
+	VeQItem *mErrorCode;
+	VeQItem *mStatusCode;
+	VeQItem *mPowerLimit;
+	VeQItem *mMaxPower;
+	VeQItem *mPosition;
+	VeQItem *mDeviceInstance;
+	VeQItem *mCustomName;
+	VeQItem *mProductName;
+	VeQItem *mConnection;
+
 	PowerInfo *mMeanPowerInfo;
 	PowerInfo *mL1PowerInfo;
 	PowerInfo *mL2PowerInfo;
 	PowerInfo *mL3PowerInfo;
-	double mPowerLimit;
-	double mMaxPower;
 };
 
 #endif // INVERTER_H

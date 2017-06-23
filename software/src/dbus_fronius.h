@@ -2,9 +2,8 @@
 #define DBUS_TEST2_H
 
 #include <QObject>
+#include "defines.h"
 
-class DBusGatewayBridge;
-class DBusSettingsBridge;
 class Inverter;
 class InverterGateway;
 class InverterMediator;
@@ -19,13 +18,11 @@ public:
 private slots:
 	void onSettingsInitialized();
 
-	void onInverterFound(Inverter *inverter);
+	void onInverterFound(DeviceInfo deviceInfo);
 
 private:
 	Settings *mSettings;
 	InverterGateway *mGateway;
-	DBusSettingsBridge *mSettingsBridge;
-	DBusGatewayBridge *mGatewayBridge;
 	QList<InverterMediator *> mMediators;
 };
 

@@ -111,7 +111,7 @@ void InverterModbusUpdater::startNextAction(ModbusState state, bool checkReInit)
 
 void InverterModbusUpdater::startIdleTimer()
 {
-	mTimer->setInterval((mInverter->isConnected() && mCurrentState != WaitForModelType) ? 1000 : 30000);
+	mTimer->setInterval(mCurrentState == WaitForModelType ? 30000 : 2000);
 	mTimer->start();
 }
 

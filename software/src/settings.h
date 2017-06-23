@@ -6,26 +6,23 @@
 #include <QList>
 #include <QMetaType>
 #include <QStringList>
+#include <ve_qitem_consumer.h>
 
-class Settings : public QObject
+class VeQItem;
+
+class Settings : public VeQItemConsumer
 {
 	Q_OBJECT
-	Q_PROPERTY(int portNumber READ portNumber WRITE setPortNumber NOTIFY portNumberChanged)
-	Q_PROPERTY(QList<QHostAddress> ipAddresses READ ipAddresses WRITE setIpAddresses NOTIFY ipAddressesChanged)
-	Q_PROPERTY(QList<QHostAddress> knownIpAddresses READ knownIpAddresses WRITE setKnownIpAddresses NOTIFY knownIpAddressesChanged)
-	Q_PROPERTY(QStringList inverterIds READ inverterIds WRITE setInverterIds NOTIFY inverterIdsChanged)
 public:
-	explicit Settings(QObject *parent = 0);
+	explicit Settings(VeQItem *root, QObject *parent = 0);
 
 	int portNumber() const;
 
-	void setPortNumber(int p);
-
-	const QList<QHostAddress> &ipAddresses() const;
+	QList<QHostAddress> ipAddresses() const;
 
 	void setIpAddresses(const QList<QHostAddress> &addresses);
 
-	const QList<QHostAddress> &knownIpAddresses() const;
+	QList<QHostAddress> knownIpAddresses() const;
 
 	void setKnownIpAddresses(const QList<QHostAddress> &addresses);
 
@@ -34,9 +31,7 @@ public:
 	 * The names in the list are based on the device type and the serial
 	 * (unique ID).
 	 */
-	const QStringList &inverterIds() const;
-
-	void setInverterIds(const QStringList &serial);
+	QStringList inverterIds() const;
 
 	/*!
 	 * Registers an inverter.
@@ -64,11 +59,19 @@ signals:
 
 	void inverterIdsChanged();
 
+private slots:
+	void onInverterdIdsChanged();
+
 private:
-	int mPortNumber;
-	QList<QHostAddress> mIpAddresses;
-	QList<QHostAddress> mKnownIpAddresses;
-	QStringList mInverterIds;
+	QList<QHostAddress> toAdressList(const QString &s) const;
+
+	QString fromAddressList(const QList<QHostAddress> &a);
+
+	VeQItem *mPortNumber;
+	VeQItem *mIpAddresses;
+	VeQItem *mKnownIpAddresses;
+	VeQItem *mInverterIds;
+	QStringList mInverterIdCache;
 };
 
 #endif // SETTINGS_H

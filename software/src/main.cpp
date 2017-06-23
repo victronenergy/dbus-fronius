@@ -5,9 +5,8 @@
 #include <velib/qt/ve_qitem.hpp>
 #include <velib/qt/ve_qitems_dbus.hpp>
 #include <velib/qt/ve_qitem_dbus_publisher.hpp>
-#include "dbus_bridge.h"
 #include "dbus_fronius.h"
-#include "dbus_settings_bridge.h"
+#include "ve_service.h"
 
 void initDBus()
 {
@@ -45,6 +44,7 @@ void initLogger(QsLogging::Level logLevel)
 int main(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
+	a.setApplicationVersion(VERSION);
 
 	initLogger(QsLogging::InfoLevel);
 
@@ -90,11 +90,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	VeQItemDbusProducer producer(VeQItems::getRoot(), "sub", false, false);
+	VeQItemDbusProducer producer(VeQItems::getRoot(), "sub", true, false);
+	producer.setListenIndividually(true);
 	producer.open(dbusAddress);
 
-	BridgeItemProducer dbusExportProducer(VeQItems::getRoot(), "pub");
-	dbusExportProducer.open();
+	VeProducer dbusExportProducer(VeQItems::getRoot(), "pub");
 	VeQItemDbusPublisher publisher(dbusExportProducer.services());
 	publisher.open(dbusAddress);
 

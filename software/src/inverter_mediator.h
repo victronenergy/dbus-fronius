@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+struct DeviceInfo;
 class Inverter;
 class InverterGateway;
 class InverterSettings;
@@ -12,29 +13,35 @@ class InverterMediator : public QObject
 {
 	Q_OBJECT
 public:
-	explicit InverterMediator(Inverter *inverter, InverterGateway *gateway,
+	explicit InverterMediator(const DeviceInfo &device, InverterGateway *gateway,
 							  Settings *settings, QObject *parent = 0);
 
-	bool processNewInverter(Inverter *inverter);
+	bool processNewInverter(const DeviceInfo &deviceInfo);
 
 private slots:
 	void onSettingsInitialized();
 
-	void onInverterInitialized();
-
 	void onIsActivatedChanged();
 
-	void onIsConnectedChanged();
+	void onConnectionLost();
+
+	void onPositionChanged();
+
+	void onSettingsCustomNameChanged();
+
+	void onInverterCustomNameChanged();
 
 private:
-	bool inverterMatches(Inverter *inverter);
-
 	void startAcquisition();
+
+	Inverter *createInverter(const DeviceInfo &di);
 
 	Inverter *mInverter;
 	InverterSettings *mInverterSettings;
 	InverterGateway *mGateway;
 	Settings *mSettings;
+	int mDeviceType;
+	QString mUniqueId;
 };
 
 #endif // INVERTERMEDIATOR_H

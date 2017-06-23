@@ -1,6 +1,6 @@
 [submodule "software/ext/velib"]
 	path = software/ext/velib
-	url = git@git.victronenergy.com:victron/velib.git
+	url = git@github.com:victronenergy/velib.git
 	branch = master
 [submodule "software/ext/qslog"]
 	path = software/ext/qslog

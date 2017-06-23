@@ -7,49 +7,45 @@
 
 static const int MaxSimultaneousRequests = 64;
 
-InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
-	QObject(parent),
+InverterGateway::InverterGateway(Settings *settings, VeQItem *root, QObject *parent) :
+	VeService(root, parent),
 	mSettings(settings),
 	mTimer(new QTimer(this)),
 	mSettingsBusy(false),
-	mAutoDetect(false),
+	mAutoDetect(createItem("AutoDetect")),
+	mScanProgress(createItem("ScanProgress")),
 	mFullScanRequested(false),
 	mFullScanIfNoDeviceFound(false)
 {
-	mAddressGenerator.setNetMaskLimit(QHostAddress(0xFFFFF000));
 	Q_ASSERT(settings != 0);
-	connect(settings, SIGNAL(portNumberChanged()),
-			this, SLOT(onSettingsChanged()));
-	connect(settings, SIGNAL(ipAddressesChanged()),
-			this, SLOT(onSettingsChanged()));
-	connect(settings, SIGNAL(knownIpAddressesChanged()),
-			this, SLOT(onSettingsChanged()));
+	mAddressGenerator.setNetMaskLimit(QHostAddress(0xFFFFF000));
+	produceValue(mAutoDetect, 0, "Idle");
+	updateScanProgress();
+	connect(settings, SIGNAL(portNumberChanged()), this, SLOT(onSettingsChanged()));
+	connect(settings, SIGNAL(ipAddressesChanged()), this, SLOT(onSettingsChanged()));
+	connect(settings, SIGNAL(knownIpAddressesChanged()), this, SLOT(onSettingsChanged()));
 	mTimer->setInterval(60000);
 	mTimer->start();
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
+	registerService();
 }
 
 bool InverterGateway::autoDetect() const
 {
-	return mAutoDetect;
+	return mAutoDetect->getValue().toBool();
 }
 
 void InverterGateway::setAutoDetect(bool b)
 {
-	if (mAutoDetect == b)
+	if (autoDetect() == b)
 		return;
-	mAutoDetect	= b;
+	produceValue(mAutoDetect, b ? 1 : 0, b ? "Busy" : "Idle");
 	if (!mSettingsBusy) {
 		mFullScanRequested = b;
 		mFullScanIfNoDeviceFound = b;
 		updateAddressGenerator();
 	}
 	emit autoDetectChanged();
-}
-
-int InverterGateway::scanProgress() const
-{
-	return mAddressGenerator.progress();
 }
 
 void InverterGateway::startDetection()
@@ -59,6 +55,15 @@ void InverterGateway::startDetection()
 	setAutoDetect(true);
 	mSettingsBusy = false;
 	updateAddressGenerator();
+}
+
+int InverterGateway::handleSetValue(VeQItem *item, const QVariant &variant)
+{
+	if (item == mAutoDetect) {
+		setAutoDetect(variant.toBool());
+		return 0;
+	}
+	return VeService::handleSetValue(item, variant);
 }
 
 void InverterGateway::onConverterInfoFound(const InverterListData &data)
@@ -90,19 +95,19 @@ void InverterGateway::onConverterInfoFound(const InverterListData &data)
 				}
 			} else {
 				QString uniqueId = fixUniqueId(it->uniqueId, it->id);
-				Inverter *inverter = new Inverter(hostName, port, it->id,
-												  it->deviceType, uniqueId,
-												  it->customName, this);
-				emit inverterFound(inverter);
-				if (inverter->parent() == this) {
-					delete inverter;
-				}
+				DeviceInfo info;
+				info.networkId = it->id;
+				info.deviceType = it->deviceType;
+				info.uniqueId = uniqueId;
+				info.hostName = hostName;
+				info.port = port;
+				emit inverterFound(info);
 			}
 		}
 	}
 	mApis.removeOne(api);
 	api->deleteLater();
-	emit scanProgressChanged();
+	updateScanProgress();
 	updateDetection();
 }
 
@@ -164,7 +169,7 @@ void InverterGateway::updateAddressGenerator()
 		mAddressGenerator.setPriorityAddresses(QList<QHostAddress>());
 		mAddressGenerator.reset();
 	}
-	emit scanProgressChanged();
+	updateScanProgress();
 }
 
 void InverterGateway::updateDetection()
@@ -223,7 +228,7 @@ void InverterGateway::updateDetection()
 			for (int i=mApis.size(); i<MaxSimultaneousRequests; ++i)
 				updateDetection();
 		}
-		scanProgressChanged();
+		updateScanProgress();
 		return;
 	}
 	int portNumber = mSettings->portNumber();
@@ -233,6 +238,11 @@ void InverterGateway::updateDetection()
 	connect(api, SIGNAL(converterInfoFound(InverterListData)),
 			this, SLOT(onConverterInfoFound(InverterListData)));
 	api->getConverterInfoAsync();
+}
+
+void InverterGateway::updateScanProgress()
+{
+	produceDouble(mScanProgress, mAddressGenerator.progress(), 0, "%");
 }
 
 QString InverterGateway::fixUniqueId(const QString &uniqueId, const QString &id)

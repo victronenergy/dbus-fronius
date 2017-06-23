@@ -1,6 +1,8 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#include <QString>
+
 enum InverterPhase {
 	/*!
 	 * Inverter produces 3 phased power
@@ -15,6 +17,15 @@ enum InverterPosition {
 	Input1 = 0,
 	Output = 1,
 	Input2 = 2
+};
+
+struct DeviceInfo
+{
+	QString hostName;
+	QString uniqueId;
+	QString networkId;
+	int port;
+	int deviceType;
 };
 
 /// This value is used to indicate that the correct device instance has not

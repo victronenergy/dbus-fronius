@@ -1,73 +1,92 @@
 #include <qnumeric.h>
+#include <QCoreApplication>
 #include <QsLog.h>
+#include <QStringList>
+#include <velib/vecan/products.h>
 #include "fronius_device_info.h"
 #include "inverter.h"
 #include "power_info.h"
 
-Inverter::Inverter(const QString &hostName, int port, const QString &id,
-				   int deviceType, const QString &uniqueId,
-				   const QString &customName, QObject *parent) :
-	QObject(parent),
-	mIsConnected(0),
-	mErrorCode(0),
-	mStatusCode(0),
-	mHostName(hostName),
-	mPort(port),
-	mId(id),
-	mDeviceType(deviceType),
-	mUniqueId(uniqueId),
-	mCustomName(customName),
-	mDeviceInstance(InvalidDeviceInstance),
-	mDeviceInfo(FroniusDeviceInfo::find(deviceType)),
-	mMeanPowerInfo(new PowerInfo(this)),
-	mL1PowerInfo(new PowerInfo(this)),
-	mL2PowerInfo(new PowerInfo(this)),
-	mL3PowerInfo(new PowerInfo(this)),
-	mPowerLimit(qQNaN()),
-	mMaxPower(qQNaN())
+Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, QObject *parent) :
+	VeService(root, parent),
+	mHostName(deviceInfo.hostName),
+	mPort(deviceInfo.port),
+	mId(deviceInfo.networkId),
+	mDeviceType(deviceInfo.deviceType),
+	mUniqueId(deviceInfo.uniqueId),
+	mDeviceInfo(FroniusDeviceInfo::find(deviceInfo.deviceType)),
+	mErrorCode(createItem("ErrorCode")),
+	mStatusCode(createItem("StatusCode")),
+	mPowerLimit(createItem("Ac/PowerLimit")),
+	mMaxPower(createItem("Ac/MaxPower")),
+	mPosition(createItem("Position")),
+	mDeviceInstance(createItem("DeviceInstance")),
+	mCustomName(createItem("CustomName")),
+	mProductName(createItem("ProductName")),
+	mConnection(createItem("Mgmt/Connection")),
+	mMeanPowerInfo(new PowerInfo(root->itemGetOrCreate("Ac", false), this)),
+	mL1PowerInfo(new PowerInfo(root->itemGetOrCreate("Ac/L1", false), this)),
+	mL2PowerInfo(new PowerInfo(root->itemGetOrCreate("Ac/L2", false), this)),
+	mL3PowerInfo(new PowerInfo(root->itemGetOrCreate("Ac/L3", false), this))
 {
 	if (mDeviceInfo == 0) {
-		QLOG_WARN() << "Unknow inverter type:" << deviceType;
+		QLOG_WARN() << "Unknow inverter type:" << deviceInfo.deviceType;
 	}
-}
-
-bool Inverter::isConnected() const
-{
-	return mIsConnected;
-}
-
-void Inverter::setIsConnected(bool v)
-{
-	if (mIsConnected == v)
-		return;
-	mIsConnected = v;
-	emit isConnectedChanged();
+	produceValue(createItem("Connected"), 1);
+	produceValue(createItem("Mgmt/ProcessName"), QCoreApplication::arguments()[0]);
+	produceValue(createItem("Mgmt/ProcessVersion"), QCoreApplication::applicationVersion());
+	produceValue(createItem("ProductName"), mDeviceInfo == 0 ?
+				 "Unknown Fronius Inverter":
+				 mDeviceInfo->name);
+	produceValue(createItem("ProductId"), VE_PROD_ID_PV_INVERTER_FRONIUS,
+				 QString::number(VE_PROD_ID_PV_INVERTER_FRONIUS, 16));
+	produceValue(createItem("FroniusDeviceType"), deviceInfo.deviceType);
+	produceValue(createItem("Serial"), deviceInfo.uniqueId);
+	produceValue(mDeviceInstance, InvalidDeviceInstance);
+	updateConnectionItem();
+	root->produceValue(QVariant(), VeQItem::Synchronized);
 }
 
 int Inverter::errorCode() const
 {
-	return mErrorCode;
+	return mErrorCode->getValue().toInt();
 }
 
 void Inverter::setErrorCode(int code)
 {
-	if (mErrorCode == code)
-		return;
-	mErrorCode = code;
-	emit errorCodeChanged();
+	produceValue(mErrorCode, code);
 }
 
 int Inverter::statusCode() const
 {
-	return mStatusCode;
+	return mStatusCode->getValue().toInt();
 }
 
 void Inverter::setStatusCode(int code)
 {
-	if (mStatusCode == code)
-		return;
-	mStatusCode = code;
-	emit statusCodeChanged();
+	QString text;
+	if (code >= 0 && code < 7) {
+		text = QString("Startup %1/6").arg(code);
+	} else {
+		switch (code) {
+		case 7:
+			text = "Running";
+			break;
+		case 8:
+			text = "Standby";
+			break;
+		case 9:
+			text = "Boot loading";
+			break;
+		case 10:
+			text = "Error";
+			break;
+		default:
+			text = QString::number(code);
+			break;
+		}
+	}
+	produceValue(mStatusCode, code, text);
 }
 
 QString Inverter::id() const
@@ -85,9 +104,22 @@ QString Inverter::uniqueId() const
 	return mUniqueId;
 }
 
+QString Inverter::productName() const
+{
+	return mProductName->getValue().toString();
+}
+
 QString Inverter::customName() const
 {
-	return mCustomName;
+	return mCustomName->getValue().toString();
+}
+
+void Inverter::setCustomName(const QString &name)
+{
+	if (customName() == name)
+		return;
+	produceValue(mCustomName, name);
+	emit customNameChanged();
 }
 
 QString Inverter::hostName() const
@@ -97,9 +129,10 @@ QString Inverter::hostName() const
 
 void Inverter::setHostName(const QString &h)
 {
-	if (mHostName == h)
+	if (mHostName== h)
 		return;
 	mHostName = h;
+	updateConnectionItem();
 	emit hostNameChanged();
 }
 
@@ -116,28 +149,45 @@ void Inverter::setPort(int p)
 	emit portChanged();
 }
 
+InverterPosition Inverter::position() const
+{
+	return static_cast<InverterPosition>(mPosition->getValue().toInt());
+}
+
+void Inverter::setPosition(InverterPosition p)
+{
+	QString text;
+	switch (p) {
+	case Input1:
+		text = "Input 1";
+		break;
+	case Output:
+		text = "Output";
+		break;
+	case Input2:
+		text = "Input 2";
+		break;
+	default:
+		QString::number(p);
+		break;
+	}
+	produceValue(mPosition, static_cast<int>(p), text);
+}
+
 int Inverter::phaseCount() const
 {
 	return mDeviceInfo == 0 ? 1 : mDeviceInfo->phaseCount;
 }
 
-QString Inverter::productName() const
-{
-	return mDeviceInfo == 0 ? QString(tr("Unknown Fronius Inverter")) :
-							  mDeviceInfo->name;
-}
-
 int Inverter::deviceInstance() const
 {
-	return mDeviceInstance;
+	return mDeviceInstance->getValue().toInt();
 }
 
 void Inverter::setDeviceInstance(int instance)
 {
-	if (mDeviceInstance == instance)
-		return;
-	mDeviceInstance = instance;
-	emit deviceInstanceChanged();
+	// Q_ASSERT(root()->getState() == VeQItem::Offline || root()->getState() == VeQItem::Idle);
+	produceValue(mDeviceInstance, instance);
 }
 
 PowerInfo *Inverter::meanPowerInfo()
@@ -177,31 +227,40 @@ PowerInfo *Inverter::getPowerInfo(InverterPhase phase)
 	}
 }
 
-void Inverter::setPowerLimit(double p)
+double Inverter::powerLimit() const
 {
-//	if (mPowerLimit == p)
-//		return;
-	mPowerLimit = p;
-	emit powerLimitChanged();
+	return getDouble(mPowerLimit);
 }
 
-void Inverter::setRequestedPowerLimit(double p)
+void Inverter::setPowerLimit(double p)
 {
-	emit powerLimitRequested(p);
+	produceDouble(mPowerLimit, p, 0, "W");
+}
+
+double Inverter::maxPower() const
+{
+	return getDouble(mMaxPower);
 }
 
 void Inverter::setMaxPower(double p)
 {
-	if (mMaxPower == p)
-		return;
-	mMaxPower = p;
-	emit maxPowerChanged();
+	produceDouble(mMaxPower, p, 0, "W");
 }
 
-void Inverter::resetValues()
+int Inverter::handleSetValue(VeQItem *item, const QVariant &variant)
 {
-	mMeanPowerInfo->resetValues();
-	mL1PowerInfo->resetValues();
-	mL2PowerInfo->resetValues();
-	mL3PowerInfo->resetValues();
+	if (item == mPowerLimit) {
+		emit powerLimitRequested(variant.toDouble());
+		return 0;
+	}
+	if (item == mCustomName) {
+		setCustomName(variant.toString());
+		return 0;
+	}
+	return VeService::handleSetValue(item, variant);
+}
+
+void Inverter::updateConnectionItem()
+{
+	produceValue(mConnection, QString("%1 - %2").arg(mHostName).arg(mId));
 }

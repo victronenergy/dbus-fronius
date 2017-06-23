@@ -2,10 +2,11 @@
 #define INVERTER_GATEWAY_H
 
 #include <QHostAddress>
-#include <QObject>
 #include <QPointer>
 #include <QStringList>
+#include "defines.h"
 #include "local_ip_address_generator.h"
+#include "ve_service.h"
 
 class FroniusSolarApi;
 class Inverter;
@@ -27,28 +28,26 @@ struct InverterListData;
  * The diagram below shows in which order devices are scanned.
  * @dotfile ipaddress_scanning.dot
  */
-class InverterGateway : public QObject
+class InverterGateway : public VeService
 {
 	Q_OBJECT
-	Q_PROPERTY(bool autoDetect READ autoDetect WRITE setAutoDetect NOTIFY autoDetectChanged)
-	Q_PROPERTY(int scanProgress READ scanProgress NOTIFY scanProgressChanged)
 public:
-	InverterGateway(Settings *settings, QObject *parent = 0);
+	InverterGateway(Settings *settings, VeQItem *root, QObject *parent = 0);
 
-	bool autoDetect() const;
+	 bool autoDetect() const;
 
-	void setAutoDetect(bool b);
+	 void setAutoDetect(bool b);
 
-	int scanProgress() const;
+	// int scanProgress() const;
 
 	void startDetection();
 
+	virtual int handleSetValue(VeQItem *item, const QVariant &variant);
+
 signals:
-	void inverterFound(Inverter *inverter);
+	void inverterFound(DeviceInfo info);
 
 	void autoDetectChanged();
-
-	void scanProgressChanged();
 
 private slots:
 	void onConverterInfoFound(const InverterListData &data);
@@ -62,6 +61,8 @@ private:
 
 	void updateDetection();
 
+	void updateScanProgress();
+
 	static QString fixUniqueId(const QString &uniqueId, const QString &id);
 
 	QPointer<Settings> mSettings;
@@ -71,7 +72,8 @@ private:
 	LocalIpAddressGenerator mAddressGenerator;
 	QTimer *mTimer;
 	bool mSettingsBusy;
-	bool mAutoDetect;
+	VeQItem *mAutoDetect;
+	VeQItem *mScanProgress;
 	bool mFullScanRequested;
 	bool mFullScanIfNoDeviceFound;
 };

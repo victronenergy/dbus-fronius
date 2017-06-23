@@ -1,131 +1,92 @@
 #include <QsLog.h>
+#include <velib/qt/ve_qitem.hpp>
 #include "defines.h"
 #include "inverter_settings.h"
+#include "settings.h"
 
-InverterSettings::InverterSettings(int deviceType, const QString &uniqueId,
-								   QObject *parent) :
-	QObject(parent),
-	mUniqueId(uniqueId),
-	mDeviceType(deviceType),
-	mPhase(PhaseL1),
-	mPosition(Input1),
-	mIsActive(true),
-	mL1Energy(0),
-	mL2Energy(0),
-	mL3Energy(0)
+InverterSettings::InverterSettings(VeQItem *root, QObject *parent) :
+	VeQItemConsumer(root, parent),
+	mPhase(connectItem("Phase", PhaseL1, SIGNAL(phaseChanged()))),
+	mPosition(connectItem("Position", Input1, SIGNAL(positionChanged()))),
+	mCustomName(connectItem("CustomName", "", SIGNAL(customNameChanged()), false)),
+	mIsActive(connectItem("IsActive", 1, SIGNAL(isActiveChanged()))),
+	mL1Energy(connectItem("L1Energy", 0.0, 0.0, 1e6, SIGNAL(l1EnergyChanged()), true)),
+	mL2Energy(connectItem("L2Energy", 0.0, 0.0, 1e6, SIGNAL(l2EnergyChanged()), true)),
+	mL3Energy(connectItem("L3Energy", 0.0, 0.0, 1e6, SIGNAL(l3EnergyChanged()), true))
 {
-}
-
-QString InverterSettings::uniqueId() const
-{
-	return mUniqueId;
-}
-
-int InverterSettings::deviceType() const
-{
-	return mDeviceType;
 }
 
 InverterPhase InverterSettings::phase() const
 {
-	return mPhase;
+	return static_cast<InverterPhase>(mPhase->getValue().toInt());
 }
 
 void InverterSettings::setPhase(InverterPhase phase)
 {
-	if (mPhase == phase)
-		return;
-	mPhase = phase;
-	emit phaseChanged();
+	mPhase->setValue(static_cast<int>(phase));
 }
 
 InverterPosition InverterSettings::position() const
 {
-	return mPosition;
-}
-
-void InverterSettings::setPosition(InverterPosition position)
-{
-	if (mPosition == position)
-		return;
-	mPosition = position;
-	emit positionChanged();
+	return static_cast<InverterPosition>(mPosition->getValue().toInt());
 }
 
 QString InverterSettings::customName() const
 {
-	return mCustomName;
+	return mCustomName->getValue().toString();
 }
 
 void InverterSettings::setCustomName(const QString &n)
 {
-	if (mCustomName == n)
+	if (customName() == n)
 		return;
-	mCustomName	= n;
-	emit customNameChanged();
+	mCustomName->setValue(n);
 }
 
 bool InverterSettings::isActive() const
 {
-	return mIsActive;
-}
-
-void InverterSettings::setActive(bool b)
-{
-	if (mIsActive == b)
-		return;
-	mIsActive = b;
-	emit isActiveChanged();
+	return mIsActive->getValue().toBool();
 }
 
 double InverterSettings::l1Energy() const
 {
-	return mL1Energy;
+	return getDouble(mL1Energy);
 }
 
 void InverterSettings::setL1Energy(double e)
 {
-	if (mL1Energy == e)
-		return;
-	mL1Energy = e;
-	emit l1EnergyChanged();
+	mL1Energy->setValue(e);
 }
 
 double InverterSettings::l2Energy() const
 {
-	return mL2Energy;
+	return getDouble(mL2Energy);
 }
 
 void InverterSettings::setL2Energy(double e)
 {
-	if (mL2Energy == e)
-		return;
-	mL2Energy = e;
-	emit l2EnergyChanged();
+	mL2Energy->setValue(e);
 }
 
 double InverterSettings::l3Energy() const
 {
-	return mL3Energy;
+	return getDouble(mL3Energy);
 }
 
 void InverterSettings::setL3Energy(double e)
 {
-	if (mL3Energy == e)
-		return;
-	mL3Energy = e;
-	emit l3EnergyChanged();
+	mL3Energy->setValue(e);
 }
 
 double InverterSettings::getEnergy(InverterPhase phase) const
 {
 	switch (phase) {
 	case PhaseL1:
-		return mL1Energy;
+		return l1Energy();
 	case PhaseL2:
-		return mL2Energy;
+		return l2Energy();
 	case PhaseL3:
-		return mL3Energy;
+		return l3Energy();
 	default:
 		QLOG_ERROR() <<"Incorrect phase:" << phase;
 		return 0;
@@ -148,4 +109,11 @@ void InverterSettings::setEnergy(InverterPhase phase, double value)
 		QLOG_ERROR() <<"Incorrect phase:" << phase;
 		break;
 	}
+}
+
+VeQItem *InverterSettings::getSettingsRoot(VeQItem *root, int deviceType, const QString &uniqueId)
+{
+	QString path = QString("com.victronenergy.settings/Settings/Fronius/Inverters/%1").
+			arg(Settings::createInverterId(deviceType, uniqueId));
+	return root->itemGetOrCreate(path, false);
 }

@@ -1,29 +1,14 @@
 #ifndef INVERTERSETTINGS_H
 #define INVERTERSETTINGS_H
 
-#include <QMetaType>
-#include <QObject>
 #include "defines.h"
+#include "ve_qitem_consumer.h"
 
-class InverterSettings : public QObject
+class InverterSettings : public VeQItemConsumer
 {
 	Q_OBJECT
-	Q_PROPERTY(QString uniqueId READ uniqueId)
-	Q_PROPERTY(int deviceType READ deviceType)
-	Q_PROPERTY(QString customName READ customName WRITE setCustomName NOTIFY customNameChanged)
-	Q_PROPERTY(InverterPhase phase READ phase WRITE setPhase NOTIFY phaseChanged)
-	Q_PROPERTY(InverterPosition position READ position WRITE setPosition NOTIFY positionChanged)
-	Q_PROPERTY(bool isActive READ isActive WRITE setActive NOTIFY isActiveChanged)
-	Q_PROPERTY(double l1Energy READ l1Energy WRITE setL1Energy NOTIFY l1EnergyChanged)
-	Q_PROPERTY(double l2Energy READ l2Energy WRITE setL2Energy NOTIFY l2EnergyChanged)
-	Q_PROPERTY(double l3Energy READ l3Energy WRITE setL3Energy NOTIFY l3EnergyChanged)
 public:
-	InverterSettings(int deviceType, const QString &uniqueId,
-					 QObject *parent = 0);
-
-	QString uniqueId() const;
-
-	int deviceType() const;
+	InverterSettings(VeQItem *root, QObject *parent = 0);
 
 	InverterPhase phase() const;
 
@@ -31,15 +16,11 @@ public:
 
 	InverterPosition position() const;
 
-	void setPosition(InverterPosition position);
-
 	QString customName() const;
 
 	void setCustomName(const QString &n);
 
 	bool isActive() const;
-
-	void setActive(bool b);
 
 	double l1Energy() const;
 
@@ -73,18 +54,15 @@ signals:
 	void l3EnergyChanged();
 
 private:
-	QString mUniqueId;
-	int mDeviceType;
-	QString mCustomName;
-	InverterPhase mPhase;
-	InverterPosition mPosition;
-	bool mIsActive;
-	double mL1Energy;
-	double mL2Energy;
-	double mL3Energy;
-};
+	static VeQItem *getSettingsRoot(VeQItem *root, int deviceType, const QString &uniqueId);
 
-Q_DECLARE_METATYPE(InverterPhase)
-Q_DECLARE_METATYPE(InverterPosition)
+	VeQItem *mPhase;
+	VeQItem *mPosition;
+	VeQItem *mCustomName;
+	VeQItem *mIsActive;
+	VeQItem *mL1Energy;
+	VeQItem *mL2Energy;
+	VeQItem *mL3Energy;
+};
 
 #endif // INVERTERSETTINGS_H

@@ -56,17 +56,15 @@ SOURCES += \
     src/local_ip_address_generator.cpp \
     src/settings.cpp \
     src/dbus_fronius.cpp \
-    src/dbus_bridge.cpp \
-    src/dbus_inverter_bridge.cpp \
-    src/dbus_settings_bridge.cpp \
     src/inverter_settings.cpp \
-    src/dbus_inverter_settings_bridge.cpp \
-    src/dbus_gateway_bridge.cpp \
     src/fronius_data_processor.cpp \
     src/fronius_device_info.cpp \
     src/inverter_mediator.cpp \
     src/modbus_tcp_client/modbus_tcp_client.cpp \
-    src/inverter_modbus_updater.cpp
+    src/inverter_modbus_updater.cpp \
+    src/ve_qitem_consumer.cpp \
+    src/ve_qitem_init_monitor.cpp \
+    src/ve_service.cpp
 
 HEADERS += \
     src/froniussolar_api.h \
@@ -77,19 +75,17 @@ HEADERS += \
     src/local_ip_address_generator.h \
     src/settings.h \
     src/dbus_fronius.h \
-    src/dbus_bridge.h \
-    src/dbus_inverter_bridge.h \
-    src/dbus_settings_bridge.h \
     src/inverter_settings.h \
-    src/dbus_inverter_settings_bridge.h \
-    src/dbus_gateway_bridge.h \
     src/defines.h \
     src/fronius_data_processor.h \
     src/fronius_device_info.h \
     src/inverter_mediator.h \
     src/velib/velib_config_app.h \
     src/modbus_tcp_client/modbus_tcp_client.h \
-    src/inverter_modbus_updater.h
+    src/inverter_modbus_updater.h \
+    src/ve_qitem_consumer.h \
+    src/ve_qitem_init_monitor.h \
+    src/ve_service.h
 
 DISTFILES += \
-	../README.md
+    ../README.md

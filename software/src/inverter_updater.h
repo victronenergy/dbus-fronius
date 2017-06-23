@@ -26,6 +26,8 @@ public:
 signals:
 	void initialized();
 
+	void connectionLost();
+
 private slots:
 	void onStartRetrieval();
 

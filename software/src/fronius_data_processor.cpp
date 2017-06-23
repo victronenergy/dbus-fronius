@@ -11,20 +11,17 @@ FroniusDataProcessor::FroniusDataProcessor(Inverter *inverter,
 	mSettings(settings),
 	mPreviousTotalEnergy(-1)
 {
-	Q_ASSERT((mInverter->phaseCount() > 1) == (mSettings->phase() == MultiPhase));
 }
 
 void FroniusDataProcessor::process(const CommonInverterData &data)
 {
-	Q_ASSERT((mInverter->phaseCount() > 1) == (mSettings->phase() == MultiPhase));
-
 	PowerInfo *pi = mInverter->meanPowerInfo();
 	pi->setCurrent(data.acCurrent);
 	pi->setVoltage(data.acVoltage);
 	pi->setPower(data.acPower);
 	// Fronius gives us energy in Wh. We need kWh here.
 	pi->setTotalEnergy(data.totalEnergy / 1000);
-	InverterPhase phase = mSettings->phase();
+	InverterPhase phase = getPhase();
 	if (phase != MultiPhase) {
 		PowerInfo *li = mInverter->getPowerInfo(phase);
 		li->setCurrent(pi->current());
@@ -47,8 +44,7 @@ void FroniusDataProcessor::process(const ThreePhasesInverterData &data)
 	 * DBus later.
 	 */
 
-	Q_ASSERT(mInverter->phaseCount() > 1);
-	Q_ASSERT(mSettings->phase() == MultiPhase);
+	Q_ASSERT(getPhase() == MultiPhase);
 
 	double vi1 = data.acVoltagePhase1 * data.acCurrentPhase1;
 	double vi2 = data.acVoltagePhase2 * data.acCurrentPhase2;
@@ -100,6 +96,11 @@ void FroniusDataProcessor::updateEnergySettings()
 	updateEnergySettings(PhaseL1);
 	updateEnergySettings(PhaseL2);
 	updateEnergySettings(PhaseL3);
+}
+
+InverterPhase FroniusDataProcessor::getPhase() const
+{
+	return mInverter->phaseCount() > 1 ? MultiPhase : mSettings->phase();
 }
 
 void FroniusDataProcessor::updateEnergyValue(InverterPhase phase,

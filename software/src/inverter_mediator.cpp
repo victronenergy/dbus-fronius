@@ -1,6 +1,5 @@
 #include <QsLog.h>
-#include "dbus_inverter_bridge.h"
-#include "dbus_inverter_settings_bridge.h"
+#include "defines.h"
 #include "inverter.h"
 #include "inverter_gateway.h"
 #include "inverter_mediator.h"
@@ -8,42 +7,40 @@
 #include "inverter_settings.h"
 #include "inverter_updater.h"
 #include "settings.h"
+#include "ve_qitem_init_monitor.h"
 
-InverterMediator::InverterMediator(Inverter *inverter, InverterGateway *gateway,
+InverterMediator::InverterMediator(const DeviceInfo &device, InverterGateway *gateway,
 								   Settings *settings, QObject *parent):
 	QObject(parent),
-	mInverter(inverter),
+	mInverter(createInverter(device)),
 	mGateway(gateway),
-	mSettings(settings)
+	mSettings(settings),
+	mDeviceType(device.deviceType),
+	mUniqueId(device.uniqueId)
 {
-	mInverterSettings = new InverterSettings(inverter->deviceType(),
-											 inverter->uniqueId(),
-											 this);
-	mInverter->setParent(this);
-	DBusInverterSettingsBridge *bridge =
-		new DBusInverterSettingsBridge(mInverterSettings, mInverterSettings);
-	connect(bridge, SIGNAL(initialized()),
-			this, SLOT(onSettingsInitialized()));
-	connect(mInverterSettings, SIGNAL(isActiveChanged()),
-			this, SLOT(onIsActivatedChanged()));
-	connect(mInverter, SIGNAL(isConnectedChanged()),
-			this, SLOT(onIsConnectedChanged()));
+	QString settingsPath = QString("Inverters/%1").arg(
+		Settings::createInverterId(device.deviceType, device.uniqueId));
+	VeQItem *settingsRoot = settings->root()->itemGetOrCreate(settingsPath, false);
+	mInverterSettings = new InverterSettings(settingsRoot, this);
+	connect(mInverterSettings, SIGNAL(isActiveChanged()), this, SLOT(onIsActivatedChanged()));
+	connect(mInverterSettings, SIGNAL(positionChanged()), this, SLOT(onPositionChanged()));
+	connect(mInverterSettings, SIGNAL(customNameChanged()), this, SLOT(onSettingsCustomNameChanged()));
 	QLOG_INFO() << "New inverter:"
-				<< inverter->uniqueId() << "@" << inverter->hostName()
-				<< ':' << inverter->id();
-	bridge->updateIsInitialized();
+				<< mInverter->uniqueId() << "@" << mInverter->hostName()
+				<< ':' << mInverter->id();
+	VeQItemInitMonitor::monitor(mInverterSettings->root(), this, SLOT(onSettingsInitialized()));
 }
 
-bool InverterMediator::processNewInverter(Inverter *inverter)
+bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 {
-	if (!inverterMatches(inverter)) {
+	if (mDeviceType != deviceInfo.deviceType || mUniqueId != deviceInfo.uniqueId) {
 		if (mInverter != 0 &&
-			mInverter->hostName() == inverter->hostName() &&
-			mInverter->id() == inverter->id()) {
+			mInverter->hostName() == deviceInfo.hostName &&
+			mInverter->id() == deviceInfo.networkId) {
 			QLOG_INFO() << "Another inverter found @"
-						<< inverter->hostName()
-						<< ':' << inverter->id()
-						<< "closing down" << inverter->uniqueId();
+						<< deviceInfo.hostName
+						<< ':' << deviceInfo.networkId
+						<< "closing down" << deviceInfo.uniqueId;
 			// So we found an inverter whose communication settings matches ours.
 			// We can only assume this inverter is no longer available there, so
 			// we give up and hope it will return somewhere else.
@@ -53,26 +50,24 @@ bool InverterMediator::processNewInverter(Inverter *inverter)
 		return false;
 	}
 	if (mInverter != 0) {
-		if (mInverter->hostName() != inverter->hostName() ||
-			mInverter->port() != inverter->port()) {
-			mInverter->setHostName(inverter->hostName());
-			mInverter->setPort(inverter->port());
+		if (mInverter->hostName() != deviceInfo.hostName ||
+			mInverter->port() != deviceInfo.port) {
+			mInverter->setHostName(deviceInfo.hostName);
+			mInverter->setPort(deviceInfo.port);
 			QLOG_INFO() << "Updated connection settings:"
-						<< inverter->uniqueId() << "@" << inverter->hostName()
-						<< ':' << inverter->id();
+						<< deviceInfo.uniqueId << "@" << deviceInfo.hostName
+						<< ':' << deviceInfo.networkId;
 		}
 		return true;
 	}
 	if (!mInverterSettings->isActive())
 		return true;
-	inverter->setParent(this);
-	connect(inverter, SIGNAL(isConnectedChanged()),
-			this, SLOT(onIsConnectedChanged()));
-	mInverter = inverter;
+	mInverter = createInverter(deviceInfo);
 	QLOG_INFO() << "Inverter reactivated:"
-				<< inverter->uniqueId() << "@" << inverter->hostName()
-				<< ':' << inverter->id();
+				<< mInverter->uniqueId() << "@" << mInverter->hostName()
+				<< ':' << mInverter->id();
 	startAcquisition();
+	onSettingsCustomNameChanged();
 	return true;
 }
 
@@ -86,11 +81,7 @@ void InverterMediator::onSettingsInitialized()
 	if (mInverter == 0)
 		return;
 	startAcquisition();
-}
-
-void InverterMediator::onInverterInitialized()
-{
-	new DBusInverterBridge(mInverter, mInverterSettings, mInverter);
+	onSettingsCustomNameChanged();
 }
 
 void InverterMediator::onIsActivatedChanged()
@@ -109,13 +100,10 @@ void InverterMediator::onIsActivatedChanged()
 	}
 }
 
-void InverterMediator::onIsConnectedChanged()
+void InverterMediator::onConnectionLost()
 {
-	Inverter *inverter = static_cast<Inverter *>(sender());
-	if (inverter->isConnected())
-		return;
-	QLOG_WARN() << "Lost connection with: " << inverter->uniqueId()
-				<< "@ " << inverter->hostName() << ':' << inverter->port();
+	QLOG_WARN() << "Lost connection with: " << mInverter->uniqueId()
+				<< "@ " << mInverter->hostName() << ':' << mInverter->port();
 	// Start device scan, maybe the IP address of the data card has changed.
 	mGateway->setAutoDetect(true);
 	// Do not delete the inverter here because right now a function within
@@ -125,11 +113,25 @@ void InverterMediator::onIsConnectedChanged()
 	mInverter = 0;
 }
 
-bool InverterMediator::inverterMatches(Inverter *inverter)
+void InverterMediator::onPositionChanged()
 {
-	return
-		mInverterSettings->deviceType() == inverter->deviceType() &&
-		mInverterSettings->uniqueId() == inverter->uniqueId();
+	mInverter->setPosition(mInverterSettings->position());
+}
+
+void InverterMediator::onSettingsCustomNameChanged()
+{
+	QString name = mInverterSettings->customName();
+	if (name.isEmpty())
+		name = mInverter->productName();
+	mInverter->setCustomName(name);
+}
+
+void InverterMediator::onInverterCustomNameChanged()
+{
+	QString name = mInverter->customName();
+	if (name == mInverter->productName())
+		name.clear();
+	mInverterSettings->setCustomName(name);
 }
 
 void InverterMediator::startAcquisition()
@@ -150,7 +152,19 @@ void InverterMediator::startAcquisition()
 					 << "multiphase. Adjusting settings.";
 		mInverterSettings->setPhase(PhaseL1);
 	}
-	InverterUpdater *iu = new InverterUpdater(mInverter, mInverterSettings, mInverter);
+	mInverter->setPosition(mInverterSettings->position());
+	InverterUpdater *updater = new InverterUpdater(mInverter, mInverterSettings, mInverter);
+	connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 	new InverterModbusUpdater(mInverter, mInverter);
-	connect(iu, SIGNAL(initialized()), this, SLOT(onInverterInitialized()));
+}
+
+Inverter *InverterMediator::createInverter(const DeviceInfo &device)
+{
+	QString path = QString("pub/com.victronenergy.pvinverter.fronius_%1_%2").
+		arg(device.deviceType).
+		arg(device.uniqueId);
+	VeQItem *root = VeQItems::getRoot()->itemGetOrCreate(path, false);
+	Inverter *inverter = new Inverter(root, device, this);
+	connect(inverter, SIGNAL(customNameChanged()), this, SLOT(onInverterCustomNameChanged()));
+	return inverter;
 }

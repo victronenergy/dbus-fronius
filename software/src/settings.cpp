@@ -1,79 +1,61 @@
 #include <QsLog.h>
-#include <velib/qt/v_busitem.h>
+#include <velib/qt/ve_qitem.hpp>
 #include "defines.h"
 #include "settings.h"
 
-Settings::Settings(QObject *parent) :
-	QObject(parent),
-	mPortNumber(80)
+Settings::Settings(VeQItem *root, QObject *parent) :
+	VeQItemConsumer(root, parent),
+	mPortNumber(connectItem("PortNumber", 80, SIGNAL(portNumberChanged()), false)),
+	mIpAddresses(connectItem("IPAddresses", "", SIGNAL(ipAddressesChanged()), false)),
+	mKnownIpAddresses(connectItem("KnownIPAddresses", "", SIGNAL(knownIpAddressesChanged()), false)),
+	mInverterIds(connectItem("InverterIds", "", SLOT(onInverterdIdsChanged()), false))
 {
 }
 
 int Settings::portNumber() const
 {
-	return mPortNumber;
+	return mPortNumber->getValue().toInt();
 }
 
-void Settings::setPortNumber(int p)
+QList<QHostAddress> Settings::ipAddresses() const
 {
-	if (mPortNumber == p)
-		return;
-	mPortNumber = p;
-	emit portNumberChanged();
-}
-
-const QList<QHostAddress> &Settings::ipAddresses() const
-{
-	return mIpAddresses;
+	return toAdressList(mIpAddresses->getValue().toString());
 }
 
 void Settings::setIpAddresses(const QList<QHostAddress> &addresses)
 {
-	if (mIpAddresses == addresses)
-		return;
-	mIpAddresses = addresses;
-	emit ipAddressesChanged();
+	mIpAddresses->setValue(fromAddressList(addresses));
 }
 
-const QList<QHostAddress> &Settings::knownIpAddresses() const
+QList<QHostAddress> Settings::knownIpAddresses() const
 {
-	return mKnownIpAddresses;
+	return toAdressList(mKnownIpAddresses->getValue().toString());
 }
 
 void Settings::setKnownIpAddresses(const QList<QHostAddress> &addresses)
 {
-	if (mKnownIpAddresses == addresses)
-		return;
-	mKnownIpAddresses = addresses;
-	emit knownIpAddressesChanged();
+	mKnownIpAddresses->setValue(fromAddressList(addresses));
 }
 
-const QStringList &Settings::inverterIds() const
+QStringList Settings::inverterIds() const
 {
-	return mInverterIds;
-}
-
-void Settings::setInverterIds(const QStringList &serials)
-{
-	if (mInverterIds == serials)
-		return;
-	mInverterIds = serials;
-	emit inverterIdsChanged();
+	return mInverterIdCache;
 }
 
 void Settings::registerInverter(int deviceType, const QString &uniqueId)
 {
 	QString settingsId = createInverterId(deviceType, uniqueId);
-	if (mInverterIds.contains(settingsId))
+	if (mInverterIdCache.contains(settingsId))
 		return;
-	mInverterIds.append(settingsId);
+	mInverterIdCache.append(settingsId);
+	mInverterIds->setValue(mInverterIdCache.join(","));
 	emit inverterIdsChanged();
 }
 
 int Settings::getDeviceInstance(int deviceType, const QString &uniqueId) const
 {
 	QString settingsId = createInverterId(deviceType, uniqueId);
-	int i = mInverterIds.indexOf(settingsId);
+	int i = mInverterIdCache.indexOf(settingsId);
 	if (i == -1)
 		return -1;
 	return MinDeviceInstance + i % (MaxDeviceInstance - MinDeviceInstance + 1);
@@ -82,4 +64,33 @@ int Settings::getDeviceInstance(int deviceType, const QString &uniqueId) const
 QString Settings::createInverterId(int deviceType, const QString &deviceSerial)
 {
 	return QString("I%1_%2").arg(deviceType).arg(deviceSerial);
+}
+
+void Settings::onInverterdIdsChanged()
+{
+	if (!mInverterIdCache.isEmpty())
+		return;
+	mInverterIdCache = mInverterIds->getValue().toString().split(',', QString::SkipEmptyParts);
+	if (!mInverterIdCache.isEmpty())
+		emit inverterIdsChanged();
+}
+
+QList<QHostAddress> Settings::toAdressList(const QString &s) const
+{
+	QStringList addresses = s.split(',', QString::SkipEmptyParts);
+	QList<QHostAddress> result;
+	foreach (QString address, addresses)
+		result.append(QHostAddress(address));
+	return result;
+}
+
+QString Settings::fromAddressList(const QList<QHostAddress> &a)
+{
+	QString result;
+	foreach(QHostAddress address, a) {
+		if (!result.isEmpty())
+			result.append(',');
+		result.append(address.toString());
+	}
+	return result;
 }

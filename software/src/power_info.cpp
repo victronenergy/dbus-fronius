@@ -1,73 +1,59 @@
-#include <limits>
+#include <qnumeric.h>
 #include "power_info.h"
 
-static const double NaN = std::numeric_limits<double>::quiet_NaN();
-
-PowerInfo::PowerInfo(QObject *parent) :
-	QObject(parent),
-	mCurrent(NaN),
-	mVoltage(NaN),
-	mPower(NaN),
-	mTotalEnergy(NaN)
+PowerInfo::PowerInfo(VeQItem *root, QObject *parent) :
+	VeService(root, parent),
+	mCurrent(createItem("Current")),
+	mVoltage(createItem("Voltage")),
+	mPower(createItem("Power")),
+	mTotalEnergy(createItem("Energy/Forward"))
 {
 }
 
 double PowerInfo::current() const
 {
-	return mCurrent;
+	return getDouble(mCurrent);
 }
 
 void PowerInfo::setCurrent(double c)
 {
-	if (c == mCurrent)
-		return;
-	mCurrent = c;
-	emit currentChanged();
+	produceDouble(mCurrent, c, 1, "A");
 }
 
 double PowerInfo::voltage() const
 {
-	return mVoltage;
+	return getDouble(mVoltage);
 }
 
 void PowerInfo::setVoltage(double v)
 {
-	if (v == mVoltage)
-		return;
-	mVoltage = v;
-	emit voltageChanged();
+	produceDouble(mVoltage, v, 0, "V");
 }
 
 double PowerInfo::power() const
 {
-	return mPower;
+	return getDouble(mPower);
 }
 
 void PowerInfo::setPower(double p)
 {
-	if (p == mPower)
-		return;
-	mPower = p;
-	emit powerChanged();
+	produceDouble(mPower, p, 0, "W");
 }
 
 double PowerInfo::totalEnergy() const
 {
-	return mTotalEnergy;
+	return getDouble(mTotalEnergy);
 }
 
 void PowerInfo::setTotalEnergy(double e)
 {
-	if (mTotalEnergy == e)
-		return;
-	mTotalEnergy = e;
-	emit totalEnergyChanged();
+	produceDouble(mTotalEnergy, e, 2, "kWh");
 }
 
 void PowerInfo::resetValues()
 {
-	setCurrent(NaN);
-	setPower(NaN);
-	setVoltage(NaN);
-	setTotalEnergy(NaN);
+	setCurrent(qQNaN());
+	setPower(qQNaN());
+	setVoltage(qQNaN());
+	setTotalEnergy(qQNaN());
 }

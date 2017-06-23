@@ -22,8 +22,6 @@ InverterUpdater::InverterUpdater(Inverter *inverter, InverterSettings *settings,
 {
 	Q_ASSERT(inverter != 0);
 	Q_ASSERT(settings != 0);
-	Q_ASSERT(inverter->uniqueId() == settings->uniqueId());
-	Q_ASSERT(inverter->deviceType() == settings->deviceType());
 	Q_ASSERT((inverter->phaseCount() > 1) == (settings->phase() == MultiPhase));
 	connect(
 		mSolarApi, SIGNAL(commonDataFound(const CommonInverterData &)),
@@ -73,7 +71,6 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		if (mInverter->phaseCount() > 1) {
 			mSolarApi->getThreePhasesInverterDataAsync(mInverter->id());
 		} else {
-			mInverter->setIsConnected(true);
 			setInitialized();
 			scheduleRetrieval();
 		}
@@ -104,7 +101,6 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 		Q_ASSERT(mInverter->phaseCount() > 1 && mSettings->phase() == MultiPhase);
 		mProcessor.process(data);
 		mRetryCount = 0;
-		mInverter->setIsConnected(true);
 		setInitialized();
 		break;
 	case SolarApiReply::NetworkError:
@@ -160,8 +156,7 @@ void InverterUpdater::handleError()
 {
 	++mRetryCount;
 	if (mRetryCount == 5) {
-		mInverter->setIsConnected(false);
-		mInverter->resetValues();
+		emit connectionLost();
 		mRetryCount = 0;
 	}
 }
