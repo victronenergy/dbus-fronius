@@ -1,4 +1,5 @@
 #include <QTextStream>
+#include "modbus_tcp_client/modbus_rtu_client.h"
 #include "modbus_tcp_client/modbus_tcp_client.h"
 #include "app.h"
 #include "arguments.h"
@@ -13,10 +14,12 @@ int App::parseOptions()
 	Arguments args;
 	args.addArg("-s", "Server name");
 	args.addArg("-p", "TCP port");
+	args.addArg("-d", "Serial port");
 	args.addArg("-r", "Register");
 	args.addArg("-c", "Register count");
 	args.addArg("-u", "Unit ID");
 	args.addArg("-w", "Write to register");
+	args.addArg("-o", "Timeout (ms)");
 	args.addArg("-h", "Help");
 
 	if (args.contains("h")) {
@@ -33,6 +36,9 @@ int App::parseOptions()
 	mRegister = static_cast<quint16>(args.value("r").toUInt());
 	mUnitId = static_cast<quint8>(args.value("u").toUInt());
 	mCount = static_cast<quint16>(qMax(1u, args.value("c").toUInt()));
+	int timeout = args.value("o").toInt();
+	if (timeout <= 0)
+		timeout = 1000;
 	QString writeValue = args.value("w");
 	if (!writeValue.isEmpty()) {
 		if (mCount > 1) {
@@ -47,51 +53,39 @@ int App::parseOptions()
 	if (args.contains("p"))
 		port = static_cast<quint16>(args.value("p").toUInt());
 
-	mClient = new ModbusTcpClient(this);
-	mClient->connectToServer(server, port);
-	connect(mClient, SIGNAL(connected()), this, SLOT(onConnected()));
-	connect(mClient, SIGNAL(readHoldingRegistersCompleted(quint8, QList<quint16>)),
-			this, SLOT(onReadCompleted(quint8, QList<quint16>)));
-	connect(mClient, SIGNAL(writeSingleHoldingRegisterCompleted(quint8, quint16, quint16)),
-			this, SLOT(onWriteCompleted(quint8, quint16, quint16)));
-	connect(mClient, SIGNAL(errorReceived(quint8, quint8, quint8)),
-			this, SLOT(onErrorReceived(quint8, quint8, quint8)));
+	QString serialPort;
+	if (args.contains("d"))
+		serialPort = args.value("d");
+
+	if (serialPort.isEmpty()) {
+		ModbusTcpClient *client = new ModbusTcpClient(this);
+		connect(client, SIGNAL(connected()), this, SLOT(onConnected()));
+		client->connectToServer(server, port);
+		mClient = client;
+	} else {
+		mClient = new ModbusRtuClient(serialPort, 9600, this);
+		onConnected();
+	}
+	mClient->setTimeout(timeout);
 	return 0;
 }
 
 void App::onConnected()
 {
+	ModbusReply *reply = 0;
 	if (mWrite) {
-		mClient->writeSingleHoldingRegister(mUnitId, mRegister, mValue);
+		reply = mClient->writeSingleHoldingRegister(mUnitId, mRegister, mValue);
 	} else {
-		mClient->readHoldingRegisters(mUnitId, mRegister, mCount);
+		reply = mClient->readHoldingRegisters(mUnitId, mRegister, mCount);
 	}
+	connect(reply, SIGNAL(finished()), this, SLOT(onFinished()));
 }
 
-void App::onReadCompleted(quint8 unitId, const QList<quint16> &values)
+void App::onFinished()
 {
-	Q_UNUSED(unitId)
+	ModbusReply *reply = static_cast<ModbusReply *>(sender());
+	reply->deleteLater();
 	QTextStream out(stdout);
-	foreach (quint16 v, values) {
-		out << v << ' ';
-	}
-	out << '\n';
-	quit();
-}
-
-void App::onWriteCompleted(quint8 unitId, quint16 address, quint16 value)
-{
-	Q_UNUSED(unitId)
-	Q_UNUSED(address)
-	QTextStream out(stdout);
-	out << value << '\n';
-	quit();
-}
-
-void App::onErrorReceived(quint8 functionCode, quint8 unitId, quint8 exception)
-{
-	Q_UNUSED(unitId)
-	QTextStream out(stdout);
-	out << "Error: " << functionCode << ' ' << unitId << ' ' << exception << '\n';
+	out << *reply << endl;
 	quit();
 }

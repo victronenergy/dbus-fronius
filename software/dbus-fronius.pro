@@ -64,7 +64,9 @@ SOURCES += \
     src/inverter_modbus_updater.cpp \
     src/ve_qitem_consumer.cpp \
     src/ve_qitem_init_monitor.cpp \
-    src/ve_service.cpp
+    src/ve_service.cpp \
+    src/modbus_tcp_client/modbus_reply.cpp \
+    src/modbus_tcp_client/modbus_client.cpp
 
 HEADERS += \
     src/froniussolar_api.h \
@@ -85,7 +87,9 @@ HEADERS += \
     src/inverter_modbus_updater.h \
     src/ve_qitem_consumer.h \
     src/ve_qitem_init_monitor.h \
-    src/ve_service.h
+    src/ve_service.h \
+    src/modbus_tcp_client/modbus_reply.h \
+    src/modbus_tcp_client/modbus_client.h
 
 DISTFILES += \
     ../README.md

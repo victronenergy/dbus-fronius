@@ -3,7 +3,7 @@
 
 #include <QCoreApplication>
 
-class ModbusTcpClient;
+class ModbusClient;
 
 class App: public QCoreApplication
 {
@@ -16,14 +16,10 @@ public:
 private slots:
 	void onConnected();
 
-	void onReadCompleted(quint8 unitId, const QList<quint16> &values);
-
-	void onWriteCompleted(quint8 unitId, quint16 address, quint16 value);
-
-	void onErrorReceived(quint8 functionCode, quint8 unitId, quint8 exception);
+	void onFinished();
 
 private:
-	ModbusTcpClient *mClient;
+	ModbusClient *mClient;
 	quint16 mRegister;
 	quint8 mUnitId;
 	quint16 mCount;
