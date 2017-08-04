@@ -14,7 +14,6 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	mErrorCode(createItem("ErrorCode")),
 	mStatusCode(createItem("StatusCode")),
 	mPowerLimit(createItem("Ac/PowerLimit")),
-	mMaxPower(createItem("Ac/MaxPower")),
 	mPosition(createItem("Position")),
 	mDeviceInstance(createItem("DeviceInstance")),
 	mCustomName(createItem("CustomName")),
@@ -33,7 +32,7 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 		QString::number(deviceInfo.productId, 16));
 	produceValue(createItem("Serial"), deviceInfo.uniqueId);
 	produceValue(mDeviceInstance, deviceInstance);
-	setMaxPower(deviceInfo.maxPower);
+	produceDouble(createItem("Ac/MaxPower"), deviceInfo.maxPower, 0, "W");
 	produceValue(createItem("FirmwareVersion"), deviceInfo.firmwareVersion.isEmpty() ?
 		QVariant() : deviceInfo.firmwareVersion);
 	updateConnectionItem();
@@ -80,16 +79,6 @@ void Inverter::setStatusCode(int code)
 		}
 	}
 	produceValue(mStatusCode, code, text);
-}
-
-int Inverter::id() const
-{
-	return mDeviceInfo.networkId;
-}
-
-QString Inverter::uniqueId() const
-{
-	return mDeviceInfo.uniqueId;
 }
 
 void Inverter::invalidateStatusCode()
@@ -167,22 +156,6 @@ void Inverter::setPosition(InverterPosition p)
 	produceValue(mPosition, static_cast<int>(p), text);
 }
 
-int Inverter::phaseCount() const
-{
-	return mDeviceInfo.phaseCount;
-}
-
-int Inverter::deviceInstance() const
-{
-	return mDeviceInstance->getValue().toInt();
-}
-
-void Inverter::setDeviceInstance(int instance)
-{
-	// Q_ASSERT(root()->getState() == VeQItem::Offline || root()->getState() == VeQItem::Idle);
-	produceValue(mDeviceInstance, instance);
-}
-
 PowerInfo *Inverter::meanPowerInfo()
 {
 	return mMeanPowerInfo;
@@ -230,16 +203,6 @@ void Inverter::setPowerLimit(double p)
 	produceDouble(mPowerLimit, p, 0, "W");
 }
 
-double Inverter::maxPower() const
-{
-	return getDouble(mMaxPower);
-}
-
-void Inverter::setMaxPower(double p)
-{
-	produceDouble(mMaxPower, p, 0, "W");
-}
-
 int Inverter::handleSetValue(VeQItem *item, const QVariant &variant)
 {
 	if (item == mPowerLimit) {
@@ -251,6 +214,14 @@ int Inverter::handleSetValue(VeQItem *item, const QVariant &variant)
 		return 0;
 	}
 	return VeService::handleSetValue(item, variant);
+}
+
+QString Inverter::location() const
+{
+	return QString("%1@%2:%3").
+		arg(mDeviceInfo.uniqueId).
+		arg(mDeviceInfo.hostName).
+		arg(mDeviceInfo.networkId);
 }
 
 void Inverter::updateConnectionItem()

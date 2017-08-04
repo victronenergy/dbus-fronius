@@ -46,6 +46,8 @@ void FroniusDataProcessor::process(const ThreePhasesInverterData &data)
 
 	Q_ASSERT(getPhase() == MultiPhase);
 
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+
 	double vi1 = data.acVoltagePhase1 * data.acCurrentPhase1;
 	double vi2 = data.acVoltagePhase2 * data.acCurrentPhase2;
 	double vi3 = data.acVoltagePhase3 * data.acCurrentPhase3;
@@ -57,7 +59,7 @@ void FroniusDataProcessor::process(const ThreePhasesInverterData &data)
 	double accumulatedEnergy =
 			getEnergyValue(PhaseL1) +
 			getEnergyValue(PhaseL2);
-	if (mInverter->phaseCount() > 2) {
+	if (deviceInfo.phaseCount > 2) {
 		accumulatedEnergy += getEnergyValue(PhaseL3);
 		totalVi += vi3;
 	}
@@ -80,7 +82,7 @@ void FroniusDataProcessor::process(const ThreePhasesInverterData &data)
 	l2->setPower(vi2 * powerCorrection);
 	updateEnergyValue(PhaseL2, accumulatedEnergy, vi2 * energyCorrection);
 
-	if (mInverter->phaseCount() > 2) {
+	if (deviceInfo.phaseCount > 2) {
 		PowerInfo *l3 = mInverter->l3PowerInfo();
 		l3->setCurrent(data.acCurrentPhase3);
 		l3->setVoltage(data.acVoltagePhase3);
@@ -100,7 +102,7 @@ void FroniusDataProcessor::updateEnergySettings()
 
 InverterPhase FroniusDataProcessor::getPhase() const
 {
-	return mInverter->phaseCount() > 1 ? MultiPhase : mSettings->phase();
+	return mInverter->deviceInfo().phaseCount > 1 ? MultiPhase : mSettings->phase();
 }
 
 void FroniusDataProcessor::updateEnergyValue(InverterPhase phase,
@@ -119,7 +121,7 @@ void FroniusDataProcessor::updateEnergyValue(InverterPhase phase,
 		// drifts away from the toal energy value.
 		phaseEnergy = mPreviousTotalEnergy * prevPhaseEnergy / accumulatedEnergy;
 	} else {
-		phaseEnergy = mPreviousTotalEnergy / mInverter->phaseCount();
+		phaseEnergy = mPreviousTotalEnergy / mInverter->deviceInfo().phaseCount;
 	}
 	phaseEnergy += energyDelta;
 	PowerInfo *pi = mInverter->getPowerInfo(phase);

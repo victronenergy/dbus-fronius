@@ -110,10 +110,3 @@ void InverterSettings::setEnergy(InverterPhase phase, double value)
 		break;
 	}
 }
-
-VeQItem *InverterSettings::getSettingsRoot(VeQItem *root, int deviceType, const QString &uniqueId)
-{
-	QString path = QString("com.victronenergy.settings/Settings/Fronius/Inverters/%1").
-			arg(Settings::createInverterId(deviceType, uniqueId));
-	return root->itemGetOrCreate(path, false);
-}

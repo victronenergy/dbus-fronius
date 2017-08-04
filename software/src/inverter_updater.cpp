@@ -57,7 +57,7 @@ InverterSettings *InverterUpdater::settings()
 
 void InverterUpdater::onStartRetrieval()
 {
-	mSolarApi->getCommonDataAsync(mInverter->id());
+	mSolarApi->getCommonDataAsync(mInverter->deviceInfo().networkId);
 }
 
 void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
@@ -65,10 +65,12 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 	switch (data.error)
 	{
 	case SolarApiReply::NoError:
+	{
 		mProcessor.process(data);
 		mRetryCount = 0;
-		if (mInverter->phaseCount() > 1) {
-			mSolarApi->getThreePhasesInverterDataAsync(mInverter->id());
+		const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+		if (deviceInfo.phaseCount > 1) {
+			mSolarApi->getThreePhasesInverterDataAsync(deviceInfo.networkId);
 		} else {
 			setInitialized();
 			scheduleRetrieval();
@@ -76,6 +78,7 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 		mInverter->setStatusCode(data.statusCode);
 		mInverter->setErrorCode(data.errorCode);
 		break;
+	}
 	case SolarApiReply::NetworkError:
 		QLOG_DEBUG() << "[Solar API] Network error: " << data.errorMessage;
 		handleError();
@@ -119,7 +122,7 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 
 void InverterUpdater::onPhaseChanged()
 {
-	if (mInverter->phaseCount() > 1)
+	if (mInverter->deviceInfo().phaseCount > 1)
 		return;
 	mInverter->l1PowerInfo()->resetValues();
 	mInverter->l2PowerInfo()->resetValues();

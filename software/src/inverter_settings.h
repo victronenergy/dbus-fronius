@@ -54,8 +54,6 @@ signals:
 	void l3EnergyChanged();
 
 private:
-	static VeQItem *getSettingsRoot(VeQItem *root, int deviceType, const QString &uniqueId);
-
 	VeQItem *mPhase;
 	VeQItem *mPosition;
 	VeQItem *mCustomName;

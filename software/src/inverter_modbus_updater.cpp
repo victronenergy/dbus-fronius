@@ -88,11 +88,6 @@ void InverterModbusUpdater::startIdleTimer()
 	mTimer->start();
 }
 
-void InverterModbusUpdater::resetValues()
-{
-	mInverter->setPowerLimit(qQNaN());
-}
-
 void InverterModbusUpdater::setInverterState(int sunSpecState)
 {
 	int froniusState = 0;
@@ -124,14 +119,16 @@ void InverterModbusUpdater::setInverterState(int sunSpecState)
 
 void InverterModbusUpdater::readHoldingRegisters(quint16 startRegister, quint16 count)
 {
-	ModbusReply *reply = mModbusClient->readHoldingRegisters(mInverter->id(), startRegister, count);
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+	ModbusReply *reply = mModbusClient->readHoldingRegisters(deviceInfo.networkId, startRegister, count);
 	connect(reply, SIGNAL(finished()), this, SLOT(onReadCompleted()));
 }
 
 void InverterModbusUpdater::writeMultipleHoldingRegisters(quint16 startReg,
 														  const QVector<quint16> &values)
 {
-	ModbusReply *reply = mModbusClient->writeMultipleHoldingRegisters(mInverter->id(), startReg, values);
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+	ModbusReply *reply = mModbusClient->writeMultipleHoldingRegisters(deviceInfo.networkId, startReg, values);
 	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
 }
 
@@ -181,7 +178,7 @@ void InverterModbusUpdater::onReadCompleted()
 			nextState = Idle;
 			break;
 		}
-		if (mInverter->deviceInfo().retrievalMode == ProtocolSunSpecFloat) {
+		if (deviceInfo.retrievalMode == ProtocolSunSpecFloat) {
 			if (values.size() != 62)
 				break;
 			/// @todo EV Value and scale at zero seems to indicate an error state...
@@ -195,7 +192,7 @@ void InverterModbusUpdater::onReadCompleted()
 				mDataProcessor->process(cid);
 
 				ThreePhasesInverterData tpid;
-				if (mInverter->phaseCount() > 1) {
+				if (deviceInfo.phaseCount > 1) {
 					tpid.acCurrentPhase1 = getFloat(values, 4);
 					tpid.acCurrentPhase2 = getFloat(values, 6);
 					tpid.acCurrentPhase3 = getFloat(values, 8);
@@ -220,7 +217,7 @@ void InverterModbusUpdater::onReadCompleted()
 				mDataProcessor->process(cid);
 
 				ThreePhasesInverterData tpid;
-				if (mInverter->phaseCount() > 1) {
+				if (deviceInfo.phaseCount > 1) {
 					tpid.acCurrentPhase1 = getScaledValue(values, 3, 1, 6, false);
 					tpid.acCurrentPhase2 = getScaledValue(values, 4, 1, 6, false);
 					tpid.acCurrentPhase3 = getScaledValue(values, 5, 1, 6, false);
@@ -244,7 +241,7 @@ void InverterModbusUpdater::onReadCompleted()
 					if (values[0] != 0xFFFF)
 						powerLimit = values[0] * deviceInfo.maxPower / deviceInfo.powerLimitScale;
 				} else {
-					powerLimit = mInverter->maxPower();
+					powerLimit = deviceInfo.maxPower;
 				}
 			}
 			mInverter->setPowerLimit(powerLimit);
@@ -267,25 +264,10 @@ void InverterModbusUpdater::onWriteCompleted()
 	startNextAction(Start);
 }
 
-void InverterModbusUpdater::onError(quint8 functionCode, quint8 unitId, quint8 exception)
-{
-	QLOG_TRACE() << "Modbus TCP error" << mCurrentState << functionCode << unitId << exception;
-	startIdleTimer();
-}
-
-void InverterModbusUpdater::onSocketError(QAbstractSocket::SocketError error)
-{
-	Q_UNUSED(error)
-	resetValues();
-	if (mTimer->isActive())
-		return;
-	mTimer->setInterval(30000);
-	mTimer->start();
-}
-
 void InverterModbusUpdater::onPowerLimitRequested(double value)
 {
-	double powerLimitScale = mInverter->deviceInfo().powerLimitScale;
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+	double powerLimitScale = deviceInfo.powerLimitScale;
 	if (powerLimitScale < PowerLimitScale)
 		return;
 	// An invalid power limit means that power limiting is not supported. So we ignore the request.
@@ -326,7 +308,7 @@ void InverterModbusUpdater::onTimer()
 
 void InverterModbusUpdater::onPhaseChanged()
 {
-	if (mInverter->phaseCount() > 1)
+	if (mInverter->deviceInfo().phaseCount > 1)
 		return;
 	mInverter->l1PowerInfo()->resetValues();
 	mInverter->l2PowerInfo()->resetValues();

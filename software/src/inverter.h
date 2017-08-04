@@ -31,10 +31,6 @@ public:
 
 	void setStatusCode(int code);
 
-	int id() const;
-
-	QString uniqueId() const;
-
 	void invalidateStatusCode();
 
 	QString productName() const;
@@ -55,8 +51,6 @@ public:
 
 	void setPosition(InverterPosition p);
 
-	int phaseCount() const;
-
 	const DeviceInfo &deviceInfo() const
 	{
 		return mDeviceInfo;
@@ -76,11 +70,10 @@ public:
 
 	void setPowerLimit(double p);
 
-	double maxPower() const;
-
-	void setMaxPower(double p);
-
 	virtual int handleSetValue(VeQItem *item, const QVariant &variant);
+
+	/// Returns a string describing the location ('<serial>@<ip-address>:<port>').
+	QString location() const;
 
 signals:
 	void isConnectedChanged();
@@ -100,7 +93,6 @@ private:
 	VeQItem *mErrorCode;
 	VeQItem *mStatusCode;
 	VeQItem *mPowerLimit;
-	VeQItem *mMaxPower;
 	VeQItem *mPosition;
 	VeQItem *mDeviceInstance;
 	VeQItem *mCustomName;

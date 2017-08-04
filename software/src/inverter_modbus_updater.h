@@ -28,10 +28,6 @@ private slots:
 
 	void onWriteCompleted();
 
-	void onError(quint8 functionCode, quint8 unitId, quint8 exception);
-
-	void onSocketError(QAbstractSocket::SocketError error);
-
 	void onPowerLimitRequested(double value);
 
 	void onConnected();
@@ -48,7 +44,7 @@ private:
 		ReadPowerAndVoltage,
 		WritePowerLimit,
 		Idle,
-		Init = ReadPowerLimitScale,
+		Init = ReadPowerLimit,
 		Start = ReadPowerLimit
 	};
 
@@ -57,8 +53,6 @@ private:
 	void startNextAction(ModbusState state);
 
 	void startIdleTimer();
-
-	void resetValues();
 
 	void setInverterState(int sunSpecState);
 

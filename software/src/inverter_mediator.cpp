@@ -32,7 +32,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 	if (mDeviceInfo.uniqueId != deviceInfo.uniqueId) {
 		if (mInverter != 0 &&
 			mInverter->hostName() == deviceInfo.hostName &&
-			mInverter->id() == deviceInfo.networkId) {
+			mInverter->deviceInfo().networkId == deviceInfo.networkId) {
 			QLOG_INFO() << "Another inverter found @"
 						<< deviceInfo.hostName
 						<< ':' << deviceInfo.networkId
@@ -56,18 +56,14 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 			mInverter->port() != deviceInfo.port) {
 			mInverter->setHostName(deviceInfo.hostName);
 			mInverter->setPort(deviceInfo.port);
-			QLOG_INFO() << "Updated connection settings:"
-						<< deviceInfo.uniqueId << "@" << deviceInfo.hostName
-						<< ':' << deviceInfo.networkId;
+			QLOG_INFO() << "Updated connection settings:" << mInverter->location();
 		}
 		return true;
 	}
 	if (!mInverterSettings->isActive())
 		return true;
 	mInverter = createInverter();
-	QLOG_INFO() << "Inverter reactivated:"
-				<< mInverter->uniqueId() << "@" << mInverter->hostName()
-				<< ':' << mInverter->id();
+	QLOG_INFO() << "Inverter reactivated:" << mInverter->location();
 	startAcquisition();
 	onSettingsCustomNameChanged();
 	return true;
@@ -82,9 +78,7 @@ void InverterMediator::onSettingsInitialized()
 	}
 	Q_ASSERT(mInverter == 0);
 	mInverter = createInverter();
-	QLOG_INFO() << "New inverter:"
-				<< mInverter->uniqueId() << "@" << mInverter->hostName()
-				<< ':' << mInverter->id();
+	QLOG_INFO() << "New inverter:" << mInverter->location();
 	startAcquisition();
 	onSettingsCustomNameChanged();
 }
@@ -96,10 +90,7 @@ void InverterMediator::onIsActivatedChanged()
 	} else {
 		if (mInverter == 0)
 			return;
-		QLOG_INFO() << "Inverter deactivated:"
-					<< mInverter->uniqueId()
-					<< "@" << mInverter->hostName()
-					<< ':' << mInverter->id();
+		QLOG_INFO() << "Inverter deactivated:" << mInverter->location();
 		delete mInverter;
 		mInverter = 0;
 	}
@@ -107,8 +98,7 @@ void InverterMediator::onIsActivatedChanged()
 
 void InverterMediator::onConnectionLost()
 {
-	QLOG_WARN() << "Lost connection with: " << mInverter->uniqueId()
-				<< "@ " << mInverter->hostName() << ':' << mInverter->port();
+	QLOG_WARN() << "Lost connection with: " << mInverter->location();
 	// Start device scan, maybe the IP address of the data card has changed.
 	mGateway->startDetection();
 	// Do not delete the inverter here because right now a function within
@@ -120,8 +110,7 @@ void InverterMediator::onConnectionLost()
 
 void InverterMediator::onInverterModelChanged()
 {
-	QLOG_WARN() << "Config change in: " << mInverter->uniqueId()
-				<< "@ " << mInverter->hostName() << ':' << mInverter->port();
+	QLOG_WARN() << "Config change in: " << mInverter->location();
 	// Start device scan, which will force a config reread.
 	mGateway->startDetection();
 	// Do not delete the inverter here because right now a function within
