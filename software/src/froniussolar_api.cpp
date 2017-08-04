@@ -52,32 +52,32 @@ void FroniusSolarApi::getConverterInfoAsync()
 	sendGetRequest(url, "getInverterInfo");
 }
 
-void FroniusSolarApi::getCumulationDataAsync(const QString &deviceId)
+void FroniusSolarApi::getCumulationDataAsync(int deviceId)
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
 	url.addQueryItem("Scope", "Device");
-	url.addQueryItem("DeviceId", deviceId);
+	url.addQueryItem("DeviceId", QString::number(deviceId));
 	url.addQueryItem("DataCollection", "CumulationInverterData");
 	sendGetRequest(url, "getCumulationData");
 }
 
-void FroniusSolarApi::getCommonDataAsync(const QString &deviceId)
+void FroniusSolarApi::getCommonDataAsync(int deviceId)
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
 	url.addQueryItem("Scope", "Device");
-	url.addQueryItem("DeviceId", deviceId);
+	url.addQueryItem("DeviceId", QString::number(deviceId));
 	url.addQueryItem("DataCollection", "CommonInverterData");
 	sendGetRequest(url, "getCommonData");
 }
 
-void FroniusSolarApi::getThreePhasesInverterDataAsync(const QString &deviceId)
+void FroniusSolarApi::getThreePhasesInverterDataAsync(int deviceId)
 {
 	QUrl url;
 	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
 	url.addQueryItem("Scope", "Device");
-	url.addQueryItem("DeviceId", deviceId);
+	url.addQueryItem("DeviceId", QString::number(deviceId));
 	url.addQueryItem("DataCollection", "3PInverterData");
 	sendGetRequest(url, "getThreePhasesInverterData");
 }
@@ -111,7 +111,7 @@ void FroniusSolarApi::processConverterInfo(const QString &networkError)
 		 it != devices.end();
 		 ++it) {
 		InverterInfo ii;
-		ii.id = it.key();
+		ii.id = it.key().toInt();
 		QVariantMap di = it.value().toMap();
 		ii.deviceType = di["DT"].toInt();
 		ii.uniqueId = di["UniqueID"].toString();

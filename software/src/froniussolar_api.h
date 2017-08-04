@@ -35,7 +35,7 @@ struct InverterInfo
 	 * inverters within this chain. Use this ID in the FroniusSolarApi where
 	 * a deviceId is required.
 	 */
-	QString id;
+	int id;
 	/*!
 	 * @brief uniqueId Unique ID of the inverter (serial number?)
 	 */
@@ -162,7 +162,7 @@ public:
 	/*!
 	 * @brief returns cumulated data from all connected inverters.
 	 */
-	void getCumulationDataAsync(const QString &deviceId);
+	void getCumulationDataAsync(int deviceId);
 
 	/*!
 	 * @brief retrieves common data from the specified inverter. Common data
@@ -173,7 +173,7 @@ public:
 	 * The commonDataFound signal will be emitted when the API call has been
 	 * handled, even if an error has occured.
 	 */
-	void getCommonDataAsync(const QString &deviceId);
+	void getCommonDataAsync(int deviceId);
 
 	/*!
 	 * @brief retrieves values from 3 phase inverters.
@@ -183,7 +183,7 @@ public:
 	 * The threePhasesDataFound signal will be emitted when the API call has
 	 * been handled, even if an error has occured.
 	 */
-	void getThreePhasesInverterDataAsync(const QString &deviceId);
+	void getThreePhasesInverterDataAsync(int deviceId);
 
 	void getSystemDataAsync();
 

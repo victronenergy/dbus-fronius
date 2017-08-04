@@ -12,28 +12,24 @@
 InverterMediator::InverterMediator(const DeviceInfo &device, InverterGateway *gateway,
 								   Settings *settings, QObject *parent):
 	QObject(parent),
-	mInverter(createInverter(device)),
+	mDeviceInfo(device),
+	mInverter(0),
 	mGateway(gateway),
-	mSettings(settings),
-	mDeviceType(device.deviceType),
-	mUniqueId(device.uniqueId)
+	mSettings(settings)
 {
 	QString settingsPath = QString("Inverters/%1").arg(
-		Settings::createInverterId(device.deviceType, device.uniqueId));
+		Settings::createInverterId(device.uniqueId));
 	VeQItem *settingsRoot = settings->root()->itemGetOrCreate(settingsPath, false);
 	mInverterSettings = new InverterSettings(settingsRoot, this);
 	connect(mInverterSettings, SIGNAL(isActiveChanged()), this, SLOT(onIsActivatedChanged()));
 	connect(mInverterSettings, SIGNAL(positionChanged()), this, SLOT(onPositionChanged()));
 	connect(mInverterSettings, SIGNAL(customNameChanged()), this, SLOT(onSettingsCustomNameChanged()));
-	QLOG_INFO() << "New inverter:"
-				<< mInverter->uniqueId() << "@" << mInverter->hostName()
-				<< ':' << mInverter->id();
 	VeQItemInitMonitor::monitor(mInverterSettings->root(), this, SLOT(onSettingsInitialized()));
 }
 
 bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 {
-	if (mDeviceType != deviceInfo.deviceType || mUniqueId != deviceInfo.uniqueId) {
+	if (mDeviceInfo.uniqueId != deviceInfo.uniqueId) {
 		if (mInverter != 0 &&
 			mInverter->hostName() == deviceInfo.hostName &&
 			mInverter->id() == deviceInfo.networkId) {
@@ -49,6 +45,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 		}
 		return false;
 	}
+	mDeviceInfo = deviceInfo;
 	if (mInverter != 0) {
 		if (mInverter->hostName() != deviceInfo.hostName ||
 			mInverter->port() != deviceInfo.port) {
@@ -62,7 +59,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 	}
 	if (!mInverterSettings->isActive())
 		return true;
-	mInverter = createInverter(deviceInfo);
+	mInverter = createInverter();
 	QLOG_INFO() << "Inverter reactivated:"
 				<< mInverter->uniqueId() << "@" << mInverter->hostName()
 				<< ':' << mInverter->id();
@@ -78,8 +75,11 @@ void InverterMediator::onSettingsInitialized()
 		mInverter = 0;
 		return;
 	}
-	if (mInverter == 0)
-		return;
+	Q_ASSERT(mInverter == 0);
+	mInverter = createInverter();
+	QLOG_INFO() << "New inverter:"
+				<< mInverter->uniqueId() << "@" << mInverter->hostName()
+				<< ':' << mInverter->id();
 	startAcquisition();
 	onSettingsCustomNameChanged();
 }
@@ -136,35 +136,23 @@ void InverterMediator::onInverterCustomNameChanged()
 
 void InverterMediator::startAcquisition()
 {
-	mSettings->registerInverter(mInverter->deviceType(), mInverter->uniqueId());
-	int deviceInstance = mSettings->getDeviceInstance(
-							 mInverter->deviceType(), mInverter->uniqueId());
-	if (deviceInstance != mInverter->deviceInstance()) {
-		QLOG_INFO() << "Assigning device instance on" << mInverter->uniqueId()
-					<< "from" << mInverter->deviceInstance()
-					<< "to" << deviceInstance;
-		mInverter->setDeviceInstance(deviceInstance);
-	}
-	if (mInverter->phaseCount() > 1) {
-		mInverterSettings->setPhase(MultiPhase);
-	} else if (mInverterSettings->phase() == MultiPhase) {
-		QLOG_ERROR() << "Inverter is single phased, but settings report"
-					 << "multiphase. Adjusting settings.";
-		mInverterSettings->setPhase(PhaseL1);
-	}
+	Q_ASSERT(mInverter != 0);
 	mInverter->setPosition(mInverterSettings->position());
-	InverterUpdater *updater = new InverterUpdater(mInverter, mInverterSettings, mInverter);
+//	InverterUpdater *updater = new InverterUpdater(mInverter, mInverterSettings, mInverter);
+//	connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
+	InverterModbusUpdater *updater = new InverterModbusUpdater(mInverter, mInverterSettings, mInverter);
 	connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
-	new InverterModbusUpdater(mInverter, mInverter);
 }
 
-Inverter *InverterMediator::createInverter(const DeviceInfo &device)
+Inverter *InverterMediator::createInverter()
 {
-	QString path = QString("pub/com.victronenergy.pvinverter.fronius_%1_%2").
-		arg(device.deviceType).
-		arg(device.uniqueId);
+	mSettings->registerInverter(mDeviceInfo.uniqueId);
+	int deviceInstance = mSettings->getDeviceInstance(mDeviceInfo.uniqueId);
+	QString path = QString("pub/com.victronenergy.pvinverter.fronius_%1").arg(mDeviceInfo.uniqueId);
 	VeQItem *root = VeQItems::getRoot()->itemGetOrCreate(path, false);
-	Inverter *inverter = new Inverter(root, device, this);
+	Inverter *inverter = new Inverter(root, mDeviceInfo, deviceInstance, this);
 	connect(inverter, SIGNAL(customNameChanged()), this, SLOT(onInverterCustomNameChanged()));
+	onPositionChanged();
+	onSettingsCustomNameChanged();
 	return inverter;
 }

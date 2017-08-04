@@ -23,7 +23,9 @@ struct DeviceInfo
 {
 	QString hostName;
 	QString uniqueId;
-	QString networkId;
+	QString productName;
+	QString firmwareVersion;
+	int networkId;
 	int port;
 	int deviceType;
 };

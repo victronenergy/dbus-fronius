@@ -8,11 +8,9 @@
 #include "local_ip_address_generator.h"
 #include "ve_service.h"
 
-class FroniusSolarApi;
-class Inverter;
+class AbstractDetector;
 class QTimer;
 class Settings;
-struct InverterListData;
 
 /*!
  * @brief Tries to find fronius PV inverters on the network.
@@ -45,12 +43,12 @@ public:
 	virtual int handleSetValue(VeQItem *item, const QVariant &variant);
 
 signals:
-	void inverterFound(DeviceInfo info);
+	void inverterFound(const DeviceInfo &deviceInfo);
 
 	void autoDetectChanged();
 
 private slots:
-	void onConverterInfoFound(const InverterListData &data);
+	void onDetectionDone(const QString &hostName);
 
 	void onSettingsChanged();
 
@@ -63,12 +61,10 @@ private:
 
 	void updateScanProgress();
 
-	static QString fixUniqueId(const QString &uniqueId, const QString &id);
-
 	QPointer<Settings> mSettings;
 	QList<QHostAddress> mDevicesFound;
 	QStringList mInvalidDevices;
-	QList<FroniusSolarApi *> mApis;
+	QList<QHostAddress> mActiveHostNames;
 	LocalIpAddressGenerator mAddressGenerator;
 	QTimer *mTimer;
 	bool mSettingsBusy;

@@ -39,16 +39,16 @@ public:
 	 * @param deviceType The device type as specified by Fronius.
 	 * @param unique The inverter serial (called unique ID by Fronius).
 	 */
-	void registerInverter(int deviceType, const QString &uniqueId);
+	void registerInverter(const QString &uniqueId);
 
-	int getDeviceInstance(int deviceType, const QString &uniqueId) const;
+	int getDeviceInstance(const QString &uniqueId) const;
 
 	/*!
 	 * Creates the D-Bus settings object name for the specified inverter.
 	 * @param deviceType The device type as specified by Fronius.
 	 * @param unique The inverter serial (called unique ID by Fronius).
 	 */
-	static QString createInverterId(int deviceType, const QString &deviceSerial);
+	static QString createInverterId(const QString &deviceSerial);
 
 signals:
 	void portNumberChanged();

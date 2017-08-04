@@ -2,8 +2,8 @@
 #define INVERTERMEDIATOR_H
 
 #include <QObject>
+#include "defines.h"
 
-struct DeviceInfo;
 class Inverter;
 class InverterGateway;
 class InverterSettings;
@@ -34,14 +34,13 @@ private slots:
 private:
 	void startAcquisition();
 
-	Inverter *createInverter(const DeviceInfo &di);
+	Inverter *createInverter();
 
+	DeviceInfo mDeviceInfo;
 	Inverter *mInverter;
 	InverterSettings *mInverterSettings;
 	InverterGateway *mGateway;
 	Settings *mSettings;
-	int mDeviceType;
-	QString mUniqueId;
 };
 
 #endif // INVERTERMEDIATOR_H

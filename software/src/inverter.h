@@ -5,13 +5,12 @@
 #include "ve_service.h"
 
 class PowerInfo;
-struct FroniusDeviceInfo;
 
 class Inverter : public VeService
 {
 	Q_OBJECT
 public:
-	Inverter(VeQItem *root, const DeviceInfo &deviceInfo, QObject *parent = 0);
+	Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstance, QObject *parent = 0);
 
 	/*!
 	 * Error code as returned by the fronius inverter
@@ -32,9 +31,7 @@ public:
 
 	void setStatusCode(int code);
 
-	QString id() const;
-
-	int deviceType() const;
+	int id() const;
 
 	QString uniqueId() const;
 
@@ -57,10 +54,6 @@ public:
 	void setPosition(InverterPosition p);
 
 	int phaseCount() const;
-
-	int deviceInstance() const;
-
-	void setDeviceInstance(int instance);
 
 	PowerInfo *meanPowerInfo();
 
@@ -97,11 +90,10 @@ private:
 	void updateConnectionItem();
 
 	QString mHostName;
-	int mPort;
-	QString mId;
-	int mDeviceType;
 	QString mUniqueId;
-	const FroniusDeviceInfo *mDeviceInfo;
+	int mId;
+	int mPort;
+	int mPhaseCount;
 	VeQItem *mErrorCode;
 	VeQItem *mStatusCode;
 	VeQItem *mPowerLimit;

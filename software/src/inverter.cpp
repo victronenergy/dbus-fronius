@@ -7,14 +7,14 @@
 #include "inverter.h"
 #include "power_info.h"
 
-Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, QObject *parent) :
+Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstance,
+				   QObject *parent) :
 	VeService(root, parent),
 	mHostName(deviceInfo.hostName),
-	mPort(deviceInfo.port),
-	mId(deviceInfo.networkId),
-	mDeviceType(deviceInfo.deviceType),
 	mUniqueId(deviceInfo.uniqueId),
-	mDeviceInfo(FroniusDeviceInfo::find(deviceInfo.deviceType)),
+	mId(deviceInfo.networkId),
+	mPort(deviceInfo.port),
+	mPhaseCount(deviceInfo.phaseCount),
 	mErrorCode(createItem("ErrorCode")),
 	mStatusCode(createItem("StatusCode")),
 	mPowerLimit(createItem("Ac/PowerLimit")),
@@ -29,20 +29,15 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, QObject *parent)
 	mL2PowerInfo(new PowerInfo(root->itemGetOrCreate("Ac/L2", false), this)),
 	mL3PowerInfo(new PowerInfo(root->itemGetOrCreate("Ac/L3", false), this))
 {
-	if (mDeviceInfo == 0) {
-		QLOG_WARN() << "Unknow inverter type:" << deviceInfo.deviceType;
-	}
 	produceValue(createItem("Connected"), 1);
 	produceValue(createItem("Mgmt/ProcessName"), QCoreApplication::arguments()[0]);
 	produceValue(createItem("Mgmt/ProcessVersion"), QCoreApplication::applicationVersion());
-	produceValue(createItem("ProductName"), mDeviceInfo == 0 ?
-				 "Unknown Fronius Inverter":
-				 mDeviceInfo->name);
+	produceValue(createItem("ProductName"), deviceInfo.productName);
 	produceValue(createItem("ProductId"), VE_PROD_ID_PV_INVERTER_FRONIUS,
 				 QString::number(VE_PROD_ID_PV_INVERTER_FRONIUS, 16));
-	produceValue(createItem("FroniusDeviceType"), deviceInfo.deviceType);
+	// produceValue(createItem("FroniusDeviceType"), deviceInfo.deviceType);
 	produceValue(createItem("Serial"), deviceInfo.uniqueId);
-	produceValue(mDeviceInstance, InvalidDeviceInstance);
+	produceValue(mDeviceInstance, deviceInstance);
 	updateConnectionItem();
 	root->produceValue(QVariant(), VeQItem::Synchronized);
 }
@@ -89,14 +84,9 @@ void Inverter::setStatusCode(int code)
 	produceValue(mStatusCode, code, text);
 }
 
-QString Inverter::id() const
+int Inverter::id() const
 {
 	return mId;
-}
-
-int Inverter::deviceType() const
-{
-	return mDeviceType;
 }
 
 QString Inverter::uniqueId() const
@@ -176,7 +166,7 @@ void Inverter::setPosition(InverterPosition p)
 
 int Inverter::phaseCount() const
 {
-	return mDeviceInfo == 0 ? 1 : mDeviceInfo->phaseCount;
+	return mPhaseCount;
 }
 
 int Inverter::deviceInstance() const

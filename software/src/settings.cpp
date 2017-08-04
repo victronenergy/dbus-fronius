@@ -42,9 +42,9 @@ QStringList Settings::inverterIds() const
 	return mInverterIdCache;
 }
 
-void Settings::registerInverter(int deviceType, const QString &uniqueId)
+void Settings::registerInverter(const QString &uniqueId)
 {
-	QString settingsId = createInverterId(deviceType, uniqueId);
+	QString settingsId = createInverterId(uniqueId);
 	if (mInverterIdCache.contains(settingsId))
 		return;
 	mInverterIdCache.append(settingsId);
@@ -52,18 +52,18 @@ void Settings::registerInverter(int deviceType, const QString &uniqueId)
 	emit inverterIdsChanged();
 }
 
-int Settings::getDeviceInstance(int deviceType, const QString &uniqueId) const
+int Settings::getDeviceInstance(const QString &uniqueId) const
 {
-	QString settingsId = createInverterId(deviceType, uniqueId);
+	QString settingsId = createInverterId(uniqueId);
 	int i = mInverterIdCache.indexOf(settingsId);
 	if (i == -1)
 		return -1;
 	return MinDeviceInstance + i % (MaxDeviceInstance - MinDeviceInstance + 1);
 }
 
-QString Settings::createInverterId(int deviceType, const QString &deviceSerial)
+QString Settings::createInverterId(const QString &deviceSerial)
 {
-	return QString("I%1_%2").arg(deviceType).arg(deviceSerial);
+	return QString("I%1").arg(deviceSerial);
 }
 
 void Settings::onInverterdIdsChanged()
