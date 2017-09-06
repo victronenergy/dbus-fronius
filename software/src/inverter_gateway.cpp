@@ -1,27 +1,23 @@
 #include <QTimer>
 #include <QsLog.h>
-#include "inverter.h"
 #include "inverter_gateway.h"
-#include "solar_api_detector.h"
-#include "sunspec_detector.h"
+#include "abstract_detector.h"
 #include "settings.h"
 
-static const int MaxSimultaneousRequests = 64;
+static const int MaxSimultaneousRequests = 48; /// @todo EV Used to be 64
 
-InverterGateway::InverterGateway(Settings *settings, VeQItem *root, QObject *parent) :
-	VeService(root, parent),
+InverterGateway::InverterGateway(AbstractDetector *detector, Settings *settings, QObject *parent) :
+	QObject(parent),
 	mSettings(settings),
-	mDetector(new SolarApiDetector(settings->portNumber(), this)),
+	mDetector(detector),
 	mTimer(new QTimer(this)),
 	mSettingsBusy(false),
-	mAutoDetect(createItem("AutoDetect")),
-	mScanProgress(createItem("ScanProgress")),
+	mAutoDetect(false),
 	mFullScanRequested(false),
 	mFullScanIfNoDeviceFound(false)
 {
 	Q_ASSERT(settings != 0);
 	mAddressGenerator.setNetMaskLimit(QHostAddress(0xFFFFF000));
-	produceValue(mAutoDetect, 0, "Idle");
 	updateScanProgress();
 	/// @todo EV What to do here? If we are using the Fronius solar_api detector we need to restart
 	/// the detection. Maybe move to the detector?
@@ -31,25 +27,29 @@ InverterGateway::InverterGateway(Settings *settings, VeQItem *root, QObject *par
 	mTimer->setInterval(60000);
 	mTimer->start();
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
-	registerService();
 }
 
 bool InverterGateway::autoDetect() const
 {
-	return mAutoDetect->getValue().toBool();
+	return mAutoDetect;
 }
 
 void InverterGateway::setAutoDetect(bool b)
 {
-	if (autoDetect() == b)
+	if (mAutoDetect == b)
 		return;
-	produceValue(mAutoDetect, b ? 1 : 0, b ? "Busy" : "Idle");
+	mAutoDetect = b;
 	if (!mSettingsBusy) {
 		mFullScanRequested = b;
 		mFullScanIfNoDeviceFound = b;
 		updateAddressGenerator();
 	}
 	emit autoDetectChanged();
+}
+
+int InverterGateway::scanProgress() const
+{
+	return mAutoDetect ? mAddressGenerator.progress() : 100;
 }
 
 void InverterGateway::startDetection()
@@ -59,15 +59,6 @@ void InverterGateway::startDetection()
 	setAutoDetect(true);
 	mSettingsBusy = false;
 	updateAddressGenerator();
-}
-
-int InverterGateway::handleSetValue(VeQItem *item, const QVariant &variant)
-{
-	if (item == mAutoDetect) {
-		setAutoDetect(variant.toBool());
-		return 0;
-	}
-	return VeService::handleSetValue(item, variant);
 }
 
 void InverterGateway::onInverterFound(const DeviceInfo &deviceInfo)
@@ -80,6 +71,7 @@ void InverterGateway::onInverterFound(const DeviceInfo &deviceInfo)
 	}
 	emit inverterFound(deviceInfo);
 }
+
 
 void InverterGateway::onDetectionDone()
 {
@@ -216,5 +208,5 @@ void InverterGateway::updateDetection()
 
 void InverterGateway::updateScanProgress()
 {
-	produceDouble(mScanProgress, mAddressGenerator.progress(), 0, "%");
+	emit scanProgressChanged();
 }

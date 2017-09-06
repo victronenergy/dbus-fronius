@@ -1,29 +1,44 @@
 #ifndef DBUS_TEST2_H
 #define DBUS_TEST2_H
 
-#include <QObject>
-#include "defines.h"
+#include "gateway_interface.h"
+#include "ve_service.h"
 
-class Inverter;
+class AbstractDetector;
 class InverterGateway;
 class InverterMediator;
 class Settings;
+class VeQItem;
 
-class DBusFronius : public QObject
+struct DeviceInfo;
+
+class DBusFronius : public VeService, public GatewayInterface
 {
 	Q_OBJECT
 public:
 	DBusFronius(QObject *parent = 0);
 
+	virtual void startDetection();
+
+	virtual int handleSetValue(VeQItem *item, const QVariant &variant);
+
 private slots:
 	void onSettingsInitialized();
 
-	void onInverterFound(DeviceInfo deviceInfo);
+	void onInverterFound(const DeviceInfo &deviceInfo);
+
+	void onScanProgressChanged();
+
+	void onAutoDetectChanged();
 
 private:
-	Settings *mSettings;
-	InverterGateway *mGateway;
+	void addGateway(AbstractDetector *detector);
+
 	QList<InverterMediator *> mMediators;
+	QList<InverterGateway *> mGateways;
+	Settings *mSettings;
+	VeQItem *mAutoDetect;
+	VeQItem *mScanProgress;
 };
 
 #endif // DBUS_TEST2_H

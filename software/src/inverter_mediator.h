@@ -4,8 +4,8 @@
 #include <QObject>
 #include "defines.h"
 
+class GatewayInterface;
 class Inverter;
-class InverterGateway;
 class InverterSettings;
 class Settings;
 
@@ -13,7 +13,7 @@ class InverterMediator : public QObject
 {
 	Q_OBJECT
 public:
-	explicit InverterMediator(const DeviceInfo &device, InverterGateway *gateway,
+	explicit InverterMediator(const DeviceInfo &device, GatewayInterface *gateway,
 							  Settings *settings, QObject *parent = 0);
 
 	bool processNewInverter(const DeviceInfo &deviceInfo);
@@ -41,7 +41,7 @@ private:
 	DeviceInfo mDeviceInfo;
 	Inverter *mInverter;
 	InverterSettings *mInverterSettings;
-	InverterGateway *mGateway;
+	GatewayInterface *mGateway;
 	Settings *mSettings;
 };
 

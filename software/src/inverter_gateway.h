@@ -5,8 +5,8 @@
 #include <QPointer>
 #include <QStringList>
 #include "defines.h"
+#include "gateway_interface.h"
 #include "local_ip_address_generator.h"
-#include "ve_service.h"
 
 class AbstractDetector;
 class QTimer;
@@ -26,26 +26,26 @@ class Settings;
  * The diagram below shows in which order devices are scanned.
  * @dotfile ipaddress_scanning.dot
  */
-class InverterGateway : public VeService
+class InverterGateway : public QObject, public GatewayInterface
 {
 	Q_OBJECT
 public:
-	InverterGateway(Settings *settings, VeQItem *root, QObject *parent = 0);
+	InverterGateway(AbstractDetector *detector, Settings *settings, QObject *parent = 0);
 
-	 bool autoDetect() const;
+	bool autoDetect() const;
 
-	 void setAutoDetect(bool b);
+	void setAutoDetect(bool b);
 
-	// int scanProgress() const;
+	int scanProgress() const;
 
-	void startDetection();
-
-	virtual int handleSetValue(VeQItem *item, const QVariant &variant);
+	virtual void startDetection();
 
 signals:
 	void inverterFound(const DeviceInfo &deviceInfo);
 
 	void autoDetectChanged();
+
+	void scanProgressChanged();
 
 private slots:
 	void onInverterFound(const DeviceInfo &deviceInfo);
@@ -70,8 +70,7 @@ private:
 	AbstractDetector *mDetector;
 	QTimer *mTimer;
 	bool mSettingsBusy;
-	VeQItem *mAutoDetect;
-	VeQItem *mScanProgress;
+	bool mAutoDetect;
 	bool mFullScanRequested;
 	bool mFullScanIfNoDeviceFound;
 };

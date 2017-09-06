@@ -1,7 +1,7 @@
 #include <QsLog.h>
 #include "defines.h"
 #include "inverter.h"
-#include "inverter_gateway.h"
+#include "gateway_interface.h"
 #include "inverter_mediator.h"
 #include "inverter_modbus_updater.h"
 #include "inverter_settings.h"
@@ -9,7 +9,7 @@
 #include "settings.h"
 #include "ve_qitem_init_monitor.h"
 
-InverterMediator::InverterMediator(const DeviceInfo &device, InverterGateway *gateway,
+InverterMediator::InverterMediator(const DeviceInfo &device, GatewayInterface *gateway,
 								   Settings *settings, QObject *parent):
 	QObject(parent),
 	mDeviceInfo(device),
@@ -92,7 +92,7 @@ void InverterMediator::onSettingsInitialized()
 void InverterMediator::onIsActivatedChanged()
 {
 	if (mInverterSettings->isActive()) {
-		mGateway->setAutoDetect(true);
+		mGateway->startDetection();
 	} else {
 		if (mInverter == 0)
 			return;
@@ -110,7 +110,7 @@ void InverterMediator::onConnectionLost()
 	QLOG_WARN() << "Lost connection with: " << mInverter->uniqueId()
 				<< "@ " << mInverter->hostName() << ':' << mInverter->port();
 	// Start device scan, maybe the IP address of the data card has changed.
-	mGateway->setAutoDetect(true);
+	mGateway->startDetection();
 	// Do not delete the inverter here because right now a function within
 	// InverterUpdater is emitting the isConnectedChanged signal. Deleting
 	// the inverter will also delete the InverterUpdater
@@ -123,7 +123,7 @@ void InverterMediator::onInverterModelChanged()
 	QLOG_WARN() << "Config change in: " << mInverter->uniqueId()
 				<< "@ " << mInverter->hostName() << ':' << mInverter->port();
 	// Start device scan, which will force a config reread.
-	mGateway->setAutoDetect(false);
+	mGateway->startDetection();
 	// Do not delete the inverter here because right now a function within
 	// InverterUpdater is emitting the isConnectedChanged signal. Deleting
 	// the inverter will also delete the InverterUpdater

@@ -69,8 +69,9 @@ SOURCES += \
     src/solar_api_detector.cpp \
     src/sunspec_detector.cpp \
     src/modbus_tcp_client/modbus_reply.cpp \
-    src/modbus_tcp_client/modbus_client.cpp
-    src/sunspec_tools.cpp
+    src/modbus_tcp_client/modbus_client.cpp \
+    src/sunspec_tools.cpp \
+    src/gateway_interface.cpp
 
 HEADERS += \
     src/froniussolar_api.h \
@@ -97,7 +98,8 @@ HEADERS += \
     src/sunspec_detector.h \
     src/modbus_tcp_client/modbus_reply.h \
     src/modbus_tcp_client/modbus_client.h \
-    src/sunspec_tools.h
+    src/sunspec_tools.h \
+    src/gateway_interface.h
 
 DISTFILES += \
     ../README.md
