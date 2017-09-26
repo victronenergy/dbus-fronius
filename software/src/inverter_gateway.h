@@ -13,15 +13,13 @@ class QTimer;
 class Settings;
 
 /*!
- * @brief Tries to find fronius PV inverters on the network.
- * This class InverterGateway will try to find fronius PV inverters using the
- * solar API. How this is done is determined by the `Settings` object passed
- * to the constructor. Whenever the `Settings` object changes the search
- * strategy will be adjusted.
+ * Handles device detection logistics for a single communication protocol.
  * There are 2 possible strategies:
  * - Scanning a list of known devices. IP addresses are taken from the
- *   ipAddresses and knownIpAddresses in the settings.
- * - Scanning all IP addresses within the local network.
+ *   ipAddresses and knownIpAddresses in the settings. This scan is very quick because a limited
+ *   number of IP-addresses is queried and will be repeated every minute.
+ * - Scanning all IP addresses within the local network (limited is the netmark is too wide). This
+ *   scan is performed on startup and can be requested manually by calling `startDetection`.
  *
  * The diagram below shows in which order devices are scanned.
  * @dotfile ipaddress_scanning.dot
