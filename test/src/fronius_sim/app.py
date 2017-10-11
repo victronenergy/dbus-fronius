@@ -1,22 +1,27 @@
+#!/usr/bin/python -u
+
 import datetime
+import modbus_tcp_sim
 import os
 import sys
+from twisted.internet import reactor
+from fronius_sim import FroniusSim
 
 app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 bottle_dir = os.path.normpath(os.path.join(app_dir, '..', '..', 'software', 'ext', 'bottle'))
 sys.path.extend([bottle_dir, app_dir])
 
 import bottle
-# import modbus_tcp_sim
-from fronius_sim import FroniusSim
 
 application = bottle.default_app()
 
 inverters = [
-	FroniusSim(id='1', device_type=232, unique_id='1234', custom_name='SouthWest', has_3phases=True),
-	FroniusSim(id='2', device_type=224, unique_id='4321', custom_name='', has_3phases=False),
-	FroniusSim(id='3', device_type=208, unique_id='1111', custom_name='Tmp', has_3phases=False)
+	FroniusSim(id='1', device_type=232, unique_id='1234', custom_name='SouthWest', has_3phases=True, modbus_enabled=False),
+	FroniusSim(id='2', device_type=224, unique_id='4321', custom_name='', has_3phases=False, modbus_enabled=False),
+	FroniusSim(id='3', device_type=208, unique_id='1111', custom_name='Tmp', has_3phases=False, modbus_enabled=True)
 ]
+
+sma_inverter = FroniusSim(id='126', device_type=None, unique_id='10988912', custom_name='SMA', has_3phases=False, modbus_enabled=True)
 
 
 @bottle.route('/solar_api/GetAPIVersion.cgi')
@@ -152,7 +157,22 @@ def create_head(args, error_code=0, error_message=''):
 		'Timestamp': datetime.datetime.now().isoformat()}
 
 
+class TwistedServer(bottle.ServerAdapter):
+	def start(self, handler):
+		from twisted.web import server, wsgi
+		from twisted.python.threadpool import ThreadPool
+		from twisted.internet import reactor
+		thread_pool = ThreadPool(minthreads=0, maxthreads=1)
+		thread_pool.start()
+		reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
+		factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
+		reactor.listenTCP(self.port, factory, interface=self.host)
+		# reactor.run()
+
+
 if __name__ == '__main__':
 	# host='0.0.0.0': accept connections from all sources
-	# modbus_tcp_sim.start_server(inverters[0])
-	bottle.run(host='0.0.0.0', port=8080, debug=True)
+	server = TwistedServer(host='0.0.0.0', port=8080, debug=True)
+	server.start(application)
+	modbus_tcp_sim.start_server(inverters + [sma_inverter])
+	reactor.run()

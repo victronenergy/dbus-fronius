@@ -37,13 +37,19 @@ class PowerInfo:
 
 
 class FroniusSim:
-	def __init__(self, id, unique_id, device_type, custom_name='', has_3phases=True):
+	def __init__(self, id, unique_id, device_type, custom_name='', has_3phases=True, modbus_enabled=False,
+			max_power=5000):
 		self.main = PowerInfo()
 		self.has_3phases = has_3phases
+		self.modbus_enabled = modbus_enabled
+		self.max_power = max_power
+		self.power_limit = 100
 		if has_3phases:
 			self.l1 = PowerInfo()
 			self.l2 = PowerInfo()
 			self.l3 = PowerInfo()
+		else:
+			self.l1 = self.main
 		self.id = id
 		self.unique_id = unique_id
 		self.custom_name = custom_name
