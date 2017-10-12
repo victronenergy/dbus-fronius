@@ -10,11 +10,7 @@
 Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstance,
 				   QObject *parent) :
 	VeService(root, parent),
-	mHostName(deviceInfo.hostName),
-	mUniqueId(deviceInfo.uniqueId),
-	mId(deviceInfo.networkId),
-	mPort(deviceInfo.port),
-	mPhaseCount(deviceInfo.phaseCount),
+	mDeviceInfo(deviceInfo),
 	mErrorCode(createItem("ErrorCode")),
 	mStatusCode(createItem("StatusCode")),
 	mPowerLimit(createItem("Ac/PowerLimit")),
@@ -33,9 +29,8 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	produceValue(createItem("Mgmt/ProcessName"), QCoreApplication::arguments()[0]);
 	produceValue(createItem("Mgmt/ProcessVersion"), QCoreApplication::applicationVersion());
 	produceValue(createItem("ProductName"), deviceInfo.productName);
-	produceValue(createItem("ProductId"), VE_PROD_ID_PV_INVERTER_FRONIUS,
-				 QString::number(VE_PROD_ID_PV_INVERTER_FRONIUS, 16));
-	// produceValue(createItem("FroniusDeviceType"), deviceInfo.deviceType);
+	produceValue(createItem("ProductId"), deviceInfo.productId,
+		QString::number(deviceInfo.productId, 16));
 	produceValue(createItem("Serial"), deviceInfo.uniqueId);
 	produceValue(mDeviceInstance, deviceInstance);
 	updateConnectionItem();
@@ -86,12 +81,12 @@ void Inverter::setStatusCode(int code)
 
 int Inverter::id() const
 {
-	return mId;
+	return mDeviceInfo.networkId;
 }
 
 QString Inverter::uniqueId() const
 {
-	return mUniqueId;
+	return mDeviceInfo.uniqueId;
 }
 
 QString Inverter::productName() const
@@ -114,28 +109,28 @@ void Inverter::setCustomName(const QString &name)
 
 QString Inverter::hostName() const
 {
-	return mHostName;
+	return mDeviceInfo.hostName;
 }
 
 void Inverter::setHostName(const QString &h)
 {
-	if (mHostName== h)
+	if (mDeviceInfo.hostName== h)
 		return;
-	mHostName = h;
+	mDeviceInfo.hostName= h;
 	updateConnectionItem();
 	emit hostNameChanged();
 }
 
 int Inverter::port() const
 {
-	return mPort;
+	return mDeviceInfo.port;
 }
 
 void Inverter::setPort(int p)
 {
-	if (mPort == p)
+	if (mDeviceInfo.port == p)
 		return;
-	mPort = p;
+	mDeviceInfo.port = p;
 	emit portChanged();
 }
 
@@ -166,7 +161,7 @@ void Inverter::setPosition(InverterPosition p)
 
 int Inverter::phaseCount() const
 {
-	return mPhaseCount;
+	return mDeviceInfo.phaseCount;
 }
 
 int Inverter::deviceInstance() const
@@ -252,5 +247,5 @@ int Inverter::handleSetValue(VeQItem *item, const QVariant &variant)
 
 void Inverter::updateConnectionItem()
 {
-	produceValue(mConnection, QString("%1 - %2").arg(mHostName).arg(mId));
+	produceValue(mConnection, QString("%1 - %2").arg(mDeviceInfo.hostName).arg(mDeviceInfo.networkId));
 }

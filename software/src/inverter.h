@@ -55,6 +55,11 @@ public:
 
 	int phaseCount() const;
 
+	const DeviceInfo &deviceInfo() const
+	{
+		return mDeviceInfo;
+	}
+
 	PowerInfo *meanPowerInfo();
 
 	PowerInfo *l1PowerInfo();
@@ -89,11 +94,7 @@ signals:
 private:
 	void updateConnectionItem();
 
-	QString mHostName;
-	QString mUniqueId;
-	int mId;
-	int mPort;
-	int mPhaseCount;
+	DeviceInfo mDeviceInfo;
 	VeQItem *mErrorCode;
 	VeQItem *mStatusCode;
 	VeQItem *mPowerLimit;
