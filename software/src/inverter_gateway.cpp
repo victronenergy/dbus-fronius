@@ -1,8 +1,9 @@
 #include <QTimer>
 #include <QsLog.h>
-#include "froniussolar_api.h"
 #include "inverter.h"
 #include "inverter_gateway.h"
+#include "solar_api_detector.h"
+#include "sunspec_detector.h"
 #include "settings.h"
 
 static const int MaxSimultaneousRequests = 64;
@@ -10,6 +11,7 @@ static const int MaxSimultaneousRequests = 64;
 InverterGateway::InverterGateway(Settings *settings, VeQItem *root, QObject *parent) :
 	VeService(root, parent),
 	mSettings(settings),
+	mDetector(new SolarApiDetector(settings->portNumber(), this)),
 	mTimer(new QTimer(this)),
 	mSettingsBusy(false),
 	mAutoDetect(createItem("AutoDetect")),
@@ -21,7 +23,9 @@ InverterGateway::InverterGateway(Settings *settings, VeQItem *root, QObject *par
 	mAddressGenerator.setNetMaskLimit(QHostAddress(0xFFFFF000));
 	produceValue(mAutoDetect, 0, "Idle");
 	updateScanProgress();
-	connect(settings, SIGNAL(portNumberChanged()), this, SLOT(onSettingsChanged()));
+	/// @todo EV What to do here? If we are using the Fronius solar_api detector we need to restart
+	/// the detection. Maybe move to the detector?
+	// connect(settings, SIGNAL(portNumberChanged()), this, SLOT(onSettingsChanged()));
 	connect(settings, SIGNAL(ipAddressesChanged()), this, SLOT(onSettingsChanged()));
 	connect(settings, SIGNAL(knownIpAddressesChanged()), this, SLOT(onSettingsChanged()));
 	mTimer->setInterval(60000);
@@ -66,9 +70,22 @@ int InverterGateway::handleSetValue(VeQItem *item, const QVariant &variant)
 	return VeService::handleSetValue(item, variant);
 }
 
-void InverterGateway::onDetectionDone(const QString &hostName)
+void InverterGateway::onInverterFound(const DeviceInfo &deviceInfo)
 {
-	mActiveHostNames.removeOne(QHostAddress(hostName));
+	QList<QHostAddress> addresses = mSettings->knownIpAddresses();
+	QHostAddress addr(deviceInfo.hostName);
+	if (!addresses.contains(addr)) {
+		addresses.append(addr);
+		mSettings->setKnownIpAddresses(addresses);
+	}
+	emit inverterFound(deviceInfo);
+}
+
+void InverterGateway::onDetectionDone()
+{
+	DetectorReply *reply = static_cast<DetectorReply *>(sender());
+	reply->deleteLater();
+	mActiveHostNames.removeOne(QHostAddress(reply->hostName()));
 	updateScanProgress();
 	updateDetection();
 }
@@ -191,7 +208,10 @@ void InverterGateway::updateDetection()
 	}
 	QLOG_TRACE() << "Scanning" << hostName;
 	mActiveHostNames.append(QHostAddress(hostName));
-	mDetector->start(hostName);
+	DetectorReply *reply = mDetector->start(hostName);
+	connect(reply, SIGNAL(deviceFound(const DeviceInfo &)),
+			this, SLOT(onInverterFound(const DeviceInfo &)));
+	connect(reply, SIGNAL(finished()), this, SLOT(onDetectionDone()));
 }
 
 void InverterGateway::updateScanProgress()

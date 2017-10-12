@@ -25,6 +25,8 @@ private slots:
 
 	void onConnectionLost();
 
+	void onInverterModelChanged();
+
 	void onPositionChanged();
 
 	void onSettingsCustomNameChanged();

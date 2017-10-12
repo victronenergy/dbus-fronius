@@ -65,8 +65,12 @@ SOURCES += \
     src/ve_qitem_consumer.cpp \
     src/ve_qitem_init_monitor.cpp \
     src/ve_service.cpp \
+    src/abstract_detector.cpp \
+    src/solar_api_detector.cpp \
+    src/sunspec_detector.cpp \
     src/modbus_tcp_client/modbus_reply.cpp \
     src/modbus_tcp_client/modbus_client.cpp
+    src/sunspec_tools.cpp
 
 HEADERS += \
     src/froniussolar_api.h \
@@ -88,8 +92,12 @@ HEADERS += \
     src/ve_qitem_consumer.h \
     src/ve_qitem_init_monitor.h \
     src/ve_service.h \
+    src/abstract_detector.h \
+    src/solar_api_detector.h \
+    src/sunspec_detector.h \
     src/modbus_tcp_client/modbus_reply.h \
-    src/modbus_tcp_client/modbus_client.h
+    src/modbus_tcp_client/modbus_client.h \
+    src/sunspec_tools.h
 
 DISTFILES += \
     ../README.md

@@ -45,6 +45,11 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 		}
 		return false;
 	}
+	if (mInverter != 0 && mDeviceInfo.retrievalMode != deviceInfo.retrievalMode) {
+		QLOG_INFO() << "Inverter retrieval mode has changed @" << mInverter->location();
+		delete mInverter;
+		mInverter = 0;
+	}
 	mDeviceInfo = deviceInfo;
 	if (mInverter != 0) {
 		if (mInverter->hostName() != deviceInfo.hostName ||
@@ -113,13 +118,30 @@ void InverterMediator::onConnectionLost()
 	mInverter = 0;
 }
 
+void InverterMediator::onInverterModelChanged()
+{
+	QLOG_WARN() << "Config change in: " << mInverter->uniqueId()
+				<< "@ " << mInverter->hostName() << ':' << mInverter->port();
+	// Start device scan, which will force a config reread.
+	mGateway->setAutoDetect(false);
+	// Do not delete the inverter here because right now a function within
+	// InverterUpdater is emitting the isConnectedChanged signal. Deleting
+	// the inverter will also delete the InverterUpdater
+	mInverter->deleteLater();
+	mInverter = 0;
+}
+
 void InverterMediator::onPositionChanged()
 {
+	if (mInverter == 0)
+		return;
 	mInverter->setPosition(mInverterSettings->position());
 }
 
 void InverterMediator::onSettingsCustomNameChanged()
 {
+	if (mInverter == 0)
+		return;
 	QString name = mInverterSettings->customName();
 	if (name.isEmpty())
 		name = mInverter->productName();
@@ -128,6 +150,8 @@ void InverterMediator::onSettingsCustomNameChanged()
 
 void InverterMediator::onInverterCustomNameChanged()
 {
+	if (mInverter == 0)
+		return;
 	QString name = mInverter->customName();
 	if (name == mInverter->productName())
 		name.clear();
@@ -138,10 +162,14 @@ void InverterMediator::startAcquisition()
 {
 	Q_ASSERT(mInverter != 0);
 	mInverter->setPosition(mInverterSettings->position());
-//	InverterUpdater *updater = new InverterUpdater(mInverter, mInverterSettings, mInverter);
-//	connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
-	InverterModbusUpdater *updater = new InverterModbusUpdater(mInverter, mInverterSettings, mInverter);
-	connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
+	if (mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi) {
+		InverterUpdater *updater = new InverterUpdater(mInverter, mInverterSettings, mInverter);
+		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
+	} else {
+		InverterModbusUpdater *updater = new InverterModbusUpdater(mInverter, mInverterSettings, mInverter);
+		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
+		connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
+	}
 }
 
 Inverter *InverterMediator::createInverter()

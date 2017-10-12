@@ -19,15 +19,42 @@ enum InverterPosition {
 	Input2 = 2
 };
 
+enum ProtocolType {
+	ProtocolFroniusSolarApi,
+	ProtocolSunSpecFloat,
+	ProtocolSunSpecIntSf
+};
+
 struct DeviceInfo
 {
+	DeviceInfo():
+		networkId(0),
+		port(0),
+		phaseCount(0),
+		productId(0),
+		retrievalMode(ProtocolFroniusSolarApi),
+		inverterModelOffset(0),
+		namePlateModelOffset(0),
+		immediateControlOffset(0),
+		powerLimitScale(0),
+		maxPower(0)
+	{}
+
 	QString hostName;
 	QString uniqueId;
 	QString productName;
 	QString firmwareVersion;
 	int networkId;
-	int port;
-	int deviceType;
+	int port; // Fronius solar API only
+	int phaseCount;
+	int productId;
+	ProtocolType retrievalMode;
+	// Sunspec only
+	quint16 inverterModelOffset;
+	quint16 namePlateModelOffset;
+	quint16 immediateControlOffset;
+	double powerLimitScale;
+	double maxPower;
 };
 
 /// This value is used to indicate that the correct device instance has not

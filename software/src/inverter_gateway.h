@@ -48,7 +48,9 @@ signals:
 	void autoDetectChanged();
 
 private slots:
-	void onDetectionDone(const QString &hostName);
+	void onInverterFound(const DeviceInfo &deviceInfo);
+
+	void onDetectionDone();
 
 	void onSettingsChanged();
 
@@ -63,9 +65,9 @@ private:
 
 	QPointer<Settings> mSettings;
 	QList<QHostAddress> mDevicesFound;
-	QStringList mInvalidDevices;
 	QList<QHostAddress> mActiveHostNames;
 	LocalIpAddressGenerator mAddressGenerator;
+	AbstractDetector *mDetector;
 	QTimer *mTimer;
 	bool mSettingsBusy;
 	VeQItem *mAutoDetect;
