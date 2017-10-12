@@ -39,7 +39,6 @@ private:
 		ReadPowerLimit,
 		ReadCurrentPower,
 		WritePowerLimit,
-		WaitForModelType,
 		Idle,
 		Init = ReadModelType,
 		Start = ReadPowerLimit

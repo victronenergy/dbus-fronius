@@ -99,7 +99,6 @@ void InverterModbusUpdater::startNextAction(ModbusState state, bool checkReInit)
 		}
 		break;
 	}
-	case WaitForModelType:
 	case Idle:
 		startIdleTimer();
 		break;
@@ -111,7 +110,7 @@ void InverterModbusUpdater::startNextAction(ModbusState state, bool checkReInit)
 
 void InverterModbusUpdater::startIdleTimer()
 {
-	mTimer->setInterval(mCurrentState == WaitForModelType ? 30000 : 2000);
+	mTimer->setInterval(mCurrentState == Idle ? 1000 : 5000);
 	mTimer->start();
 }
 
@@ -254,7 +253,7 @@ void InverterModbusUpdater::onDisconnected()
 void InverterModbusUpdater::onTimer()
 {
 	if (mModbusClient->isConnected())
-		startNextAction(mCurrentState == Idle || mCurrentState == WaitForModelType ? Init : mCurrentState);
+		startNextAction(mCurrentState == Idle ? Start : mCurrentState);
 	else
 		mModbusClient->connectToServer(mInverter->hostName());
 }
