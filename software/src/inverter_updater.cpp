@@ -22,7 +22,6 @@ InverterUpdater::InverterUpdater(Inverter *inverter, InverterSettings *settings,
 {
 	Q_ASSERT(inverter != 0);
 	Q_ASSERT(settings != 0);
-	Q_ASSERT((inverter->phaseCount() > 1) == (settings->phase() == MultiPhase));
 	connect(
 		mSolarApi, SIGNAL(commonDataFound(const CommonInverterData &)),
 		this, SLOT(onCommonDataFound(const CommonInverterData &)));
@@ -98,7 +97,6 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 	switch (data.error)
 	{
 	case SolarApiReply::NoError:
-		Q_ASSERT(mInverter->phaseCount() > 1 && mSettings->phase() == MultiPhase);
 		mProcessor.process(data);
 		mRetryCount = 0;
 		setInitialized();
