@@ -5,12 +5,11 @@
 #include <QScopedPointer>
 #include <QString>
 
-class DBusInverterBridge;
-class DBusObserver;
 class Inverter;
 class InverterSettings;
 class PowerInfo;
 class QVariant;
+class VeQItem;
 class VeQItemProducer;
 
 class DBusInverterBridgeTest : public testing::Test
@@ -25,11 +24,11 @@ protected:
 
 	virtual void TearDown();
 
-	void SetUpBridge();
-
 	void setupPowerInfo(PowerInfo *pi);
 
 	static QVariant getValue(const QString &service, const QString &path);
+
+	static VeQItem *getItem(const QString &service, const QString &path);
 
 	static QString getText(const QString &service, const QString &path);
 
@@ -39,11 +38,15 @@ protected:
 
 	void checkValue(const QVariant &expected, const QVariant &actual);
 
+	void checkValue(VeQItem *item, const QVariant &expected, const QString &text);
+
 	const QString mServiceName;
 	QScopedPointer<Inverter> mInverter;
 	QScopedPointer<InverterSettings> mSettings;
-	QScopedPointer<DBusInverterBridge> mBridge;
 	QScopedPointer<VeQItemProducer> mItemProducer;
+	QScopedPointer<VeQItemProducer> mItemSubscriber;
+	VeQItem *mPosition;
+	VeQItem *mPhase;
 };
 
 #endif // DBUS_INVERTER_BRIDGE_TEST

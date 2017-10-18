@@ -13,7 +13,7 @@ class QVariant;
 void qWait(int ms);
 
 // Google test relies on PrintTo functions while logging failed tests. They
-// should live in the namespace	where the printed classes are located. In this
+// should live in the namespace where the printed classes are located. In this
 // case the global namespace since all QT objects live there.
 void PrintTo(const QString &s, std::ostream *os);
 

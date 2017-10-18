@@ -246,17 +246,29 @@ void FroniusDataProcessorTest::TearDown()
 	mProcessor.reset();
 	mSettings.reset();
 	mInverter.reset();
+	mItemProducer.reset();
+	mItemSubscriber.reset();
 }
 
 void FroniusDataProcessorTest::setUpProcessor(InverterPhase phase)
 {
-	int deviceType = phase == MultiPhase ? 123 : 224;
-	mInverter.reset(new Inverter("127.0.0.1", 80, "1", deviceType, "1212b", "cn"));
-	mSettings.reset(new InverterSettings(mInverter->deviceType(),
-										 mInverter->uniqueId()));
-	mSettings->setPhase(phase);
-	mProcessor.reset(new FroniusDataProcessor(mInverter.data(),
-											  mSettings.data()));
+	mItemProducer.reset(new VeProducer(VeQItems::getRoot(), "pub"));
+	mItemSubscriber.reset(new VeQItemProducer(VeQItems::getRoot(), "sub"));
+	DeviceInfo deviceInfo;
+	deviceInfo.phaseCount = phase == MultiPhase ? 3 : 1;
+	deviceInfo.hostName = "10.0.1.4";
+	deviceInfo.port = 80;
+	deviceInfo.uniqueId = "756";
+	deviceInfo.networkId = 3;
+	VeQItem *root = mItemProducer->services()->itemGetOrCreate("com.victronenergy.pvinverter.test");
+	mInverter.reset(new Inverter(root, deviceInfo, 123));
 
-	Q_ASSERT((mInverter->phaseCount() > 1) == (mSettings->phase() == MultiPhase));
+	VeQItem *settingsRoot = mItemSubscriber->services()->itemGetOrCreate("com.victronenergy.settings/Settings/Fronius/I123");
+	VeQItem *mPosition = settingsRoot->itemGetOrCreate("Position");
+	mPosition->setValue(static_cast<int>(Input2));
+	VeQItem *mPhase = settingsRoot->itemGetOrCreate("Phase");
+	mPhase->setValue(static_cast<int>(phase));
+	mSettings.reset(new InverterSettings(settingsRoot));
+
+	mProcessor.reset(new FroniusDataProcessor(mInverter.data(), mSettings.data()));
 }

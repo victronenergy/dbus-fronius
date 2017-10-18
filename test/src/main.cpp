@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
 	logger.setLoggingLevel(QsLogging::WarnLevel);
 
 	QCoreApplication app(argc, argv);
+	app.setApplicationVersion(VERSION);
 
 	testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();

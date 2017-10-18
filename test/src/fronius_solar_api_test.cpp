@@ -80,8 +80,8 @@ TEST_F(FroniusSolarApiTest, getConverterInfo)
 	EXPECT_TRUE(mInverterListData->errorMessage.isEmpty());
 	ASSERT_TRUE(mInverterListData->inverters.size() > 0);
 	const InverterInfo &ii = mInverterListData->inverters.first();
-	EXPECT_EQ(QString("1"), ii.id);
-	EXPECT_EQ(QString("1234"), ii.uniqueId);
+	EXPECT_EQ(1, ii.id);
+	EXPECT_EQ("1234", ii.uniqueId);
 	EXPECT_EQ(QString("SouthWest"), ii.customName);
 	EXPECT_EQ(232, ii.deviceType);
 	/// @todo EV Bad test: even if the reply does not contain an error code,
@@ -92,7 +92,7 @@ TEST_F(FroniusSolarApiTest, getConverterInfo)
 
 TEST_F(FroniusSolarApiTest, getCumulationData)
 {
-	mApi.getCumulationDataAsync("2");
+	mApi.getCumulationDataAsync(2);
 	waitForCompletion(mCumulationData);
 
 	EXPECT_EQ(SolarApiReply::NoError, mCumulationData->error);
@@ -105,7 +105,7 @@ TEST_F(FroniusSolarApiTest, getCumulationData)
 
 TEST_F(FroniusSolarApiTest, getCommonData)
 {
-	mApi.getCommonDataAsync("2");
+	mApi.getCommonDataAsync(2);
 	waitForCompletion(mCommonData);
 
 	EXPECT_EQ(SolarApiReply::NoError, mCommonData->error);
@@ -118,7 +118,7 @@ TEST_F(FroniusSolarApiTest, getCommonData)
 
 TEST_F(FroniusSolarApiTest, getThreePhasesInverterData)
 {
-	mApi.getThreePhasesInverterDataAsync("1");
+	mApi.getThreePhasesInverterDataAsync(1);
 	waitForCompletion(m3PData);
 
 	EXPECT_EQ(SolarApiReply::NoError, m3PData->error);
@@ -127,7 +127,7 @@ TEST_F(FroniusSolarApiTest, getThreePhasesInverterData)
 
 TEST_F(FroniusSolarApiTest, getThreePhasesInverterDataSinglePhase)
 {
-	mApi.getThreePhasesInverterDataAsync("2");
+	mApi.getThreePhasesInverterDataAsync(2);
 	waitForCompletion(m3PData);
 
 	EXPECT_EQ(SolarApiReply::ApiError, m3PData->error);

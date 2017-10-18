@@ -8,6 +8,7 @@
 class Inverter;
 class InverterSettings;
 class FroniusDataProcessor;
+class VeQItemProducer;
 
 class FroniusDataProcessorTest : public testing::Test
 {
@@ -21,6 +22,8 @@ protected:
 	QScopedPointer<Inverter> mInverter;
 	QScopedPointer<InverterSettings> mSettings;
 	QScopedPointer<FroniusDataProcessor> mProcessor;
+	QScopedPointer<VeQItemProducer> mItemProducer;
+	QScopedPointer<VeQItemProducer> mItemSubscriber;
 };
 
 #endif // FRONIUSDATAPROCESSORTEST_H
