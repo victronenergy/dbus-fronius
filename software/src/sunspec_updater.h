@@ -11,12 +11,11 @@ class ModbusReply;
 class ModbusTcpClient;
 class QTimer;
 
-class InverterModbusUpdater: public QObject
+class SunspecUpdater: public QObject
 {
 	Q_OBJECT
 public:
-	explicit InverterModbusUpdater(Inverter *inverter, InverterSettings *settings,
-								   QObject *parent = 0);
+	explicit SunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
 
 signals:
 	void connectionLost();

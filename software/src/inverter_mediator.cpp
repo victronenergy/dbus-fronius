@@ -3,7 +3,7 @@
 #include "inverter.h"
 #include "gateway_interface.h"
 #include "inverter_mediator.h"
-#include "inverter_modbus_updater.h"
+#include "sunspec_updater.h"
 #include "inverter_settings.h"
 #include "inverter_updater.h"
 #include "settings.h"
@@ -155,7 +155,7 @@ void InverterMediator::startAcquisition()
 		InverterUpdater *updater = new InverterUpdater(mInverter, mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 	} else {
-		InverterModbusUpdater *updater = new InverterModbusUpdater(mInverter, mInverterSettings, mInverter);
+		SunspecUpdater *updater = new SunspecUpdater(mInverter, mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 		connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
 	}

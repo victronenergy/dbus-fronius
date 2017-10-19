@@ -61,7 +61,6 @@ SOURCES += \
     src/fronius_device_info.cpp \
     src/inverter_mediator.cpp \
     src/modbus_tcp_client/modbus_tcp_client.cpp \
-    src/inverter_modbus_updater.cpp \
     src/ve_qitem_consumer.cpp \
     src/ve_qitem_init_monitor.cpp \
     src/ve_service.cpp \
@@ -71,7 +70,8 @@ SOURCES += \
     src/modbus_tcp_client/modbus_reply.cpp \
     src/modbus_tcp_client/modbus_client.cpp \
     src/sunspec_tools.cpp \
-    src/gateway_interface.cpp
+    src/gateway_interface.cpp \
+    src/sunspec_updater.cpp
 
 HEADERS += \
     src/froniussolar_api.h \
@@ -89,7 +89,6 @@ HEADERS += \
     src/inverter_mediator.h \
     src/velib/velib_config_app.h \
     src/modbus_tcp_client/modbus_tcp_client.h \
-    src/inverter_modbus_updater.h \
     src/ve_qitem_consumer.h \
     src/ve_qitem_init_monitor.h \
     src/ve_service.h \
@@ -99,7 +98,8 @@ HEADERS += \
     src/modbus_tcp_client/modbus_reply.h \
     src/modbus_tcp_client/modbus_client.h \
     src/sunspec_tools.h \
-    src/gateway_interface.h
+    src/gateway_interface.h \
+    src/sunspec_updater.h
 
 DISTFILES += \
     ../README.md

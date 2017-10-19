@@ -4,7 +4,7 @@
 #include "froniussolar_api.h"
 #include "fronius_data_processor.h"
 #include "inverter.h"
-#include "inverter_modbus_updater.h"
+#include "sunspec_updater.h"
 #include "inverter_settings.h"
 #include "modbus_tcp_client.h"
 #include "modbus_reply.h"
@@ -17,8 +17,7 @@
 static const int PowerLimitTimeout = 120;
 static const int PowerLimitScale = 100; /// @todo EV This may cause problems with hub4control
 
-InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, InverterSettings *settings,
-											 QObject *parent):
+SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent):
 	QObject(parent),
 	mInverter(inverter),
 	mSettings(settings),
@@ -42,7 +41,7 @@ InverterModbusUpdater::InverterModbusUpdater(Inverter *inverter, InverterSetting
 	connect(mSettings, SIGNAL(phaseChanged()), this, SLOT(onPhaseChanged()));
 }
 
-void InverterModbusUpdater::startNextAction(ModbusState state)
+void SunspecUpdater::startNextAction(ModbusState state)
 {
 	mCurrentState = state;
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
@@ -82,13 +81,13 @@ void InverterModbusUpdater::startNextAction(ModbusState state)
 	}
 }
 
-void InverterModbusUpdater::startIdleTimer()
+void SunspecUpdater::startIdleTimer()
 {
 	mTimer->setInterval(mCurrentState == Idle ? 1000 : 5000);
 	mTimer->start();
 }
 
-void InverterModbusUpdater::setInverterState(int sunSpecState)
+void SunspecUpdater::setInverterState(int sunSpecState)
 {
 	int froniusState = 0;
 	switch (sunSpecState) {
@@ -117,22 +116,21 @@ void InverterModbusUpdater::setInverterState(int sunSpecState)
 	mInverter->setStatusCode(froniusState);
 }
 
-void InverterModbusUpdater::readHoldingRegisters(quint16 startRegister, quint16 count)
+void SunspecUpdater::readHoldingRegisters(quint16 startRegister, quint16 count)
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	ModbusReply *reply = mModbusClient->readHoldingRegisters(deviceInfo.networkId, startRegister, count);
 	connect(reply, SIGNAL(finished()), this, SLOT(onReadCompleted()));
 }
 
-void InverterModbusUpdater::writeMultipleHoldingRegisters(quint16 startReg,
-														  const QVector<quint16> &values)
+void SunspecUpdater::writeMultipleHoldingRegisters(quint16 startReg, const QVector<quint16> &values)
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	ModbusReply *reply = mModbusClient->writeMultipleHoldingRegisters(deviceInfo.networkId, startReg, values);
 	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
 }
 
-bool InverterModbusUpdater::handleModbusError(ModbusReply *reply)
+bool SunspecUpdater::handleModbusError(ModbusReply *reply)
 {
 	if (reply->error() == ModbusReply::NoException) {
 		mRetryCount = 0;
@@ -142,7 +140,7 @@ bool InverterModbusUpdater::handleModbusError(ModbusReply *reply)
 	return false;
 }
 
-void InverterModbusUpdater::handleError()
+void SunspecUpdater::handleError()
 {
 	++mRetryCount;
 	if (mRetryCount > 5) {
@@ -152,7 +150,7 @@ void InverterModbusUpdater::handleError()
 	startIdleTimer();
 }
 
-void InverterModbusUpdater::onReadCompleted()
+void SunspecUpdater::onReadCompleted()
 {
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
@@ -256,7 +254,7 @@ void InverterModbusUpdater::onReadCompleted()
 	startNextAction(nextState);
 }
 
-void InverterModbusUpdater::onWriteCompleted()
+void SunspecUpdater::onWriteCompleted()
 {
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
@@ -264,7 +262,7 @@ void InverterModbusUpdater::onWriteCompleted()
 	startNextAction(Start);
 }
 
-void InverterModbusUpdater::onPowerLimitRequested(double value)
+void SunspecUpdater::onPowerLimitRequested(double value)
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	double powerLimitScale = deviceInfo.powerLimitScale;
@@ -286,18 +284,18 @@ void InverterModbusUpdater::onPowerLimitRequested(double value)
 	mWritePowerLimitRequested = true;
 }
 
-void InverterModbusUpdater::onConnected()
+void SunspecUpdater::onConnected()
 {
 	startNextAction(Init);
 }
 
-void InverterModbusUpdater::onDisconnected()
+void SunspecUpdater::onDisconnected()
 {
 	mCurrentState = Init;
 	handleError();
 }
 
-void InverterModbusUpdater::onTimer()
+void SunspecUpdater::onTimer()
 {
 	Q_ASSERT(!mTimer->isActive());
 	if (mModbusClient->isConnected())
@@ -306,7 +304,7 @@ void InverterModbusUpdater::onTimer()
 		mModbusClient->connectToServer(mInverter->hostName());
 }
 
-void InverterModbusUpdater::onPhaseChanged()
+void SunspecUpdater::onPhaseChanged()
 {
 	if (mInverter->deviceInfo().phaseCount > 1)
 		return;
@@ -315,7 +313,7 @@ void InverterModbusUpdater::onPhaseChanged()
 	mInverter->l3PowerInfo()->resetValues();
 }
 
-void InverterModbusUpdater::connectModbusClient()
+void SunspecUpdater::connectModbusClient()
 {
 	connect(mModbusClient, SIGNAL(connected()), this, SLOT(onConnected()));
 	connect(mModbusClient, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
