@@ -3,14 +3,13 @@
 #include "froniussolar_api.h"
 #include "inverter.h"
 #include "inverter_settings.h"
-#include "inverter_updater.h"
+#include "solar_api_updater.h"
 #include "power_info.h"
 
 static const int UpdateInterval = 5000;
 static const int UpdateSettingsInterval = 10 * 60 * 1000;
 
-InverterUpdater::InverterUpdater(Inverter *inverter, InverterSettings *settings,
-								 QObject *parent):
+SolarApiUpdater::SolarApiUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent):
 	QObject(parent),
 	mInverter(inverter),
 	mSettings(settings),
@@ -45,22 +44,22 @@ InverterUpdater::InverterUpdater(Inverter *inverter, InverterSettings *settings,
 	onStartRetrieval();
 }
 
-Inverter *InverterUpdater::inverter()
+Inverter *SolarApiUpdater::inverter()
 {
 	return mInverter;
 }
 
-InverterSettings *InverterUpdater::settings()
+InverterSettings *SolarApiUpdater::settings()
 {
 	return mSettings;
 }
 
-void InverterUpdater::onStartRetrieval()
+void SolarApiUpdater::onStartRetrieval()
 {
 	mSolarApi->getCommonDataAsync(mInverter->deviceInfo().networkId);
 }
 
-void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
+void SolarApiUpdater::onCommonDataFound(const CommonInverterData &data)
 {
 	switch (data.error)
 	{
@@ -95,7 +94,7 @@ void InverterUpdater::onCommonDataFound(const CommonInverterData &data)
 	}
 }
 
-void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data)
+void SolarApiUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data)
 {
 	switch (data.error)
 	{
@@ -120,7 +119,7 @@ void InverterUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 	scheduleRetrieval();
 }
 
-void InverterUpdater::onPhaseChanged()
+void SolarApiUpdater::onPhaseChanged()
 {
 	if (mInverter->deviceInfo().phaseCount > 1)
 		return;
@@ -129,23 +128,23 @@ void InverterUpdater::onPhaseChanged()
 	mInverter->l3PowerInfo()->resetValues();
 }
 
-void InverterUpdater::onSettingsTimer()
+void SolarApiUpdater::onSettingsTimer()
 {
 	mProcessor.updateEnergySettings();
 }
 
-void InverterUpdater::onConnectionDataChanged()
+void SolarApiUpdater::onConnectionDataChanged()
 {
 	mSolarApi->setHostName(mInverter->hostName());
 	mSolarApi->setPort(mInverter->port());
 }
 
-void InverterUpdater::scheduleRetrieval()
+void SolarApiUpdater::scheduleRetrieval()
 {
 	QTimer::singleShot(UpdateInterval, this, SLOT(onStartRetrieval()));
 }
 
-void InverterUpdater::setInitialized()
+void SolarApiUpdater::setInitialized()
 {
 	if (!mInitialized) {
 		mInitialized = true;
@@ -153,7 +152,7 @@ void InverterUpdater::setInitialized()
 	}
 }
 
-void InverterUpdater::handleError()
+void SolarApiUpdater::handleError()
 {
 	++mRetryCount;
 	if (mRetryCount == 5) {

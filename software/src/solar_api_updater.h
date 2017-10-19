@@ -12,12 +12,11 @@ class QTimer;
 struct CommonInverterData;
 struct ThreePhasesInverterData;
 
-class InverterUpdater : public QObject
+class SolarApiUpdater : public QObject
 {
 	Q_OBJECT
 public:
-	InverterUpdater(Inverter *inverter, InverterSettings *settings,
-					QObject *parent = 0);
+	SolarApiUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
 
 	Inverter *inverter();
 

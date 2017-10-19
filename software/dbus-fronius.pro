@@ -51,7 +51,6 @@ SOURCES += \
     src/froniussolar_api.cpp \
     src/inverter.cpp \
     src/power_info.cpp \
-    src/inverter_updater.cpp \
     src/inverter_gateway.cpp \
     src/local_ip_address_generator.cpp \
     src/settings.cpp \
@@ -71,13 +70,13 @@ SOURCES += \
     src/modbus_tcp_client/modbus_client.cpp \
     src/sunspec_tools.cpp \
     src/gateway_interface.cpp \
-    src/sunspec_updater.cpp
+    src/sunspec_updater.cpp \
+    src/solar_api_updater.cpp
 
 HEADERS += \
     src/froniussolar_api.h \
     src/inverter.h \
     src/power_info.h \
-    src/inverter_updater.h \
     src/inverter_gateway.h \
     src/local_ip_address_generator.h \
     src/settings.h \
@@ -99,7 +98,8 @@ HEADERS += \
     src/modbus_tcp_client/modbus_client.h \
     src/sunspec_tools.h \
     src/gateway_interface.h \
-    src/sunspec_updater.h
+    src/sunspec_updater.h \
+    src/solar_api_updater.h
 
 DISTFILES += \
     ../README.md

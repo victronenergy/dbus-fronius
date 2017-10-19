@@ -5,7 +5,7 @@
 #include "inverter_mediator.h"
 #include "sunspec_updater.h"
 #include "inverter_settings.h"
-#include "inverter_updater.h"
+#include "solar_api_updater.h"
 #include "settings.h"
 #include "ve_qitem_init_monitor.h"
 
@@ -101,9 +101,9 @@ void InverterMediator::onConnectionLost()
 	QLOG_WARN() << "Lost connection with: " << mInverter->location();
 	// Start device scan, maybe the IP address of the data card has changed.
 	mGateway->startDetection();
-	// Do not delete the inverter here because right now a function within
-	// InverterUpdater is emitting the isConnectedChanged signal. Deleting
-	// the inverter will also delete the InverterUpdater
+	// Do not delete the inverter here because right now a function within The updater is emitting
+	// the isConnectedChanged signal. Deleting the inverter will also delete the updater while a
+	// function in the class is still on the stack.
 	mInverter->deleteLater();
 	mInverter = 0;
 }
@@ -113,9 +113,9 @@ void InverterMediator::onInverterModelChanged()
 	QLOG_WARN() << "Config change in: " << mInverter->location();
 	// Start device scan, which will force a config reread.
 	mGateway->startDetection();
-	// Do not delete the inverter here because right now a function within
-	// InverterUpdater is emitting the isConnectedChanged signal. Deleting
-	// the inverter will also delete the InverterUpdater
+	// Do not delete the inverter here because right now a function within The updater is emitting
+	// the isConnectedChanged signal. Deleting the inverter will also delete the updater while a
+	// function in the class is still on the stack.
 	mInverter->deleteLater();
 	mInverter = 0;
 }
@@ -152,7 +152,7 @@ void InverterMediator::startAcquisition()
 	Q_ASSERT(mInverter != 0);
 	mInverter->setPosition(mInverterSettings->position());
 	if (mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi) {
-		InverterUpdater *updater = new InverterUpdater(mInverter, mInverterSettings, mInverter);
+		SolarApiUpdater *updater = new SolarApiUpdater(mInverter, mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 	} else {
 		SunspecUpdater *updater = new SunspecUpdater(mInverter, mInverterSettings, mInverter);
