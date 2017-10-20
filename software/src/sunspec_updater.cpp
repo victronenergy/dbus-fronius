@@ -1,6 +1,7 @@
 #include <qnumeric.h>
 #include <QsLog.h>
 #include <QTimer>
+#include <velib/vecan/products.h>
 #include "froniussolar_api.h"
 #include "data_processor.h"
 #include "inverter.h"
@@ -150,6 +151,21 @@ void SunspecUpdater::handleError()
 	startIdleTimer();
 }
 
+SunspecUpdater::ModbusState SunspecUpdater::getInitState() const
+{
+	// This is a workaround. SMA power limiting is not fully compatible with the standard: the
+	// registers controlling the limiter are write only (and should be read write). Because we
+	// are reading from the WMaxLimPct register. It is unclear how other sunspec inverters handle
+	// this, and if they are compatible. There may also be issues with the power limit controller
+	// in hub4control. So for now, we only allow power limiting when the inverter is a Fronius.
+
+	// To explicitly disable power limiting we take ReadPowerLimit from the state machine.
+	// Problem is that it is the first state, which is used in several places when the engine is
+	// reset. Hence this function.
+	return mInverter->deviceInfo().productId == VE_PROD_ID_PV_INVERTER_FRONIUS ?
+		ReadPowerLimit : ReadPowerAndVoltage;
+}
+
 void SunspecUpdater::onReadCompleted()
 {
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
@@ -248,7 +264,7 @@ void SunspecUpdater::onReadCompleted()
 		break;
 	default:
 		Q_ASSERT(false);
-		nextState = Init;
+		nextState = getInitState();
 		break;
 	}
 	startNextAction(nextState);
@@ -259,7 +275,7 @@ void SunspecUpdater::onWriteCompleted()
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
 	mWritePowerLimitRequested = false;
-	startNextAction(Start);
+	startNextAction(getInitState());
 }
 
 void SunspecUpdater::onPowerLimitRequested(double value)
@@ -286,12 +302,12 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 
 void SunspecUpdater::onConnected()
 {
-	startNextAction(Init);
+	startNextAction(getInitState());
 }
 
 void SunspecUpdater::onDisconnected()
 {
-	mCurrentState = Init;
+	mCurrentState = getInitState();
 	handleError();
 }
 
@@ -299,7 +315,7 @@ void SunspecUpdater::onTimer()
 {
 	Q_ASSERT(!mTimer->isActive());
 	if (mModbusClient->isConnected())
-		startNextAction(mCurrentState == Idle ? Start : mCurrentState);
+		startNextAction(mCurrentState == Idle ? getInitState() : mCurrentState);
 	else
 		mModbusClient->connectToServer(mInverter->hostName());
 }

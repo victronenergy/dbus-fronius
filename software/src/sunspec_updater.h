@@ -42,9 +42,7 @@ private:
 		ReadPowerLimit,
 		ReadPowerAndVoltage,
 		WritePowerLimit,
-		Idle,
-		Init = ReadPowerLimit,
-		Start = ReadPowerLimit
+		Idle
 	};
 
 	void connectModbusClient();
@@ -62,6 +60,8 @@ private:
 	bool handleModbusError(ModbusReply *reply);
 
 	void handleError();
+
+	ModbusState getInitState() const;
 
 	Inverter *mInverter;
 	InverterSettings *mSettings;
