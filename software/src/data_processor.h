@@ -18,10 +18,10 @@ struct ThreePhasesInverterData;
  * the phase selected in the `InverterSettings` object passed to the
  * constructor.
  */
-class FroniusDataProcessor
+class DataProcessor
 {
 public:
-	FroniusDataProcessor(Inverter *inverter, InverterSettings *settings);
+	DataProcessor(Inverter *inverter, InverterSettings *settings);
 
 	void process(const CommonInverterData &data);
 

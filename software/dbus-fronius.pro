@@ -56,7 +56,6 @@ SOURCES += \
     src/settings.cpp \
     src/dbus_fronius.cpp \
     src/inverter_settings.cpp \
-    src/fronius_data_processor.cpp \
     src/fronius_device_info.cpp \
     src/inverter_mediator.cpp \
     src/modbus_tcp_client/modbus_tcp_client.cpp \
@@ -71,7 +70,8 @@ SOURCES += \
     src/sunspec_tools.cpp \
     src/gateway_interface.cpp \
     src/sunspec_updater.cpp \
-    src/solar_api_updater.cpp
+    src/solar_api_updater.cpp \
+    src/data_processor.cpp
 
 HEADERS += \
     src/froniussolar_api.h \
@@ -83,7 +83,6 @@ HEADERS += \
     src/dbus_fronius.h \
     src/inverter_settings.h \
     src/defines.h \
-    src/fronius_data_processor.h \
     src/fronius_device_info.h \
     src/inverter_mediator.h \
     src/velib/velib_config_app.h \
@@ -99,7 +98,8 @@ HEADERS += \
     src/sunspec_tools.h \
     src/gateway_interface.h \
     src/sunspec_updater.h \
-    src/solar_api_updater.h
+    src/solar_api_updater.h \
+    src/data_processor.h
 
 DISTFILES += \
     ../README.md

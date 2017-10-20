@@ -1,19 +1,18 @@
 #include <cmath>
-#include "fronius_data_processor.h"
+#include "data_processor.h"
 #include "froniussolar_api.h"
 #include "inverter.h"
 #include "inverter_settings.h"
 #include "power_info.h"
 
-FroniusDataProcessor::FroniusDataProcessor(Inverter *inverter,
-										   InverterSettings *settings):
+DataProcessor::DataProcessor(Inverter *inverter, InverterSettings *settings):
 	mInverter(inverter),
 	mSettings(settings),
 	mPreviousTotalEnergy(-1)
 {
 }
 
-void FroniusDataProcessor::process(const CommonInverterData &data)
+void DataProcessor::process(const CommonInverterData &data)
 {
 	PowerInfo *pi = mInverter->meanPowerInfo();
 	pi->setCurrent(data.acCurrent);
@@ -31,7 +30,7 @@ void FroniusDataProcessor::process(const CommonInverterData &data)
 	}
 }
 
-void FroniusDataProcessor::process(const ThreePhasesInverterData &data)
+void DataProcessor::process(const ThreePhasesInverterData &data)
 {
 	/* The com.victron.system module expects power values for each phase,
 	 * but the Fronius inverter does not supply them. So we take to total
@@ -93,21 +92,20 @@ void FroniusDataProcessor::process(const ThreePhasesInverterData &data)
 	mPreviousTotalEnergy = totalEnergy;
 }
 
-void FroniusDataProcessor::updateEnergySettings()
+void DataProcessor::updateEnergySettings()
 {
 	updateEnergySettings(PhaseL1);
 	updateEnergySettings(PhaseL2);
 	updateEnergySettings(PhaseL3);
 }
 
-InverterPhase FroniusDataProcessor::getPhase() const
+InverterPhase DataProcessor::getPhase() const
 {
 	return mInverter->deviceInfo().phaseCount > 1 ? MultiPhase : mSettings->phase();
 }
 
-void FroniusDataProcessor::updateEnergyValue(InverterPhase phase,
-											 double accumulatedEnergy,
-											 double energyDelta)
+void DataProcessor::updateEnergyValue(InverterPhase phase, double accumulatedEnergy,
+									  double energyDelta)
 {
 	if (mPreviousTotalEnergy < 0)
 		return;
@@ -128,7 +126,7 @@ void FroniusDataProcessor::updateEnergyValue(InverterPhase phase,
 	pi->setTotalEnergy(phaseEnergy);
 }
 
-double FroniusDataProcessor::getEnergyValue(InverterPhase phase)
+double DataProcessor::getEnergyValue(InverterPhase phase)
 {
 	PowerInfo *pi = mInverter->getPowerInfo(phase);
 	if (pi == 0)
@@ -137,7 +135,7 @@ double FroniusDataProcessor::getEnergyValue(InverterPhase phase)
 	return std::isnormal(e) ? e : mSettings->getEnergy(phase);
 }
 
-void FroniusDataProcessor::updateEnergySettings(InverterPhase phase)
+void DataProcessor::updateEnergySettings(InverterPhase phase)
 {
 	PowerInfo *pi = mInverter->getPowerInfo(phase);
 	if (pi == 0)

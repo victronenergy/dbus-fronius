@@ -46,14 +46,14 @@ HEADERS += \
     $$SRCDIR/settings.h \
     $$SRCDIR/inverter_gateway.h \
     $$SRCDIR/inverter_settings.h \
-    $$SRCDIR/fronius_data_processor.h \
+    $$SRCDIR/data_processor.h \
     $$SRCDIR/fronius_device_info.h \
     $$SRCDIR/ve_qitem_consumer.h \
     $$SRCDIR/ve_service.h \
     src/fronius_solar_api_test.h \
     src/test_helper.h \
     src/dbus_inverter_bridge_test.h \
-    src/fronius_data_processor_test.h
+    src/data_processor_test.h
 
 SOURCES += \
     $$SRCDIR/froniussolar_api.cpp \
@@ -64,7 +64,7 @@ SOURCES += \
     $$SRCDIR/settings.cpp \
     $$SRCDIR/inverter_settings.cpp \
     $$SRCDIR/inverter_gateway.cpp \
-    $$SRCDIR/fronius_data_processor.cpp \
+    $$SRCDIR/data_processor.cpp \
     $$SRCDIR/fronius_device_info.cpp \
     $$SRCDIR/ve_qitem_consumer.cpp \
     $$SRCDIR/ve_service.cpp \
@@ -73,7 +73,7 @@ SOURCES += \
     src/dbus_inverter_bridge_test.cpp \
     src/fronius_solar_api_test.cpp \
     src/test_helper.cpp \
-    src/fronius_data_processor_test.cpp \
+    src/data_processor_test.cpp
 
 OTHER_FILES += \
     src/fronius_sim/app.py \

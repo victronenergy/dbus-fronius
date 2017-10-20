@@ -1,6 +1,6 @@
 #include <cmath>
-#include "fronius_data_processor.h"
-#include "fronius_data_processor_test.h"
+#include "data_processor.h"
+#include "data_processor_test.h"
 #include "froniussolar_api.h"
 #include "inverter.h"
 #include "inverter_settings.h"
@@ -8,7 +8,7 @@
 
 #define EXPECT_NAN(x) EXPECT_TRUE(std::isnan(x))
 
-TEST_F(FroniusDataProcessorTest, L1PhaseUpdate)
+TEST_F(DataProcessorTest, L1PhaseUpdate)
 {
 	setUpProcessor(PhaseL1);
 
@@ -31,7 +31,7 @@ TEST_F(FroniusDataProcessorTest, L1PhaseUpdate)
 	EXPECT_FLOAT_EQ(34.5969, mInverter->l1PowerInfo()->totalEnergy());
 }
 
-TEST_F(FroniusDataProcessorTest, L2PhaseUpdate)
+TEST_F(DataProcessorTest, L2PhaseUpdate)
 {
 	setUpProcessor(PhaseL2);
 
@@ -54,7 +54,7 @@ TEST_F(FroniusDataProcessorTest, L2PhaseUpdate)
 	EXPECT_FLOAT_EQ(12.3839, mInverter->l2PowerInfo()->totalEnergy());
 }
 
-TEST_F(FroniusDataProcessorTest, L3PhaseUpdate)
+TEST_F(DataProcessorTest, L3PhaseUpdate)
 {
 	setUpProcessor(PhaseL3);
 
@@ -77,7 +77,7 @@ TEST_F(FroniusDataProcessorTest, L3PhaseUpdate)
 	EXPECT_FLOAT_EQ(4.3219, mInverter->l3PowerInfo()->totalEnergy());
 }
 
-TEST_F(FroniusDataProcessorTest, AllPhaseCommonUpdate)
+TEST_F(DataProcessorTest, AllPhaseCommonUpdate)
 {
 	setUpProcessor(MultiPhase);
 
@@ -102,7 +102,7 @@ TEST_F(FroniusDataProcessorTest, AllPhaseCommonUpdate)
 	EXPECT_NAN(mInverter->l3PowerInfo()->power());
 }
 
-TEST_F(FroniusDataProcessorTest, ThreePhaseInitial)
+TEST_F(DataProcessorTest, ThreePhaseInitial)
 {
 	setUpProcessor(MultiPhase);
 
@@ -149,7 +149,7 @@ TEST_F(FroniusDataProcessorTest, ThreePhaseInitial)
 	EXPECT_NAN(mInverter->l3PowerInfo()->totalEnergy());
 }
 
-TEST_F(FroniusDataProcessorTest, ThreePhaseTwice)
+TEST_F(DataProcessorTest, ThreePhaseTwice)
 {
 	setUpProcessor(MultiPhase);
 
@@ -188,7 +188,7 @@ TEST_F(FroniusDataProcessorTest, ThreePhaseTwice)
 	EXPECT_FLOAT_EQ(1.00014, e1 / e2);
 }
 
-TEST_F(FroniusDataProcessorTest, ThreePhaseMultiple)
+TEST_F(DataProcessorTest, ThreePhaseMultiple)
 {
 	setUpProcessor(MultiPhase);
 
@@ -237,11 +237,11 @@ TEST_F(FroniusDataProcessorTest, ThreePhaseMultiple)
 	}
 }
 
-void FroniusDataProcessorTest::SetUp()
+void DataProcessorTest::SetUp()
 {
 }
 
-void FroniusDataProcessorTest::TearDown()
+void DataProcessorTest::TearDown()
 {
 	mProcessor.reset();
 	mSettings.reset();
@@ -250,7 +250,7 @@ void FroniusDataProcessorTest::TearDown()
 	mItemSubscriber.reset();
 }
 
-void FroniusDataProcessorTest::setUpProcessor(InverterPhase phase)
+void DataProcessorTest::setUpProcessor(InverterPhase phase)
 {
 	mItemProducer.reset(new VeProducer(VeQItems::getRoot(), "pub"));
 	mItemSubscriber.reset(new VeQItemProducer(VeQItems::getRoot(), "sub"));
@@ -270,5 +270,5 @@ void FroniusDataProcessorTest::setUpProcessor(InverterPhase phase)
 	mPhase->setValue(static_cast<int>(phase));
 	mSettings.reset(new InverterSettings(settingsRoot));
 
-	mProcessor.reset(new FroniusDataProcessor(mInverter.data(), mSettings.data()));
+	mProcessor.reset(new DataProcessor(mInverter.data(), mSettings.data()));
 }

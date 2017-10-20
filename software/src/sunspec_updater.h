@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QAbstractSocket>
 
-class FroniusDataProcessor;
+class DataProcessor;
 class Inverter;
 class InverterSettings;
 class ModbusReply;
@@ -67,7 +67,7 @@ private:
 	InverterSettings *mSettings;
 	ModbusTcpClient *mModbusClient;
 	QTimer *mTimer;
-	FroniusDataProcessor *mDataProcessor;
+	DataProcessor *mDataProcessor;
 	ModbusState mCurrentState;
 	double mPowerLimitPct;
 	int mRetryCount;

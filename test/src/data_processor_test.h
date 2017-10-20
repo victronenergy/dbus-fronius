@@ -7,10 +7,10 @@
 
 class Inverter;
 class InverterSettings;
-class FroniusDataProcessor;
+class DataProcessor;
 class VeQItemProducer;
 
-class FroniusDataProcessorTest : public testing::Test
+class DataProcessorTest : public testing::Test
 {
 protected:
 	virtual void SetUp();
@@ -21,7 +21,7 @@ protected:
 
 	QScopedPointer<Inverter> mInverter;
 	QScopedPointer<InverterSettings> mSettings;
-	QScopedPointer<FroniusDataProcessor> mProcessor;
+	QScopedPointer<DataProcessor> mProcessor;
 	QScopedPointer<VeQItemProducer> mItemProducer;
 	QScopedPointer<VeQItemProducer> mItemSubscriber;
 };

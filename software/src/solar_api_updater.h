@@ -2,7 +2,7 @@
 #define INVERTER_UPDATER_H
 
 #include <QObject>
-#include "fronius_data_processor.h"
+#include "data_processor.h"
 
 class FroniusSolarApi;
 class Inverter;
@@ -51,7 +51,7 @@ private:
 	InverterSettings *mSettings;
 	FroniusSolarApi *mSolarApi;
 	QTimer *mSettingsTimer;
-	FroniusDataProcessor mProcessor;
+	DataProcessor mProcessor;
 	bool mInitialized;
 	int mRetryCount;
 };

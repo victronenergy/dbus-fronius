@@ -2,7 +2,7 @@
 #include <QsLog.h>
 #include <QTimer>
 #include "froniussolar_api.h"
-#include "fronius_data_processor.h"
+#include "data_processor.h"
 #include "inverter.h"
 #include "sunspec_updater.h"
 #include "inverter_settings.h"
@@ -23,7 +23,7 @@ SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, Q
 	mSettings(settings),
 	mModbusClient(new ModbusTcpClient(this)),
 	mTimer(new QTimer(this)),
-	mDataProcessor(new FroniusDataProcessor(inverter, settings)),
+	mDataProcessor(new DataProcessor(inverter, settings)),
 	mCurrentState(Idle),
 	mPowerLimitPct(100),
 	mRetryCount(0),
