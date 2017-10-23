@@ -87,7 +87,7 @@ void LocalIpAddressGenerator::reset()
 	}
 }
 
-int LocalIpAddressGenerator::progress() const
+int LocalIpAddressGenerator::progress(int activeCount) const
 {
 	int total = 0;
 	int done = 0;
@@ -105,7 +105,7 @@ int LocalIpAddressGenerator::progress() const
 		Q_ASSERT(done == 0);
 		return 0;
 	}
-	return (100 * done) / total;
+	return (100 * qMax(0, done - activeCount)) / total;
 }
 
 bool LocalIpAddressGenerator::priorityOnly() const

@@ -49,7 +49,7 @@ void InverterGateway::setAutoDetect(bool b)
 
 int InverterGateway::scanProgress() const
 {
-	return mAutoDetect ? mAddressGenerator.progress() : 100;
+	return mAutoDetect ? mAddressGenerator.progress(mActiveHostNames.count()) : 100;
 }
 
 void InverterGateway::startDetection()

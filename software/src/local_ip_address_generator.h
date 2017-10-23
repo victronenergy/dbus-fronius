@@ -44,9 +44,11 @@ public:
 
 	/*!
 	 * \brief Returns the percentage of work done.
+	 * \param Number of IP addresses currently under investigation (will be deducted from the
+	 * number of IP addresses that have been retrieved already).
 	 * \return The progress percentage
 	 */
-	int progress() const;
+	int progress(int activeCount) const;
 
 	/*!
 	 * \brief If true, the generator will only return value from the
