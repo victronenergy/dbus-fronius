@@ -4,7 +4,7 @@
 #include "abstract_detector.h"
 #include "settings.h"
 
-static const int MaxSimultaneousRequests = 48; /// @todo EV Used to be 64
+static const int MaxSimultaneousRequests = 32;
 
 InverterGateway::InverterGateway(AbstractDetector *detector, Settings *settings, QObject *parent) :
 	QObject(parent),
@@ -19,9 +19,7 @@ InverterGateway::InverterGateway(AbstractDetector *detector, Settings *settings,
 	Q_ASSERT(settings != 0);
 	mAddressGenerator.setNetMaskLimit(QHostAddress(0xFFFFF000));
 	updateScanProgress();
-	/// @todo EV What to do here? If we are using the Fronius solar_api detector we need to restart
-	/// the detection. Maybe move to the detector?
-	// connect(settings, SIGNAL(portNumberChanged()), this, SLOT(onSettingsChanged()));
+	connect(settings, SIGNAL(portNumberChanged()), this, SLOT(onSettingsChanged()));
 	connect(settings, SIGNAL(ipAddressesChanged()), this, SLOT(onSettingsChanged()));
 	connect(settings, SIGNAL(knownIpAddressesChanged()), this, SLOT(onSettingsChanged()));
 	mTimer->setInterval(60000);

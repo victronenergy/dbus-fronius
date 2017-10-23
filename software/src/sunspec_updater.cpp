@@ -16,7 +16,10 @@
 // the power of the inverter to increase (or stay at its current value), so a large value for the
 // timeout is pretty safe.
 static const int PowerLimitTimeout = 120;
-static const int PowerLimitScale = 100; /// @todo EV This may cause problems with hub4control
+// This value used to be bigger to prevent old Fronius firmware from running (the resolution of
+// the power limiter was 1%. New Versions support precision of 0.01%. However, since a change in
+// the algorithm in hub4control, 1% should only work.
+static const int PowerLimitScale = 100;
 
 SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent):
 	QObject(parent),
@@ -195,13 +198,15 @@ void SunspecUpdater::onReadCompleted()
 		if (deviceInfo.retrievalMode == ProtocolSunSpecFloat) {
 			if (values.size() != 62)
 				break;
-			/// @todo EV Value and scale at zero seems to indicate an error state...
 			double power = getFloat(values, 22);
 			if (qIsFinite(power)) {
 				CommonInverterData cid;
 				cid.acCurrent = getFloat(values, 2);
 				cid.acPower = power;
-				cid.acVoltage = getFloat(values, 16); /// @todo EV This is phase 1 voltage
+				// sunspec does not provide a voltage for the system as a whole. This does not
+				// make a lot of sense. Since previous versions of dbus-fronius published this
+				// value (retrieved via the Solar API) we use the value from phase 1.
+				cid.acVoltage = getFloat(values, 16);
 				cid.totalEnergy = getFloat(values, 32);
 				mDataProcessor->process(cid);
 
@@ -220,13 +225,18 @@ void SunspecUpdater::onReadCompleted()
 		} else {
 			if (values.size() != 52)
 				break;
-			/// @todo EV Value and scale at zero seems to indicate an error state...
+			// In older versions of the Fronius firmware, power value and its scaling were sometimes
+			// 0 even when it was obvious that the value should have been different. It seemed to
+			// be indicating some kind of error situation.
 			double power = getScaledValue(values, 14, 1, 15, true);
 			if (qIsFinite(power)) {
 				CommonInverterData cid;
 				cid.acCurrent = getScaledValue(values, 2, 1, 6, false);
 				cid.acPower = power;
-				cid.acVoltage = getScaledValue(values, 10, 1, 13, false); /// @todo EV This is phase 1 voltage
+				// sunspec does not provide a voltage for the system as a whole. This does not
+				// make a lot of sense. Since previous versions of dbus-fronius published this
+				// value (retrieved via the Solar API) we use the value from phase 1.
+				cid.acVoltage = getScaledValue(values, 10, 1, 13, false);
 				cid.totalEnergy = getScaledValue(values, 24, 2, 26, false);
 				mDataProcessor->process(cid);
 
