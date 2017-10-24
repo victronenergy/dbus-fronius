@@ -12,6 +12,12 @@ class VeQItem;
 
 struct DeviceInfo;
 
+/*!
+ * Ties all functionality together in the dbus-fronius process.
+ *
+ * It acts as a composite GatewayInterface, as a D-Bus publisher of the
+ * 'com.victronenergy.fronius` service, and as createor of the `InverterMediator` classes.
+ */
 class DBusFronius : public VeService, public GatewayInterface
 {
 	Q_OBJECT

@@ -9,6 +9,9 @@ class Inverter;
 class InverterSettings;
 class Settings;
 
+/*!
+ * Represents a PV inverter, and manages data retrieval and D-Bus publishing.
+ */
 class InverterMediator : public QObject
 {
 	Q_OBJECT
@@ -16,6 +19,13 @@ public:
 	explicit InverterMediator(const DeviceInfo &device, GatewayInterface *gateway,
 							  Settings *settings, QObject *parent = 0);
 
+	/*!
+	 * Checks if the given device is represented by this class.
+	 * If so, it will make the necessary adjustments to the data retrieval (like changing
+	 * the IP address or the retrieval mode).
+	 * @param deviceInfo Describes a newly found PV inverter
+	 * @return true is this class represent the given device info. False otherwise.
+	 */
 	bool processNewInverter(const DeviceInfo &deviceInfo);
 
 private slots:
