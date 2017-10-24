@@ -131,20 +131,14 @@ void InverterMediator::onSettingsCustomNameChanged()
 {
 	if (mInverter == 0)
 		return;
-	QString name = mInverterSettings->customName();
-	if (name.isEmpty())
-		name = mInverter->productName();
-	mInverter->setCustomName(name);
+	mInverter->setCustomName(mInverterSettings->customName());
 }
 
 void InverterMediator::onInverterCustomNameChanged()
 {
 	if (mInverter == 0)
 		return;
-	QString name = mInverter->customName();
-	if (name == mInverter->productName())
-		name.clear();
-	mInverterSettings->setCustomName(name);
+	mInverterSettings->setCustomName(mInverter->customName());
 }
 
 void InverterMediator::startAcquisition()

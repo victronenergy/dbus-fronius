@@ -98,7 +98,8 @@ QString Inverter::customName() const
 
 void Inverter::setCustomName(const QString &name)
 {
-	if (customName() == name)
+	QVariant n = mCustomName->getValue();
+	if (n.isValid() && n.toString() == name)
 		return;
 	produceValue(mCustomName, name);
 	emit customNameChanged();
