@@ -145,6 +145,8 @@ void SunspecDetector::onFinished()
 		case 120: // Nameplate ratings
 			if (values.size() > 4)
 				di->di.maxPower = getScaledValue(values, 3, 1, 4, false);
+			if (values.size() > 22)
+				di->di.storageCapacity = getScaledValue(values, 21, 1, 22, false);
 			break;
 		case 123: // Immediate controls
 			if (values.size() > 23)

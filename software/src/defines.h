@@ -37,7 +37,8 @@ struct DeviceInfo
 		namePlateModelOffset(0),
 		immediateControlOffset(0),
 		powerLimitScale(0),
-		maxPower(0)
+		maxPower(0),
+		storageCapacity(0)
 	{}
 
 	QString hostName;
@@ -55,6 +56,7 @@ struct DeviceInfo
 	quint16 immediateControlOffset;
 	double powerLimitScale;
 	double maxPower;
+	double storageCapacity; // SMA SunnyIsland will report a storage capacity
 };
 
 /// This value is used to indicate that the correct device instance has not
