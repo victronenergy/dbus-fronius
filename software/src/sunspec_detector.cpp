@@ -94,11 +94,11 @@ void SunspecDetector::onFinished()
 			di->di.phaseCount = modelId % 10;
 			di->di.inverterModelOffset = di->currentRegister;
 			break;
-		case 120:
+		case 120: // Nameplate ratings
 			di->di.namePlateModelOffset = di->currentRegister;
 			di->state = Reply::ModuleContent;
 			break;
-		case 123:
+		case 123: // Immediate controls
 			di->di.immediateControlOffset = di->currentRegister;
 			di->state = Reply::ModuleContent;
 			break;
@@ -142,11 +142,11 @@ void SunspecDetector::onFinished()
 				di->di.uniqueId = getString(values, 50, 16);
 			}
 			break;
-		case 120:
+		case 120: // Nameplate ratings
 			if (values.size() > 4)
 				di->di.maxPower = getScaledValue(values, 3, 1, 4, false);
 			break;
-		case 123:
+		case 123: // Immediate controls
 			if (values.size() > 23)
 				di->di.powerLimitScale = 100.0 / getScale(values, 23);
 			break;
