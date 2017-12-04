@@ -159,9 +159,7 @@ Inverter *InverterMediator::createInverter()
 {
 	mSettings->registerInverter(mDeviceInfo.uniqueId);
 	int deviceInstance = mSettings->getDeviceInstance(mDeviceInfo.uniqueId);
-	QString path = QString("pub/com.victronenergy.pvinverter.%1_%2").
-			arg(mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi ? "solarapi" : "sunspec").
-			arg(mDeviceInfo.uniqueId);
+	QString path = QString("pub/com.victronenergy.pvinverter.pv_%1").arg(mDeviceInfo.uniqueId);
 	VeQItem *root = VeQItems::getRoot()->itemGetOrCreate(path, false);
 	Inverter *inverter = new Inverter(root, mDeviceInfo, deviceInstance, this);
 	connect(inverter, SIGNAL(customNameChanged()), this, SLOT(onInverterCustomNameChanged()));

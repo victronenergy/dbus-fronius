@@ -227,5 +227,7 @@ QString Inverter::location() const
 
 void Inverter::updateConnectionItem()
 {
-	produceValue(mConnection, QString("%1 - %2").arg(mDeviceInfo.hostName).arg(mDeviceInfo.networkId));
+	produceValue(mConnection, QString("%1 - %2 (%3)").
+		arg(mDeviceInfo.hostName).arg(mDeviceInfo.networkId).
+		arg(mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi ? "solarapi" : "sunspec"));
 }

@@ -26,7 +26,7 @@ TEST_F(DBusInverterBridgeTest, constructor)
 			   getValue(mServiceName, "/Mgmt/ProcessName"));
 	checkValue(QString(VERSION),
 			   getValue(mServiceName, "/Mgmt/ProcessVersion"));
-	checkValue(QString("10.0.1.4 - 3"),
+	checkValue(QString("10.0.1.4 - 3 (solarapi)"),
 			   getValue(mServiceName, "/Mgmt/Connection"));
 	checkValue(QVariant(1),
 			   getValue(mServiceName, "/Position"));
