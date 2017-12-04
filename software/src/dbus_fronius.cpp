@@ -47,6 +47,16 @@ void DBusFronius::onSettingsInitialized()
 
 void DBusFronius::onInverterFound(const DeviceInfo &deviceInfo)
 {
+	// Filter out inverters with storage, we don't want to support those.
+	if (qIsFinite(deviceInfo.storageCapacity) && (deviceInfo.storageCapacity > 0)) {
+		QString location = QString("%1@%2:%3").arg(deviceInfo.uniqueId).
+			arg(deviceInfo.hostName).
+			arg(deviceInfo.networkId);
+		QLOG_INFO() << "Skipping storage inverter" << deviceInfo.productName << "@" << location;
+		return;
+	}
+
+
 	foreach (InverterMediator *m, mMediators) {
 		if (m->processNewInverter(deviceInfo))
 			return;
