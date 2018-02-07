@@ -46,6 +46,17 @@ SMA sunny boy:
   current value, for example during startup. There is a workaround possible,
   but it is not part of this release.
 
+Solar Edge:
+* The SE2200H - SE6000H range (HD-wave) was specifically tested, though others
+  may work too.
+* The unit id is 126.
+* Only one concurrent TCP connection is allowed on port 502. Additional
+  connections are rejected.
+* The inverter publishes only the Common model and the Inverter model. This is
+  sufficient for basic operation.
+* Power limiting is not possible because the inverter does not publish model
+  121 (basic settings).
+
 Testing on a linux PC
 =====================
 
