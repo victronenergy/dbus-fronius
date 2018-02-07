@@ -30,19 +30,21 @@ Sunspec quirks
 --------------
 
 Fronius:
-The Fronius inverter appears to be compliant with the sunspec standard regarding the registers
-needed in this project. However, there may be multiple PV inverters sharing a single IP address.
-Multiple inverters are connected to a data manager, and not directly to the network. The data
-manager is connected to the network, and acts as a gateway for modbus TCP communication. Each
+The Fronius inverter appears to be compliant with the sunspec standard
+regarding the registers needed in this project. However, there may be multiple
+PV inverters sharing a single IP address.  Multiple inverters are connected to
+a data manager, and not directly to the network. The data manager is connected
+to the network, and acts as a gateway for modbus TCP communication. Each
 inverter has its own unit ID. The unit IDs are retrieved using the solar API.
 
 SMA sunny boy:
-* The Operating State (part of the inverter model) is not supported, allthough the SunSpec standard
-specifies it as mandatory. This is a problem, because the power limiter in hub4control uses this
-state.
-* The parameters controlling power limiting are write only (SunSpec has them read/write). This is a
-problem because it is impossible to retrieve their current value, for example during startup. There
-is a workaround possible, but it is not part of this release.
+* The Operating State (part of the inverter model) is not supported, although
+  the SunSpec standard specifies it as mandatory. This is a problem, because
+  the power limiter in hub4control uses this state.
+* The parameters controlling power limiting are write only (SunSpec has them
+  read/write). This is a problem because it is impossible to retrieve their
+  current value, for example during startup. There is a workaround possible,
+  but it is not part of this release.
 
 Testing on a linux PC
 =====================
