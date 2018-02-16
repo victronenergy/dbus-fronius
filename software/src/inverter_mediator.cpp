@@ -1,6 +1,7 @@
 #include <QsLog.h>
 #include "defines.h"
 #include "inverter.h"
+#include "fronius_inverter.h"
 #include "gateway_interface.h"
 #include "inverter_mediator.h"
 #include "sunspec_updater.h"
@@ -161,7 +162,12 @@ Inverter *InverterMediator::createInverter()
 	int deviceInstance = mSettings->getDeviceInstance(mDeviceInfo.uniqueId);
 	QString path = QString("pub/com.victronenergy.pvinverter.pv_%1").arg(mDeviceInfo.uniqueId);
 	VeQItem *root = VeQItems::getRoot()->itemGetOrCreate(path, false);
-	Inverter *inverter = new Inverter(root, mDeviceInfo, deviceInstance, this);
+	Inverter *inverter;
+	if (mDeviceInfo.deviceType != 0) {
+		inverter = new FroniusInverter(root, mDeviceInfo, deviceInstance, this);
+	} else {
+		inverter = new Inverter(root, mDeviceInfo, deviceInstance, this);
+	}
 	connect(inverter, SIGNAL(customNameChanged()), this, SLOT(onInverterCustomNameChanged()));
 	onPositionChanged();
 	onSettingsCustomNameChanged();

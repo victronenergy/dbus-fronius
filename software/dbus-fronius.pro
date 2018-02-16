@@ -50,6 +50,7 @@ SOURCES += \
     src/main.cpp \
     src/froniussolar_api.cpp \
     src/inverter.cpp \
+    src/fronius_inverter.cpp \
     src/power_info.cpp \
     src/inverter_gateway.cpp \
     src/local_ip_address_generator.cpp \
@@ -76,6 +77,7 @@ SOURCES += \
 HEADERS += \
     src/froniussolar_api.h \
     src/inverter.h \
+    src/fronius_inverter.h \
     src/power_info.h \
     src/inverter_gateway.h \
     src/local_ip_address_generator.h \

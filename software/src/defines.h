@@ -30,6 +30,7 @@ struct DeviceInfo
 	DeviceInfo():
 		networkId(0),
 		port(0),
+		deviceType(0),
 		phaseCount(0),
 		productId(0),
 		retrievalMode(ProtocolFroniusSolarApi),
@@ -47,6 +48,7 @@ struct DeviceInfo
 	QString firmwareVersion;
 	int networkId;
 	int port; // Fronius solar API only
+	int deviceType; // Fronius solar API only
 	int phaseCount;
 	int productId;
 	ProtocolType retrievalMode;

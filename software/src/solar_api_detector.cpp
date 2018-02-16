@@ -74,6 +74,12 @@ void SolarApiDetector::onSunspecDeviceFound(const DeviceInfo &info)
 	// The sunspec detector uses the serial number of the inverter as unique ID, which is not
 	// available in the solar API.
 	i2.uniqueId = fixUniqueId(device.inverter);
+
+	// Fronius inverters have a deviceType that is exposed on solarAPI but not
+	// via sunspec. Transplant it here. If this is not a Fronius inverter
+	// this value will simply be a zero.
+	i2.deviceType = device.inverter.deviceType;
+
 	device.deviceFound = true;
 	device.reply->setResult(i2);
 }
@@ -96,6 +102,7 @@ void SolarApiDetector::onSunspecDone()
 	info.uniqueId = fixUniqueId(device.inverter);
 	info.hostName = device.reply->api->hostName();
 	info.port = device.reply->api->port();
+	info.deviceType = device.inverter.deviceType;
 	info.productId = VE_PROD_ID_PV_INVERTER_FRONIUS;
 	info.maxPower = qQNaN();
 	const FroniusDeviceInfo *deviceInfo = FroniusDeviceInfo::find(device.inverter.deviceType);
