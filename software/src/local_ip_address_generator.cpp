@@ -2,14 +2,30 @@
 #include <QsLog.h>
 #include "local_ip_address_generator.h"
 
+Subnet::Subnet(quint32 first, quint32 last, quint32 localhost):
+	mFirst(first),
+	mCurrent(first),
+	mLast(last),
+	mLocalHost(localhost)
+{
+}
+
+bool Subnet::hasNext() const {
+	return mCurrent < mLast;
+}
+
+QHostAddress Subnet::next() {
+	++mCurrent;
+	if (mCurrent == mLocalHost)
+		++mCurrent;
+	return QHostAddress(mCurrent);
+}
+
 LocalIpAddressGenerator::LocalIpAddressGenerator():
 	mPriorityOnly(false),
-	mFirst(0),
-	mCurrent(0),
-	mLast(0),
-	mLocalHost(0),
 	mNetMaskLimit(0u),
-	mPriorityIndex(0)
+	mPriorityIndex(0),
+	mSubnetIndex(0)
 {
 	reset();
 }
@@ -17,44 +33,52 @@ LocalIpAddressGenerator::LocalIpAddressGenerator():
 LocalIpAddressGenerator::LocalIpAddressGenerator(
 		const QList<QHostAddress> &priorityAddresses, bool priorityOnly):
 	mPriorityOnly(priorityOnly),
-	mFirst(0),
-	mCurrent(0),
-	mLast(0),
-	mLocalHost(0),
 	mPriorityAddresses(priorityAddresses),
 	mNetMaskLimit(0u),
-	mPriorityIndex(0)
+	mPriorityIndex(0),
+	mSubnetIndex(0)
 {
 	reset();
 }
 
 QHostAddress LocalIpAddressGenerator::next()
 {
+	// First return the priority addresses
 	if (mPriorityIndex < mPriorityAddresses.size()) {
 		QHostAddress a = mPriorityAddresses[mPriorityIndex];
 		++mPriorityIndex;
 		return a;
 	}
-	++mCurrent;
-	if (mCurrent == mLocalHost)
-		++mCurrent;
-	return QHostAddress(mCurrent);
+
+	// Then traverse the subnets
+	while (mSubnetIndex < mSubnets.size()) {
+		if (mSubnets[mSubnetIndex].hasNext())
+			return mSubnets[mSubnetIndex].next();
+		++mSubnetIndex;
+	}
+
+	Q_ASSERT(false);
+	return QHostAddress((quint32)0); // We should never reach this.
 }
 
 bool LocalIpAddressGenerator::hasNext() const
 {
+	int idx = mSubnetIndex;
 	if (mPriorityIndex < mPriorityAddresses.size())
 		return true;
-	return mCurrent < mLast;
+	while (idx < mSubnets.size()) {
+		if (mSubnets[idx].hasNext())
+			return true;
+		++idx;
+	}
+	return false;
 }
 
 void LocalIpAddressGenerator::reset()
 {
-	mFirst = 0;
-	mCurrent = 0;
-	mLocalHost = 0;
-	mLast = 0;
 	mPriorityIndex = 0;
+	mSubnetIndex = 0;
+	mSubnets.clear();
 	if (mPriorityOnly)
 		return;
 	foreach (QNetworkInterface iface, QNetworkInterface::allInterfaces()) {
@@ -75,12 +99,13 @@ void LocalIpAddressGenerator::reset()
 								<< "Netmask:" << entry.netmask();
 					quint32 netMask = entry.netmask().toIPv4Address();
 					netMask |= mNetMaskLimit.toIPv4Address();
-					mLocalHost = address.toIPv4Address();
-					mCurrent = mLocalHost & netMask;
-					mFirst = mCurrent;
-					mLast = (mCurrent | ~netMask) - 1;
-					if (mLast == mLocalHost)
-						--mLast;
+
+					quint32 localHost = address.toIPv4Address();
+					quint32 first = localHost & netMask;
+					quint32 last = (first | ~netMask) - 1;
+					if (last == localHost) --last;
+					mSubnets.append(
+						Subnet(first, last, localHost));
 				}
 			}
 		}
@@ -95,11 +120,13 @@ int LocalIpAddressGenerator::progress(int activeCount) const
 	done += mPriorityIndex;
 	if (!mPriorityOnly) {
 		/*!
-		 * @todo EV correct for the fact that we skip mLocalHost. This will
+		 * @todo EV correct for the fact that we skip localhost. This will
 		 * make the value slightly more accurate.
 		 */
-		total += mLast - mFirst;
-		done += mCurrent - mFirst;
+		foreach (Subnet s, mSubnets) {
+			total += s.size();
+			done += s.position();
+		}
 	}
 	if (total == 0) {
 		Q_ASSERT(done == 0);

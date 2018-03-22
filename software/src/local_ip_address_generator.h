@@ -4,6 +4,21 @@
 #include <QHostAddress>
 #include <QList>
 
+class Subnet
+{
+public:
+	Subnet(quint32 first, quint32 last, quint32 localhost);
+	bool hasNext() const;
+	QHostAddress next();
+	int size() const { return mLast - mFirst; }
+	int position() const { return mCurrent - mFirst; }
+private:
+	quint32 mFirst;
+	quint32 mCurrent;
+	quint32 mLast;
+	quint32 mLocalHost;
+};
+
 /*!
  * @brief An iterator like object, which enumerates all IP addresses within the
  * local subnet (except the IP address of the localhost).
@@ -74,13 +89,11 @@ public:
 
 private:
 	bool mPriorityOnly;
-	quint32 mFirst;
-	quint32 mCurrent;
-	quint32 mLast;
-	quint32 mLocalHost;
+	QList<Subnet> mSubnets;
 	QList<QHostAddress> mPriorityAddresses;
 	QHostAddress mNetMaskLimit;
 	int mPriorityIndex;
+	int mSubnetIndex;
 };
 
 #endif // LOCAL_IP_ADDRESS_GENERATOR_H
