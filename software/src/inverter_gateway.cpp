@@ -65,7 +65,9 @@ void InverterGateway::onInverterFound(const DeviceInfo &deviceInfo)
 	QHostAddress addr(deviceInfo.hostName);
 	if (!addresses.contains(addr)) {
 		addresses.append(addr);
+		mSettingsBusy = true; // prevent onSettingsChanged from firing
 		mSettings->setKnownIpAddresses(addresses);
+		mSettingsBusy = false;
 	}
 	emit inverterFound(deviceInfo);
 }
