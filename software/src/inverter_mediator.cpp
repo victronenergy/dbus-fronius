@@ -77,6 +77,13 @@ void InverterMediator::onSettingsInitialized()
 		mInverter = 0;
 		return;
 	}
+
+	/* Migration, if this is a multi-phase inverter, make sure localsettings
+	 * reflect it. */
+	if (mDeviceInfo.phaseCount > 1 && mInverterSettings->phase() != MultiPhase) {
+		mInverterSettings->setPhase(MultiPhase);
+	}
+
 	Q_ASSERT(mInverter == 0);
 	mInverter = createInverter();
 	QLOG_INFO() << "New inverter:" << mInverter->location();
