@@ -21,8 +21,6 @@ TEST_F(DataProcessorTest, L1PhaseUpdate)
 	mProcessor->process(data);
 
 	EXPECT_FLOAT_EQ(512, mInverter->meanPowerInfo()->power());
-	EXPECT_FLOAT_EQ(2.3, mInverter->meanPowerInfo()->current());
-	EXPECT_FLOAT_EQ(225, mInverter->meanPowerInfo()->voltage());
 	EXPECT_FLOAT_EQ(34.5969, mInverter->meanPowerInfo()->totalEnergy());
 
 	EXPECT_FLOAT_EQ(512, mInverter->l1PowerInfo()->power());
@@ -44,8 +42,6 @@ TEST_F(DataProcessorTest, L2PhaseUpdate)
 	mProcessor->process(data);
 
 	EXPECT_FLOAT_EQ(338.2, mInverter->meanPowerInfo()->power());
-	EXPECT_FLOAT_EQ(225.8, mInverter->meanPowerInfo()->voltage());
-	EXPECT_FLOAT_EQ(1.4, mInverter->meanPowerInfo()->current());
 	EXPECT_FLOAT_EQ(12.3839, mInverter->meanPowerInfo()->totalEnergy());
 
 	EXPECT_FLOAT_EQ(338.2, mInverter->l2PowerInfo()->power());
@@ -67,8 +63,6 @@ TEST_F(DataProcessorTest, L3PhaseUpdate)
 	mProcessor->process(data);
 
 	EXPECT_FLOAT_EQ(445.7, mInverter->meanPowerInfo()->power());
-	EXPECT_FLOAT_EQ(1.93, mInverter->meanPowerInfo()->current());
-	EXPECT_FLOAT_EQ(232.8, mInverter->meanPowerInfo()->voltage());
 	EXPECT_FLOAT_EQ(4.3219, mInverter->meanPowerInfo()->totalEnergy());
 
 	EXPECT_FLOAT_EQ(445.7, mInverter->l3PowerInfo()->power());
@@ -90,8 +84,6 @@ TEST_F(DataProcessorTest, AllPhaseCommonUpdate)
 	mProcessor->process(data);
 
 	EXPECT_FLOAT_EQ(445.7, mInverter->meanPowerInfo()->power());
-	EXPECT_FLOAT_EQ(1.93, mInverter->meanPowerInfo()->current());
-	EXPECT_FLOAT_EQ(232.8, mInverter->meanPowerInfo()->voltage());
 	EXPECT_FLOAT_EQ(4.3219, mInverter->meanPowerInfo()->totalEnergy());
 
 	EXPECT_NAN(mInverter->l1PowerInfo()->power());
@@ -115,8 +107,6 @@ TEST_F(DataProcessorTest, ThreePhaseInitial)
 	mProcessor->process(data);
 
 	EXPECT_FLOAT_EQ(445.7, mInverter->meanPowerInfo()->power());
-	EXPECT_FLOAT_EQ(1.93, mInverter->meanPowerInfo()->current());
-	EXPECT_FLOAT_EQ(232.8, mInverter->meanPowerInfo()->voltage());
 	EXPECT_FLOAT_EQ(4.3219, mInverter->meanPowerInfo()->totalEnergy());
 
 	ThreePhasesInverterData tpd;
@@ -174,7 +164,7 @@ TEST_F(DataProcessorTest, ThreePhaseTwice)
 	mProcessor->process(data);
 	mProcessor->process(tpd);
 
-	PowerInfo *pt = mInverter->meanPowerInfo();
+	BasicPowerInfo *pt = mInverter->meanPowerInfo();
 	PowerInfo *p1 = mInverter->l1PowerInfo();
 	PowerInfo *p2 = mInverter->l2PowerInfo();
 	PowerInfo *p3 = mInverter->l3PowerInfo();
@@ -209,7 +199,7 @@ TEST_F(DataProcessorTest, ThreePhaseMultiple)
 	tpd.acVoltagePhase3 = 227.3;
 	mProcessor->process(tpd);
 
-	PowerInfo *pt = mInverter->meanPowerInfo();
+	BasicPowerInfo *pt = mInverter->meanPowerInfo();
 	PowerInfo *p1 = mInverter->l1PowerInfo();
 	PowerInfo *p2 = mInverter->l2PowerInfo();
 	PowerInfo *p3 = mInverter->l3PowerInfo();

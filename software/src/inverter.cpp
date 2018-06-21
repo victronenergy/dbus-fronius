@@ -19,7 +19,7 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	mCustomName(createItem("CustomName")),
 	mProductName(createItem("ProductName")),
 	mConnection(createItem("Mgmt/Connection")),
-	mMeanPowerInfo(new PowerInfo(root->itemGetOrCreate("Ac", false), this)),
+	mMeanPowerInfo(new BasicPowerInfo(root->itemGetOrCreate("Ac", false), this)),
 	mL1PowerInfo(new PowerInfo(root->itemGetOrCreate("Ac/L1", false), this)),
 	mL2PowerInfo(new PowerInfo(root->itemGetOrCreate("Ac/L2", false), this)),
 	mL3PowerInfo(new PowerInfo(root->itemGetOrCreate("Ac/L3", false), this))
@@ -157,7 +157,7 @@ void Inverter::setPosition(InverterPosition p)
 	produceValue(mPosition, static_cast<int>(p), text);
 }
 
-PowerInfo *Inverter::meanPowerInfo()
+BasicPowerInfo *Inverter::meanPowerInfo()
 {
 	return mMeanPowerInfo;
 }

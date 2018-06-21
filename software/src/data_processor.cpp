@@ -14,17 +14,15 @@ DataProcessor::DataProcessor(Inverter *inverter, InverterSettings *settings):
 
 void DataProcessor::process(const CommonInverterData &data)
 {
-	PowerInfo *pi = mInverter->meanPowerInfo();
-	pi->setCurrent(data.acCurrent);
-	pi->setVoltage(data.acVoltage);
+	BasicPowerInfo *pi = mInverter->meanPowerInfo();
 	pi->setPower(data.acPower);
 	// Fronius gives us energy in Wh. We need kWh here.
 	pi->setTotalEnergy(data.totalEnergy / 1000);
 	InverterPhase phase = getPhase();
 	if (phase != MultiPhase) {
 		PowerInfo *li = mInverter->getPowerInfo(phase);
-		li->setCurrent(pi->current());
-		li->setVoltage(pi->voltage());
+		li->setCurrent(data.acCurrent);
+		li->setVoltage(data.acVoltage);
 		li->setPower(pi->power());
 		li->setTotalEnergy(pi->totalEnergy());
 	}

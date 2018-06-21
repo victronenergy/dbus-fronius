@@ -5,6 +5,7 @@
 #include "ve_service.h"
 
 class PowerInfo;
+class BasicPowerInfo;
 
 class Inverter : public VeService
 {
@@ -56,7 +57,7 @@ public:
 		return mDeviceInfo;
 	}
 
-	PowerInfo *meanPowerInfo();
+	BasicPowerInfo *meanPowerInfo();
 
 	PowerInfo *l1PowerInfo();
 
@@ -99,7 +100,7 @@ private:
 	VeQItem *mProductName;
 	VeQItem *mConnection;
 
-	PowerInfo *mMeanPowerInfo;
+	BasicPowerInfo *mMeanPowerInfo;
 	PowerInfo *mL1PowerInfo;
 	PowerInfo *mL2PowerInfo;
 	PowerInfo *mL3PowerInfo;

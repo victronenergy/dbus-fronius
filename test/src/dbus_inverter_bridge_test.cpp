@@ -12,9 +12,7 @@
 
 TEST_F(DBusInverterBridgeTest, constructor)
 {
-	mInverter->meanPowerInfo()->setCurrent(1.43);
 	mInverter->meanPowerInfo()->setPower(137.7);
-	mInverter->meanPowerInfo()->setVoltage(342.3);
 	mInverter->l2PowerInfo()->setCurrent(1.79);
 	mInverter->l2PowerInfo()->setPower(138.2);
 	mInverter->l2PowerInfo()->setVoltage(343.9);
@@ -43,8 +41,6 @@ TEST_F(DBusInverterBridgeTest, constructor)
 	checkValue(QVariant(1),
 			   getValue(mServiceName, "/Connected"));
 
-	checkValue(getItem(mServiceName, "Ac/Current"), 1.43, "1.4A");
-	checkValue(getItem(mServiceName, "Ac/Voltage"), 342.3, "342V");
 	checkValue(getItem(mServiceName, "Ac/Power"), 137.7, "138W");
 
 	checkValue(getItem(mServiceName, "Ac/L2/Current"), 1.79, "1.8A");
@@ -76,10 +72,11 @@ void DBusInverterBridgeTest::SetUp()
 	deviceInfo.productId = 0xA144;
 	VeQItem *root = mItemProducer->services()->itemGetOrCreate("com.victronenergy.pvinverter.test");
 	mInverter.reset(new Inverter(root, deviceInfo, 123));
-	setupPowerInfo(mInverter->meanPowerInfo());
 	setupPowerInfo(mInverter->l1PowerInfo());
 	setupPowerInfo(mInverter->l2PowerInfo());
 	setupPowerInfo(mInverter->l3PowerInfo());
+	mInverter->meanPowerInfo()->setPower(0);
+	mInverter->meanPowerInfo()->setTotalEnergy(0);
 	VeQItem *settingsRoot = mItemSubscriber->services()->itemGetOrCreate("com.victronenergy.settings/Settings/Fronius/I123");
 	mPosition = settingsRoot->itemGetOrCreate("Position");
 	mPosition->setValue(static_cast<int>(Input2));
