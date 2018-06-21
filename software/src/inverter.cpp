@@ -179,9 +179,8 @@ PowerInfo *Inverter::l3PowerInfo()
 
 PowerInfo *Inverter::getPowerInfo(InverterPhase phase)
 {
+	Q_ASSERT(phase != MultiPhase);
 	switch (phase) {
-	case MultiPhase:
-		return mMeanPowerInfo;
 	case PhaseL1:
 		return mL1PowerInfo;
 	case PhaseL2:
