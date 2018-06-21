@@ -3,7 +3,28 @@
 
 #include "ve_service.h"
 
-class PowerInfo : public VeService
+class BasicPowerInfo : public VeService
+{
+	Q_OBJECT
+public:
+	explicit BasicPowerInfo(VeQItem *root, QObject *parent = 0);
+
+	double power() const;
+
+	void setPower(double p);
+
+	double totalEnergy() const;
+
+	void setTotalEnergy(double e);
+
+	void resetValues();
+
+private:
+	VeQItem *mPower;
+	VeQItem *mTotalEnergy;
+};
+
+class PowerInfo : public BasicPowerInfo
 {
 	Q_OBJECT
 public:
@@ -17,14 +38,6 @@ public:
 
 	void setVoltage(double v);
 
-	double power() const;
-
-	void setPower(double p);
-
-	double totalEnergy() const;
-
-	void setTotalEnergy(double e);
-
 	/*!
 	 * @brief Reset all measured values to NaN
 	 */
@@ -33,8 +46,6 @@ public:
 private:
 	VeQItem *mCurrent;
 	VeQItem *mVoltage;
-	VeQItem *mPower;
-	VeQItem *mTotalEnergy;
 };
 
 #endif // POWER_INFO_H
