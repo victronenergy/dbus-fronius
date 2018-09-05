@@ -107,8 +107,10 @@ void SunspecUpdater::setInverterState(int sunSpecState)
 		froniusState = 3;
 		break;
 	case 4: // MPPT
+		froniusState = 11;
+		break;
 	case 5: // Throttled
-		froniusState = 7;
+		froniusState = 12;
 		break;
 	case 7: // Fault
 		froniusState = 10;

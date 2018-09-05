@@ -73,6 +73,12 @@ void Inverter::setStatusCode(int code)
 		case 10:
 			text = "Error";
 			break;
+		case 11:
+			text = "Running (MPPT)";
+			break;
+		case 12:
+			text = "Running (Throttled)";
+			break;
 		default:
 			text = QString::number(code);
 			break;
