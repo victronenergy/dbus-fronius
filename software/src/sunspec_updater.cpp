@@ -27,7 +27,7 @@ SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, Q
 	mSettings(settings),
 	mModbusClient(new ModbusTcpClient(this)),
 	mTimer(new QTimer(this)),
-	mDataProcessor(new DataProcessor(inverter, settings)),
+	mDataProcessor(new DataProcessor(inverter, settings, this)),
 	mCurrentState(Idle),
 	mPowerLimitPct(100),
 	mRetryCount(0),

@@ -5,7 +5,8 @@
 #include "inverter_settings.h"
 #include "power_info.h"
 
-DataProcessor::DataProcessor(Inverter *inverter, InverterSettings *settings):
+DataProcessor::DataProcessor(Inverter *inverter, InverterSettings *settings, QObject *parent):
+	QObject(parent),
 	mInverter(inverter),
 	mSettings(settings),
 	mPreviousTotalEnergy(-1)

@@ -1,6 +1,7 @@
 #ifndef FRONIUSDATAPROCESSOR_H
 #define FRONIUSDATAPROCESSOR_H
 
+#include <QObject>
 #include "defines.h"
 
 class Inverter;
@@ -18,10 +19,11 @@ struct ThreePhasesInverterData;
  * the phase selected in the `InverterSettings` object passed to the
  * constructor.
  */
-class DataProcessor
+class DataProcessor : public QObject
 {
+	Q_OBJECT
 public:
-	DataProcessor(Inverter *inverter, InverterSettings *settings);
+	DataProcessor(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
 
 	void process(const CommonInverterData &data);
 
