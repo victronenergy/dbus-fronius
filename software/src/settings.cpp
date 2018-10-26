@@ -1,4 +1,5 @@
 #include <QsLog.h>
+#include <QRegExp>
 #include <velib/qt/ve_qitem.hpp>
 #include "defines.h"
 #include "settings.h"
@@ -63,7 +64,10 @@ int Settings::getDeviceInstance(const QString &uniqueId) const
 
 QString Settings::createInverterId(const QString &deviceSerial)
 {
-	return QString("I%1").arg(deviceSerial);
+	// DBus paths may only contain [A-Z][a-z][0-9]_, therefore we must
+	// limit serial numbers to those.
+	return QString("I%1").arg(deviceSerial).replace(
+		QRegExp("[^A-Za-z0-9_]"), "_");
 }
 
 void Settings::onInverterdIdsChanged()
