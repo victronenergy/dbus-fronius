@@ -27,7 +27,7 @@ double getScaledValue(const QVector<quint16> &values, int offset, int size, int 
 		break;
 	}
 	double value = isSigned ?
-		static_cast<double>(static_cast<qint32>(v)) :
+		static_cast<double>(size==1?static_cast<qint16>(v):static_cast<qint32>(v)) :
 		static_cast<double>(v);
 	return value * scale;
 }
