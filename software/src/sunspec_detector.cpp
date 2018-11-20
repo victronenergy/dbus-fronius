@@ -131,6 +131,8 @@ void SunspecDetector::onFinished()
 					di->di.productId = VE_PROD_ID_PV_INVERTER_FRONIUS;
 				else if (manufacturer == "SMA")
 					di->di.productId = VE_PROD_ID_PV_INVERTER_SMA;
+				else if (manufacturer == "ABB")
+					di->di.productId = VE_PROD_ID_PV_INVERTER_ABB;
 				else
 					di->di.productId = VE_PROD_ID_PV_INVERTER_SUNSPEC;
 				QString model = getString(values, 18, 16);

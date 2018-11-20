@@ -167,7 +167,9 @@ SunspecUpdater::ModbusState SunspecUpdater::getInitState() const
 	// To explicitly disable power limiting we take ReadPowerLimit from the state machine.
 	// Problem is that it is the first state, which is used in several places when the engine is
 	// reset. Hence this function.
-	return mInverter->deviceInfo().productId == VE_PROD_ID_PV_INVERTER_FRONIUS ?
+	return (
+		mInverter->deviceInfo().productId == VE_PROD_ID_PV_INVERTER_FRONIUS ||
+		mInverter->deviceInfo().productId == VE_PROD_ID_PV_INVERTER_ABB) ?
 		ReadPowerLimit : ReadPowerAndVoltage;
 }
 
