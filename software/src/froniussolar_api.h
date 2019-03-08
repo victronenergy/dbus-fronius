@@ -4,11 +4,14 @@
 #include <QByteArray>
 #include <QObject>
 #include <QList>
+#include <QPair>
 #include <QString>
 #include <QUrl>
 #include <QVariantMap>
 
-class QHttp;
+class QNetworkAccessManager;
+class QNetworkRequest;
+class QNetworkReply;
 class QTimer;
 
 /*!
@@ -216,29 +219,27 @@ signals:
 	void systemDataFound(const CumulationInverterData &data);
 
 private slots:
-	void onDone(bool error);
+	void onDone(QNetworkReply *reply);
 
 	void onTimeout();
 
 private:
+	const QUrl baseUrl(const QString &path);
+
 	void sendGetRequest(const QUrl &request, const QString &id);
 
-	void processRequest(const QString &networkError);
+	void processRequest(QNetworkReply *reply);
 
-	void processConverterInfo(const QString &networkError);
+	void processConverterInfo(QNetworkReply *reply);
 
-	void processCumulationData(const QString &networkError);
+	void processCumulationData(QNetworkReply *reply);
 
-	void processCommonData(const QString &networkError);
+	void processCommonData(QNetworkReply *reply);
 
-	void processThreePhasesData(const QString &networkError);
+	void processThreePhasesData(QNetworkReply *reply);
 
-	void processSystemData(const QString &networkError);
-
-	void processReply(const QString &networkError, SolarApiReply &apiReply,
+	void processReply(QNetworkReply *reply, SolarApiReply &apiReply,
 					  QVariantMap &map);
-
-	void updateHttpClient();
 
 	/*!
 	 * @brief Retrieves a nested value from the specified map.
@@ -249,7 +250,8 @@ private:
 	 */
 	static QVariant getByPath(const QVariant &map, const QString &path);
 
-	QHttp *mHttp;
+	QNetworkAccessManager *mNetworkManager;
+	QNetworkReply *mReply;
 	QString mHostName;
 	int mPort;
 	QString mRequestType;
