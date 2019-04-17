@@ -124,7 +124,7 @@ QString SolarApiDetector::fixUniqueId(const InverterInfo &inverterInfo)
 	bool isOk = false;
 	QString result;
 	foreach (QChar c, inverterInfo.uniqueId) {
-		c = c.toLatin1();
+		c = c.toAscii();
 		if (!c.isLetterOrNumber()) {
 			c = '_';
 		} else {
