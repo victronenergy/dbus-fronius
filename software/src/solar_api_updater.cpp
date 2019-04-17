@@ -15,7 +15,7 @@ SolarApiUpdater::SolarApiUpdater(Inverter *inverter, InverterSettings *settings,
 	mSettings(settings),
 	mSolarApi(new FroniusSolarApi(inverter->hostName(), inverter->port(), this)),
 	mSettingsTimer(new QTimer(this)),
-	mProcessor(inverter, settings, this),
+	mProcessor(inverter, settings),
 	mInitialized(false),
 	mRetryCount(0)
 {
