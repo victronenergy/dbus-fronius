@@ -1,10 +1,11 @@
 dbus-fronius
 ============
-This application reads data from Fronius photoelectric voltage inverters, and
-publishes it on the D-Bus. It is designed to run on the Color Control (CCGX).
+This application communicates with Fronius, ABB, SolarEdge, SMA, and possibly also
+other brands of PV Inverters. The data is then made available on D-Bus, the internal
+Data bus in Venus OS.
 
-The color control gui application contains several pages to change the behaviour
-of this application, especially settings on how to detect the inverters.
+The Venus OS gui application contains several pages to change the behaviour
+of this application, especially settings on how to detect the inverters on the LAN.
 
 In order to build the application for the color control you need a linux system,
 a recent version of QT creator and the CCGX SDK. You can find the SDK here:
