@@ -15,18 +15,31 @@ This page also contains information on how to configure QT creator to use the CC
 Next you can load the project file software/dbus-fronius.pro in QT creator and create the
 CCGX binary.
 
-Compatibility
+PV Inverter Compatibility
 =============
 
-All Fronius inverters supporting the solar API v1. Also the sunspec modbus TCP standard is
-supported. If modbus TCP is enabled on the Fronius using the web interface, it will be used.
-Note that this is required for power limiting.
+Fronius: All Fronius inverters supporting the solar API v1. Also the sunspec modbus TCP standard is
+supported. If ModbusTCP is enabled on the Fronius using the web interface, then their ModbusTCP
+api is used, not the JSON. Power limiting, aka Zero feed-in, only works via ModbusTCP.
 
-Other PV inverters that implement the sunspec standard are supported. This has been tested with
-a SMA sunnyboy inverter. Results with other inverters may vary. At this moment, it is assumed that
-the sunspec registers are available at unit ID 126. There is no way to change this.
+ABB: both monitoring and power limiting works. Uses the ModbusTCP sunspec API.
 
-Sunspec quirks
+SMA: only monitoring works. Power limiting could be done, but requires more work, as SMA doesn’t
+follow the Sunspec API for that. Abandoned.
+
+Solar Edge: only monitoring works. Its not possible to enable power limiting without help or even
+a firmware change on Solar Edge side. See details below. Abandoned.
+
+Other PV inverters that implement the sunspec standard might work as well.
+
+Note that as the code is now, it assumes that the sunspec registers are available at unit ID
+126. There is currently no mechanism to change this for the user, nor auto detection. This means
+that for some brands it might be necessary to change the config in the PV Inverter to that unit ID.
+
+More information in the CCGX manual, section PV Inverter monitoring, as well as the PV Inverter
+manuals linked from there.
+
+Sunspec quirks & more compatibility details
 --------------
 
 Fronius:
@@ -57,7 +70,7 @@ Solar Edge:
 * Power limiting is not possible because the inverter does not publish model
   121 (basic settings).
 
-Testing on a linux PC
+Development & toolchain
 =====================
 
 To compile and run on a (linux) PC you will also need a QT SDK (version 4.8.x), including QT D-Bus 
