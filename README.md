@@ -69,7 +69,7 @@ Solar Edge:
 * The inverter publishes only the Common model and the Inverter model. This is
   sufficient for basic operation.
 * Power limiting is not possible because the inverter does not publish model
-  121 (basic settings).
+  123 (Immediate Controls).
 
 Development & toolchain
 =====================
