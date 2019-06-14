@@ -63,6 +63,8 @@ private:
 
 	ModbusState getInitState() const;
 
+	void updateSplitPhase(double power, double energy);
+
 	Inverter *mInverter;
 	InverterSettings *mSettings;
 	ModbusTcpClient *mModbusClient;

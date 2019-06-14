@@ -214,8 +214,8 @@ void SunspecUpdater::onReadCompleted()
 				cid.totalEnergy = getFloat(values, 32);
 				mDataProcessor->process(cid);
 
-				ThreePhasesInverterData tpid;
 				if (deviceInfo.phaseCount > 1) {
+					ThreePhasesInverterData tpid;
 					tpid.acCurrentPhase1 = getFloat(values, 4);
 					tpid.acCurrentPhase2 = getFloat(values, 6);
 					tpid.acCurrentPhase3 = getFloat(values, 8);
@@ -223,6 +223,12 @@ void SunspecUpdater::onReadCompleted()
 					tpid.acVoltagePhase2 = getFloat(values, 18);
 					tpid.acVoltagePhase3 = getFloat(values, 20);
 					mDataProcessor->process(tpid);
+				} else if (mSettings->phase() == MultiPhase) {
+					// A single phase inverter used as a Multiphase
+					// generator. This only makes sense in a split-phase
+					// system. Typical in North America, and fully
+					// supported by Fronius.
+					updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
 				}
 			}
 			setInverterState(values[48]);
@@ -244,8 +250,8 @@ void SunspecUpdater::onReadCompleted()
 				cid.totalEnergy = getScaledValue(values, 24, 2, 26, false);
 				mDataProcessor->process(cid);
 
-				ThreePhasesInverterData tpid;
 				if (deviceInfo.phaseCount > 1) {
+					ThreePhasesInverterData tpid;
 					tpid.acCurrentPhase1 = getScaledValue(values, 3, 1, 6, false);
 					tpid.acCurrentPhase2 = getScaledValue(values, 4, 1, 6, false);
 					tpid.acCurrentPhase3 = getScaledValue(values, 5, 1, 6, false);
@@ -253,6 +259,12 @@ void SunspecUpdater::onReadCompleted()
 					tpid.acVoltagePhase2 = getScaledValue(values, 11, 1, 13, false);
 					tpid.acVoltagePhase3 = getScaledValue(values, 12, 1, 13, false);
 					mDataProcessor->process(tpid);
+				} else if (mSettings->phase() == MultiPhase) {
+					// A single phase inverter used as a Multiphase
+					// generator. This only makes sense in a split-phase
+					// system. Typical in North America, and fully
+					// supported by Fronius.
+					updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
 				}
 			}
 			setInverterState(values[38]);
@@ -347,4 +359,15 @@ void SunspecUpdater::connectModbusClient()
 {
 	connect(mModbusClient, SIGNAL(connected()), this, SLOT(onConnected()));
 	connect(mModbusClient, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
+}
+
+
+void SunspecUpdater::updateSplitPhase(double power, double energy)
+{
+	PowerInfo *l1 = mInverter->getPowerInfo(PhaseL1);
+	PowerInfo *l2 = mInverter->getPowerInfo(PhaseL2);
+	l1->setPower(power);
+	l2->setPower(power);
+	l1->setTotalEnergy(energy);
+	l2->setTotalEnergy(energy);
 }
