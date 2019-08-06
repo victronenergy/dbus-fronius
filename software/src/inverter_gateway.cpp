@@ -122,7 +122,7 @@ void InverterGateway::updateAddressGenerator()
 				addresses.append(a);
 			}
 		}
-		if (addresses.isEmpty()) {
+		if (addresses.isEmpty() && mSettings->autoScan()) {
 			QLOG_INFO() << "Starting auto IP scan";
 			mAddressGenerator.setPriorityOnly(false);
 			mAddressGenerator.reset();
@@ -173,7 +173,7 @@ void InverterGateway::updateDetection()
 				mFullScanRequested = false;
 			} else if (!mFullScanIfNoDeviceFound) {
 				QLOG_DEBUG() << "No auto IP scan requested. Detection finished";
-			} else if (count < addresses.size() || mDevicesFound.isEmpty()) {
+			} else if (mSettings->autoScan() && (count < addresses.size() || mDevicesFound.isEmpty())) {
 				/// @todo EV We may get here when auto detect is disabled manually
 				/// *before* any inverter have been found.
 				// Some devices were missing or no devices were found at all.

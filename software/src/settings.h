@@ -26,6 +26,8 @@ public:
 
 	void setKnownIpAddresses(const QList<QHostAddress> &addresses);
 
+	bool autoScan() const;
+
 	/*!
 	 * Returns the list with D-Bus object names for each registered inverter.
 	 * The names in the list are based on the device type and the serial
@@ -71,6 +73,7 @@ private:
 	VeQItem *mIpAddresses;
 	VeQItem *mKnownIpAddresses;
 	VeQItem *mInverterIds;
+	VeQItem *mAutoScan;
 	QStringList mInverterIdCache;
 };
 

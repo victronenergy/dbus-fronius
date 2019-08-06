@@ -9,7 +9,8 @@ Settings::Settings(VeQItem *root, QObject *parent) :
 	mPortNumber(connectItem("PortNumber", 80, SIGNAL(portNumberChanged()), false)),
 	mIpAddresses(connectItem("IPAddresses", "", SIGNAL(ipAddressesChanged()), false)),
 	mKnownIpAddresses(connectItem("KnownIPAddresses", "", SIGNAL(knownIpAddressesChanged()), false)),
-	mInverterIds(connectItem("InverterIds", "", SLOT(onInverterdIdsChanged()), false))
+	mInverterIds(connectItem("InverterIds", "", SLOT(onInverterdIdsChanged()), false)),
+	mAutoScan(connectItem("AutoScan", 1, 0))
 {
 }
 
@@ -36,6 +37,12 @@ QList<QHostAddress> Settings::knownIpAddresses() const
 void Settings::setKnownIpAddresses(const QList<QHostAddress> &addresses)
 {
 	mKnownIpAddresses->setValue(fromAddressList(addresses));
+}
+
+
+bool Settings::autoScan() const
+{
+	return mAutoScan->getValue().toBool();
 }
 
 QStringList Settings::inverterIds() const
