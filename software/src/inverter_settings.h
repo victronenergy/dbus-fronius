@@ -14,6 +14,8 @@ public:
 
 	void setPhase(InverterPhase phase);
 
+	void setPhaseCount(int phaseCount);
+
 	InverterPosition position() const;
 
 	QString customName() const;
@@ -55,6 +57,7 @@ signals:
 
 private:
 	VeQItem *mPhase;
+	VeQItem *mPhaseCount;
 	VeQItem *mPosition;
 	VeQItem *mCustomName;
 	VeQItem *mIsActive;

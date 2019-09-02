@@ -7,6 +7,7 @@
 InverterSettings::InverterSettings(VeQItem *root, QObject *parent) :
 	VeQItemConsumer(root, parent),
 	mPhase(connectItem("Phase", PhaseL1, SIGNAL(phaseChanged()))),
+	mPhaseCount(connectItem("PhaseCount", 1, 0)),
 	mPosition(connectItem("Position", Input1, SIGNAL(positionChanged()))),
 	mCustomName(connectItem("CustomName", "", SIGNAL(customNameChanged()), false)),
 	mIsActive(connectItem("IsActive", 1, SIGNAL(isActiveChanged()))),
@@ -24,6 +25,11 @@ InverterPhase InverterSettings::phase() const
 void InverterSettings::setPhase(InverterPhase phase)
 {
 	mPhase->setValue(static_cast<int>(phase));
+}
+
+void InverterSettings::setPhaseCount(int phaseCount)
+{
+	mPhaseCount->setValue(phaseCount);
 }
 
 InverterPosition InverterSettings::position() const
