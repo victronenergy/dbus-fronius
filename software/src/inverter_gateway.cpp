@@ -6,25 +6,21 @@
 
 static const int MaxSimultaneousRequests = 32;
 
-InverterGateway::InverterGateway(AbstractDetector *detector, Settings *settings, QObject *parent) :
+InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
 	mSettings(settings),
-	mDetector(detector),
 	mTimer(new QTimer(this)),
-	mSettingsBusy(false),
 	mAutoDetect(false),
-	mFullScanRequested(false),
-	mFullScanIfNoDeviceFound(false)
+	mScanType(None)
 {
 	Q_ASSERT(settings != 0);
 	mAddressGenerator.setNetMaskLimit(QHostAddress(0xFFFFF000));
-	updateScanProgress();
-	connect(settings, SIGNAL(portNumberChanged()), this, SLOT(onSettingsChanged()));
-	connect(settings, SIGNAL(ipAddressesChanged()), this, SLOT(onSettingsChanged()));
-	connect(settings, SIGNAL(knownIpAddressesChanged()), this, SLOT(onSettingsChanged()));
 	mTimer->setInterval(60000);
-	mTimer->start();
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
+}
+
+void InverterGateway::addDetector(AbstractDetector *detector) {
+	mDetectors.append(detector);
 }
 
 bool InverterGateway::autoDetect() const
@@ -37,176 +33,180 @@ void InverterGateway::setAutoDetect(bool b)
 	if (mAutoDetect == b)
 		return;
 	mAutoDetect = b;
-	if (!mSettingsBusy) {
-		mFullScanRequested = b;
-		mFullScanIfNoDeviceFound = b;
-		updateAddressGenerator();
-	}
 	emit autoDetectChanged();
 }
 
 int InverterGateway::scanProgress() const
 {
-	return mAutoDetect ? mAddressGenerator.progress(mActiveHostNames.count()) : 100;
+	return mAutoDetect ? mAddressGenerator.progress(mActiveHosts.count()) : 100;
+}
+
+void InverterGateway::initializeSettings()
+{
+	connect(mSettings, SIGNAL(portNumberChanged()), this, SLOT(onPortNumberChanged()));
+	connect(mSettings, SIGNAL(ipAddressesChanged()), this, SLOT(onIpAddressesChanged()));
 }
 
 void InverterGateway::startDetection()
 {
-	mSettingsBusy = true;
-	mFullScanIfNoDeviceFound = true;
-	setAutoDetect(true);
-	mSettingsBusy = false;
-	updateAddressGenerator();
+	// startDetection is called as soon as localsettings comes up. So this
+	// is a good spot to start our period re-scan timer.
+	mTimer->start();
+
+	// Do a priorityScan, followed by a fullScan if not all hosts are found
+	scan(TryPriority);
 }
 
-void InverterGateway::onInverterFound(const DeviceInfo &deviceInfo)
+void InverterGateway::fullScan()
 {
-	QList<QHostAddress> addresses = mSettings->knownIpAddresses();
-	QHostAddress addr(deviceInfo.hostName);
-	if (!addresses.contains(addr)) {
-		addresses.append(addr);
-		mSettingsBusy = true; // prevent onSettingsChanged from firing
-		mSettings->setKnownIpAddresses(addresses);
-		mSettingsBusy = false;
-	}
-	emit inverterFound(deviceInfo);
+	scan(Full);
 }
 
-
-void InverterGateway::onDetectionDone()
+void InverterGateway::scan(enum ScanType scanType)
 {
-	DetectorReply *reply = static_cast<DetectorReply *>(sender());
-	reply->deleteLater();
-	mActiveHostNames.removeOne(QHostAddress(reply->hostName()));
-	updateScanProgress();
-	updateDetection();
-}
+	mScanType = scanType;
+	mDevicesFound.clear();
 
-void InverterGateway::onSettingsChanged()
-{
-	if (mSettingsBusy)
-		return;
-	mSettingsBusy = true;
-	setAutoDetect(true);
-	mSettingsBusy = false;
-	updateAddressGenerator();
-}
-
-void InverterGateway::onTimer()
-{
-	if (mAddressGenerator.hasNext())
-		return;
+	// Initialise address generator with priority addresses
 	QList<QHostAddress> addresses = mSettings->ipAddresses();
 	foreach (QHostAddress a, mSettings->knownIpAddresses()) {
 		if (!addresses.contains(a)) {
 			addresses.append(a);
 		}
 	}
-	if (addresses.isEmpty())
+
+	// If priority scan and no known PV-inverters, then we're done
+	if (scanType == Priority && addresses.isEmpty())
 		return;
-	QLOG_DEBUG() << "Starting known IP scan (timer based)";
-	mFullScanIfNoDeviceFound = false;
+
+	setAutoDetect(scanType == Full);
+
+	QLOG_TRACE() << "Starting IP scan (" << scanType << ")";
 	mAddressGenerator.setPriorityAddresses(addresses);
-	mAddressGenerator.setPriorityOnly(true);
+	mAddressGenerator.setPriorityOnly(scanType != Full);
 	mAddressGenerator.reset();
-	for (int i=mActiveHostNames.size(); i<MaxSimultaneousRequests; ++i)
-		updateDetection();
+
+	while (mActiveHosts.size() < MaxSimultaneousRequests && mAddressGenerator.hasNext()) {
+		QString host = mAddressGenerator.next().toString();
+		QLOG_TRACE() << "Starting scan for" << host;
+		scanHost(host);
+	}
 }
 
-void InverterGateway::updateAddressGenerator()
+void InverterGateway::scanHost(QString hostName)
 {
-	if (autoDetect()) {
-		QList<QHostAddress> addresses = mSettings->ipAddresses();
-		foreach (QHostAddress a, mSettings->knownIpAddresses()) {
-			if (!addresses.contains(a)) {
-				addresses.append(a);
-			}
-		}
-		if (addresses.isEmpty() && mSettings->autoScan()) {
-			QLOG_INFO() << "Starting auto IP scan";
-			mAddressGenerator.setPriorityOnly(false);
-			mAddressGenerator.reset();
-		} else {
-			QLOG_DEBUG() << "Starting known IP scan";
-			mAddressGenerator.setPriorityAddresses(addresses);
-			mAddressGenerator.setPriorityOnly(true);
-			mAddressGenerator.reset();
-		}
-		for (int i=mActiveHostNames.size(); i<MaxSimultaneousRequests; ++i)
-			updateDetection();
-	} else {
-		QLOG_DEBUG() << "Auto IP scan disabled";
-		mAddressGenerator.setPriorityOnly(true);
-		mAddressGenerator.setPriorityAddresses(QList<QHostAddress>());
-		mAddressGenerator.reset();
-	}
-	updateScanProgress();
-}
-
-void InverterGateway::updateDetection()
-{
-	QString hostName;
-	while (hostName.isEmpty() && mAddressGenerator.hasNext()) {
-		hostName = mAddressGenerator.next().toString();
-		if (mActiveHostNames.contains(QHostAddress(hostName)))
-			hostName.clear();
-	}
-	if (hostName.isEmpty()) {
-		if (!mActiveHostNames.isEmpty()) {
-			// Wait for pending requests to return
-			return;
-		}
-		bool autoDetect = false;
-		if (mAddressGenerator.priorityOnly()) {
-			// We scanned all known addresses. Have we found what we needed?
-			QList<QHostAddress> addresses = mAddressGenerator.priorityAddresses();
-			int count = 0;
-			foreach (QHostAddress a, addresses) {
-				if (mDevicesFound.contains(a)) {
-					++count;
-					break;
-				}
-			}
-			if (mFullScanRequested) {
-				QLOG_INFO() << "Full scan requested, starting auto IP scan";
-				autoDetect = true;
-				mFullScanRequested = false;
-			} else if (!mFullScanIfNoDeviceFound) {
-				QLOG_DEBUG() << "No auto IP scan requested. Detection finished";
-			} else if (mSettings->autoScan() && (count < addresses.size() || mDevicesFound.isEmpty())) {
-				/// @todo EV We may get here when auto detect is disabled manually
-				/// *before* any inverter have been found.
-				// Some devices were missing or no devices were found at all.
-				// Start auto scan.
-				QLOG_INFO() << "Not all devices found, starting auto IP scan";
-				autoDetect = true;
-			} else {
-				QLOG_DEBUG() << "Auto IP scan disabled, all devices found";
-			}
-		} else {
-			QLOG_INFO() << "Auto IP scan completed. Detection finished";
-		}
-		mSettingsBusy = true;
-		setAutoDetect(autoDetect);
-		mSettingsBusy = false;
-		if (autoDetect) {
-			mAddressGenerator.setPriorityOnly(false);
-			mAddressGenerator.reset();
-			for (int i=mActiveHostNames.size(); i<MaxSimultaneousRequests; ++i)
-				updateDetection();
-		}
-		updateScanProgress();
-		return;
-	}
-	QLOG_TRACE() << "Scanning" << hostName;
-	mActiveHostNames.append(QHostAddress(hostName));
-	DetectorReply *reply = mDetector->start(hostName);
-	connect(reply, SIGNAL(deviceFound(const DeviceInfo &)),
+	HostScan *host = new HostScan(mDetectors, hostName);
+	mActiveHosts.append(host);
+	connect(host, SIGNAL(finished()), this, SLOT(onDetectionDone()));
+	connect(host, SIGNAL(deviceFound(const DeviceInfo &)),
 			this, SLOT(onInverterFound(const DeviceInfo &)));
-	connect(reply, SIGNAL(finished()), this, SLOT(onDetectionDone()));
+	host->scan();
+}
+
+void InverterGateway::onInverterFound(const DeviceInfo &deviceInfo)
+{
+	QList<QHostAddress> addresses = mSettings->knownIpAddresses();
+	QHostAddress addr(deviceInfo.hostName);
+	mDevicesFound.insert(addr);
+	if (!addresses.contains(addr)) {
+		addresses.append(addr);
+		mSettings->setKnownIpAddresses(addresses);
+	}
+	emit inverterFound(deviceInfo);
+}
+
+void InverterGateway::onDetectionDone()
+{
+	HostScan *host = static_cast<HostScan *>(sender());
+	QLOG_TRACE() << "Done scanning" << host->hostName();
+	mActiveHosts.removeOne(host);
+	host->deleteLater();
+	updateScanProgress();
+
+	if (mScanType > None && mAddressGenerator.hasNext()) {
+		// Scan the next available host
+		scanHost(mAddressGenerator.next().toString());
+	} else if(mActiveHosts.size() == 0) {
+		// Scan is complete
+		enum ScanType scanType = mScanType;
+		mScanType = None;
+		setAutoDetect(false);
+
+		QLOG_INFO() << "Auto IP scan completed. Detection finished";
+
+		// Did we get what we came for? For full and priority scans, this is it.
+		// For TryPriority scans, we switch to a full scan if we're a few
+		// piggies short, and if autoScan is enabled.
+		if ((scanType == TryPriority) && mSettings->autoScan()) {
+			// FIXME only check that we found all known ones, not all priority
+			// ones. Otherwise we do a full scan whenever a manually defined one
+			// is missing
+			QSet<QHostAddress> addresses = QSet<QHostAddress>::fromList(
+					mAddressGenerator.priorityAddresses());
+
+			// Do a full scan if not all devices were found
+			if ((addresses - mDevicesFound).size()) {
+				QLOG_INFO() << "Not all devices found, starting full IP scan";
+				scan(Full);
+			}
+		}
+	}
+}
+
+void InverterGateway::onPortNumberChanged()
+{
+	// If the port was changed, assume that the IP addresses did not, and
+	// scan the priority addresses first, then fall back to a full scan.
+	scan(TryPriority);
+}
+
+void InverterGateway::onIpAddressesChanged()
+{
+	// If the IP addresses changed, do a priority scan. That will scan
+	// the new addresses too, and avoid a full scan.
+	scan(Priority);
+}
+
+void InverterGateway::onTimer()
+{
+	// If we are in the middle of a sweep, don't start another one.
+	if (mScanType > None)
+		return;
+	scan(TryPriority);
 }
 
 void InverterGateway::updateScanProgress()
 {
 	emit scanProgressChanged();
+}
+
+HostScan::HostScan(QList<AbstractDetector *> detectors, QString hostname, QObject *parent) :
+	QObject(parent),
+	mDetectors(detectors),
+	mHostname(hostname)
+{
+}
+
+void HostScan::scan()
+{
+	if (mDetectors.size()) {
+		DetectorReply *reply = mDetectors.takeFirst()->start(mHostname);
+		connect(reply, SIGNAL(deviceFound(const DeviceInfo &)),
+			this, SLOT(onDeviceFound(const DeviceInfo &)));
+		connect(reply, SIGNAL(finished()), this, SLOT(continueScan()));
+	} else {
+		emit finished();
+	}
+}
+
+void HostScan::continueScan() {
+	DetectorReply *reply = static_cast<DetectorReply *>(sender());
+	reply->deleteLater();
+	scan(); // Try next detector
+}
+
+void HostScan::onDeviceFound(const DeviceInfo &deviceInfo)
+{
+	mDetectors.clear(); // Found an inverter on this host, we're done.
+	emit deviceFound(deviceInfo);
 }

@@ -57,8 +57,6 @@ signals:
 
 	void ipAddressesChanged();
 
-	void knownIpAddressesChanged();
-
 	void inverterIdsChanged();
 
 private slots:

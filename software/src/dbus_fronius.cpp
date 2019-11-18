@@ -12,24 +12,27 @@ DBusFronius::DBusFronius(QObject *parent) :
 	VeService(VeQItems::getRoot()->itemGetOrCreate("pub/com.victronenergy.fronius"), parent),
 	mSettings(new Settings(VeQItems::getRoot()->itemGetOrCreate("sub/com.victronenergy.settings/Settings/Fronius", false), this)),
 	mAutoDetect(createItem("AutoDetect")),
-	mScanProgress(createItem("ScanProgress"))
+	mScanProgress(createItem("ScanProgress")),
+	mGateway(new InverterGateway(mSettings, this))
 {
+	connect(mGateway, SIGNAL(inverterFound(DeviceInfo)), this, SLOT(onInverterFound(DeviceInfo)));
+	connect(mGateway, SIGNAL(autoDetectChanged()), this, SLOT(onAutoDetectChanged()));
+	connect(mGateway, SIGNAL(scanProgressChanged()), this, SLOT(onScanProgressChanged()));
+
 	VeQItemInitMonitor::monitor(mSettings->root(), this, SLOT(onSettingsInitialized()));
 	registerService();
 }
 
 void DBusFronius::startDetection()
 {
-	foreach (InverterGateway *gateway, mGateways)
-		gateway->startDetection();
+	mGateway->startDetection();
 }
 
 int DBusFronius::handleSetValue(VeQItem *item, const QVariant &variant)
 {
 	if (item == mAutoDetect) {
-		bool autoDetect = variant.toBool();
-		foreach (InverterGateway *gateway, mGateways)
-			gateway->setAutoDetect(autoDetect);
+		if (variant.toBool())
+			mGateway->fullScan(); // This causes /AutoDetect to change to 1
 		return 0;
 	}
 	return VeService::handleSetValue(item, variant);
@@ -37,9 +40,9 @@ int DBusFronius::handleSetValue(VeQItem *item, const QVariant &variant)
 
 void DBusFronius::onSettingsInitialized()
 {
-	Q_ASSERT(mGateways.isEmpty());
-	addGateway(new SolarApiDetector(mSettings, this));
-	addGateway(new SunspecDetector(126, this));
+	mGateway->addDetector(new SolarApiDetector(mSettings, this));
+	mGateway->addDetector(new SunspecDetector(126, this));
+	mGateway->initializeSettings();
 	onScanProgressChanged();
 	onAutoDetectChanged();
 	startDetection();
@@ -67,32 +70,14 @@ void DBusFronius::onInverterFound(const DeviceInfo &deviceInfo)
 
 void DBusFronius::onScanProgressChanged()
 {
-	int progress = 0;
-	if (!mGateways.isEmpty()) {
-		foreach (InverterGateway *gateway, mGateways)
-			progress += gateway->scanProgress();
-		progress /= mGateways.size();
-	}
-	produceDouble(mScanProgress, progress, 0, "%");
+	produceDouble(mScanProgress, mGateway->scanProgress(), 0, "%");
 }
 
 void DBusFronius::onAutoDetectChanged()
 {
-	foreach (InverterGateway *gateway, mGateways)
-	{
-		if (gateway->autoDetect()) {
-			produceValue(mAutoDetect, 1, "Busy");
-			return;
-		}
+	if (mGateway->autoDetect()) {
+		produceValue(mAutoDetect, 1, "Busy");
+		return;
 	}
 	produceValue(mAutoDetect, 0, "Idle");
-}
-
-void DBusFronius::addGateway(AbstractDetector *detector)
-{
-	InverterGateway *gateway = new InverterGateway(detector, mSettings, this);
-	mGateways.append(gateway);
-	connect(gateway, SIGNAL(inverterFound(DeviceInfo)), this, SLOT(onInverterFound(DeviceInfo)));
-	connect(gateway, SIGNAL(autoDetectChanged()), this, SLOT(onAutoDetectChanged()));
-	connect(gateway, SIGNAL(scanProgressChanged()), this, SLOT(onScanProgressChanged()));
 }

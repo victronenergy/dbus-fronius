@@ -11,7 +11,7 @@
 class AbstractDetector;
 class QTimer;
 class Settings;
-
+class HostScan;
 /*!
  * Handles device detection logistics for a single communication protocol.
  * There are 2 possible strategies:
@@ -28,15 +28,19 @@ class InverterGateway : public QObject, public GatewayInterface
 {
 	Q_OBJECT
 public:
-	InverterGateway(AbstractDetector *detector, Settings *settings, QObject *parent = 0);
+	InverterGateway(Settings *settings, QObject *parent = 0);
+
+	void addDetector(AbstractDetector *detector);
 
 	bool autoDetect() const;
 
-	void setAutoDetect(bool b);
-
 	int scanProgress() const;
 
+	void initializeSettings();
+
 	virtual void startDetection();
+
+	void fullScan();
 
 signals:
 	void inverterFound(const DeviceInfo &deviceInfo);
@@ -46,31 +50,63 @@ signals:
 	void scanProgressChanged();
 
 private slots:
+	void setAutoDetect(bool b);
+
 	void onInverterFound(const DeviceInfo &deviceInfo);
 
 	void onDetectionDone();
 
-	void onSettingsChanged();
+	void onPortNumberChanged();
+
+	void onIpAddressesChanged();
 
 	void onTimer();
 
 private:
-	void updateAddressGenerator();
-
-	void updateDetection();
+	enum ScanType
+	{
+		None, // Not scanning at the moment
+		Full, // Full scan
+		Priority, // Scan known addresses
+		TryPriority // Do priority, switch to full if all not found
+	};
 
 	void updateScanProgress();
 
+	void scanHost(QString hostName);
+
+	void scan(enum ScanType scanType);
+
 	QPointer<Settings> mSettings;
-	QList<QHostAddress> mDevicesFound;
-	QList<QHostAddress> mActiveHostNames;
+	QSet<QHostAddress> mDevicesFound;
+	QList<HostScan *> mActiveHosts;
 	LocalIpAddressGenerator mAddressGenerator;
-	AbstractDetector *mDetector;
+	QList<AbstractDetector *> mDetectors;
 	QTimer *mTimer;
-	bool mSettingsBusy;
 	bool mAutoDetect;
-	bool mFullScanRequested;
-	bool mFullScanIfNoDeviceFound;
+	bool mScanning;
+	enum ScanType mScanType;
+};
+
+class HostScan: public QObject
+{
+    Q_OBJECT
+public:
+	HostScan(QList<AbstractDetector *> detectors, QString hostname, QObject *parent = 0);
+	QString hostName() { return mHostname; }
+	void scan();
+
+signals:
+	void deviceFound(const DeviceInfo &deviceInfo);
+	void finished();
+
+private slots:
+	void continueScan();
+	void onDeviceFound(const DeviceInfo &deviceInfo);
+
+private:
+	QList<AbstractDetector *> mDetectors;
+	QString mHostname;
 };
 
 #endif // INVERTER_GATEWAY_H

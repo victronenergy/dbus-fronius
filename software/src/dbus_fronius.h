@@ -4,7 +4,6 @@
 #include "gateway_interface.h"
 #include "ve_service.h"
 
-class AbstractDetector;
 class InverterGateway;
 class InverterMediator;
 class Settings;
@@ -38,13 +37,11 @@ private slots:
 	void onAutoDetectChanged();
 
 private:
-	void addGateway(AbstractDetector *detector);
-
 	QList<InverterMediator *> mMediators;
-	QList<InverterGateway *> mGateways;
 	Settings *mSettings;
 	VeQItem *mAutoDetect;
 	VeQItem *mScanProgress;
+	InverterGateway *mGateway;
 };
 
 #endif // DBUS_TEST2_H
