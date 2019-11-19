@@ -130,9 +130,6 @@ void InverterGateway::onDetectionDone()
 		// Scan is complete
 		enum ScanType scanType = mScanType;
 		mScanType = None;
-		setAutoDetect(false);
-
-		QLOG_INFO() << "Auto IP scan completed. Detection finished";
 
 		// Did we get what we came for? For full and priority scans, this is it.
 		// For TryPriority scans, we switch to a full scan if we're a few
@@ -148,8 +145,12 @@ void InverterGateway::onDetectionDone()
 			if ((addresses - mDevicesFound).size()) {
 				QLOG_INFO() << "Not all devices found, starting full IP scan";
 				scan(Full);
+				return;
 			}
 		}
+
+		setAutoDetect(false);
+		QLOG_INFO() << "Auto IP scan completed. Detection finished";
 	}
 }
 
