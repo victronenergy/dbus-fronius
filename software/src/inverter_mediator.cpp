@@ -22,9 +22,6 @@ InverterMediator::InverterMediator(const DeviceInfo &device, GatewayInterface *g
 		Settings::createInverterId(device.uniqueId));
 	VeQItem *settingsRoot = settings->root()->itemGetOrCreate(settingsPath, false);
 	mInverterSettings = new InverterSettings(settingsRoot, this);
-	connect(mInverterSettings, SIGNAL(isActiveChanged()), this, SLOT(onIsActivatedChanged()));
-	connect(mInverterSettings, SIGNAL(positionChanged()), this, SLOT(onPositionChanged()));
-	connect(mInverterSettings, SIGNAL(customNameChanged()), this, SLOT(onSettingsCustomNameChanged()));
 	VeQItemInitMonitor::monitor(mInverterSettings->root(), this, SLOT(onSettingsInitialized()));
 }
 
@@ -72,6 +69,11 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 
 void InverterMediator::onSettingsInitialized()
 {
+	// Connect the signals now that the settings are up
+	connect(mInverterSettings, SIGNAL(isActiveChanged()), this, SLOT(onIsActivatedChanged()));
+	connect(mInverterSettings, SIGNAL(positionChanged()), this, SLOT(onPositionChanged()));
+	connect(mInverterSettings, SIGNAL(customNameChanged()), this, SLOT(onSettingsCustomNameChanged()));
+
 	if (!mInverterSettings->isActive()) {
 		delete mInverter;
 		mInverter = 0;
