@@ -21,7 +21,7 @@ FroniusSolarApi::FroniusSolarApi(const QString &hostName, int port,
 	mPort(port),
 	mTimeoutTimer(new QTimer(this))
 {
-	mTimeoutTimer->setInterval(5000);
+	mTimeoutTimer->setInterval(15000);
 	connect(mTimeoutTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
 }
 

@@ -23,7 +23,7 @@ DetectorReply *SunspecDetector::start(const QString &hostName)
 	ModbusTcpClient *client = new ModbusTcpClient(this);
 	connect(client, SIGNAL(connected()), this, SLOT(onConnected()));
 	connect(client, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
-	client->setTimeout(5000);
+	client->setTimeout(15000);
 	client->connectToServer(hostName);
 	Reply *reply = new Reply(this);
 	reply->client = client;
