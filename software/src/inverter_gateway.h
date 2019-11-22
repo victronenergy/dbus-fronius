@@ -9,6 +9,7 @@
 #include "local_ip_address_generator.h"
 
 class AbstractDetector;
+class FroniusUdpDetector;
 class QTimer;
 class Settings;
 class HostScan;
@@ -62,6 +63,8 @@ private slots:
 
 	void onTimer();
 
+	void continueScan();
+
 private:
 	enum ScanType
 	{
@@ -83,6 +86,7 @@ private:
 	LocalIpAddressGenerator mAddressGenerator;
 	QList<AbstractDetector *> mDetectors;
 	QTimer *mTimer;
+	FroniusUdpDetector *mUdpDetector;
 	bool mAutoDetect;
 	bool mScanning;
 	enum ScanType mScanType;

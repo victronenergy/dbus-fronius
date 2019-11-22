@@ -3,6 +3,7 @@
 #include "inverter_gateway.h"
 #include "abstract_detector.h"
 #include "settings.h"
+#include "fronius_udp_detector.h"
 
 static const int MaxSimultaneousRequests = 32;
 
@@ -10,6 +11,7 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
 	mSettings(settings),
 	mTimer(new QTimer(this)),
+	mUdpDetector(new FroniusUdpDetector(this)),
 	mAutoDetect(false),
 	mScanType(None)
 {
@@ -17,6 +19,7 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	mAddressGenerator.setNetMaskLimit(QHostAddress(0xFFFFF000));
 	mTimer->setInterval(60000);
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
+	connect(mUdpDetector, SIGNAL(finished()), this, SLOT(continueScan()));
 }
 
 void InverterGateway::addDetector(AbstractDetector *detector) {
@@ -66,24 +69,31 @@ void InverterGateway::scan(enum ScanType scanType)
 {
 	mScanType = scanType;
 	mDevicesFound.clear();
+	setAutoDetect(mScanType == Full);
+
+	// Do a UDP scan
+	mUdpDetector->start();
+}
+
+void InverterGateway::continueScan()
+{
+	// Start with any addresses found by the fast UDP scan.
+	QList<QHostAddress> addresses = mUdpDetector->devicesFound();
 
 	// Initialise address generator with priority addresses
-	QList<QHostAddress> addresses = mSettings->ipAddresses();
-	foreach (QHostAddress a, mSettings->knownIpAddresses()) {
+	foreach (QHostAddress a, mSettings->ipAddresses() + mSettings->knownIpAddresses()) {
 		if (!addresses.contains(a)) {
 			addresses.append(a);
 		}
 	}
 
 	// If priority scan and no known PV-inverters, then we're done
-	if (scanType == Priority && addresses.isEmpty())
+	if (mScanType == Priority && addresses.isEmpty())
 		return;
 
-	setAutoDetect(scanType == Full);
-
-	QLOG_TRACE() << "Starting IP scan (" << scanType << ")";
+	QLOG_TRACE() << "Starting IP scan (" << mScanType << ")";
 	mAddressGenerator.setPriorityAddresses(addresses);
-	mAddressGenerator.setPriorityOnly(scanType != Full);
+	mAddressGenerator.setPriorityOnly(mScanType != Full);
 	mAddressGenerator.reset();
 
 	while (mActiveHosts.size() < MaxSimultaneousRequests && mAddressGenerator.hasNext()) {
@@ -144,7 +154,9 @@ void InverterGateway::onDetectionDone()
 			// Do a full scan if not all devices were found
 			if ((addresses - mDevicesFound).size()) {
 				QLOG_INFO() << "Not all devices found, starting full IP scan";
-				scan(Full);
+				mScanType = Full;
+				setAutoDetect(true);
+				continueScan();
 				return;
 			}
 		}

@@ -66,6 +66,7 @@ SOURCES += \
     src/abstract_detector.cpp \
     src/solar_api_detector.cpp \
     src/sunspec_detector.cpp \
+    src/fronius_udp_detector.cpp \
     src/modbus_tcp_client/modbus_reply.cpp \
     src/modbus_tcp_client/modbus_client.cpp \
     src/sunspec_tools.cpp \
@@ -95,6 +96,7 @@ HEADERS += \
     src/abstract_detector.h \
     src/solar_api_detector.h \
     src/sunspec_detector.h \
+    src/fronius_udp_detector.h \
     src/modbus_tcp_client/modbus_reply.h \
     src/modbus_tcp_client/modbus_client.h \
     src/sunspec_tools.h \
