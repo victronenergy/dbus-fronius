@@ -2,38 +2,39 @@
 #include <QsLog.h>
 #include "local_ip_address_generator.h"
 
-Subnet::Subnet(quint32 first, quint32 last, quint32 localhost):
+Subnet::Subnet(LocalIpAddressGenerator *generator, quint32 first, quint32 last, quint32 localhost):
+	mGenerator(generator),
 	mFirst(first),
 	mCurrent(first),
 	mLast(last),
 	mLocalHost(localhost)
 {
+	next();
 }
 
-bool Subnet::hasNext() const {
-	return mCurrent < mLast;
+bool Subnet::hasNext() const
+{
+	return mCurrent <= mLast;
 }
 
-QHostAddress Subnet::next() {
+QHostAddress Subnet::next()
+{
+	quint32 current = mCurrent;
 	++mCurrent;
-	if (mCurrent == mLocalHost)
+	while ((mCurrent <= mLast) && (
+		(mCurrent == mLocalHost) || mGenerator->exceptions().contains(QHostAddress(mCurrent)))) {
 		++mCurrent;
-	return QHostAddress(mCurrent);
+	}
+	return QHostAddress(current);
+}
+
+int Subnet::position() const
+{
+	return mCurrent - 1 - mGenerator->exceptions().size() - mFirst;
 }
 
 LocalIpAddressGenerator::LocalIpAddressGenerator():
 	mPriorityOnly(false),
-	mNetMaskLimit(0u),
-	mPriorityIndex(0),
-	mSubnetIndex(0)
-{
-	reset();
-}
-
-LocalIpAddressGenerator::LocalIpAddressGenerator(
-		const QList<QHostAddress> &priorityAddresses, bool priorityOnly):
-	mPriorityOnly(priorityOnly),
-	mPriorityAddresses(priorityAddresses),
 	mNetMaskLimit(0u),
 	mPriorityIndex(0),
 	mSubnetIndex(0)
@@ -103,9 +104,8 @@ void LocalIpAddressGenerator::reset()
 					quint32 localHost = address.toIPv4Address();
 					quint32 first = localHost & netMask;
 					quint32 last = (first | ~netMask) - 1;
-					if (last == localHost) --last;
 					mSubnets.append(
-						Subnet(first, last, localHost));
+						Subnet(this, first, last, localHost));
 				}
 			}
 		}
@@ -152,6 +152,13 @@ void LocalIpAddressGenerator::setPriorityOnly(bool p)
 const QList<QHostAddress> &LocalIpAddressGenerator::priorityAddresses() const
 {
 	return mPriorityAddresses;
+}
+
+const QSet<QHostAddress> LocalIpAddressGenerator::exceptions() const
+{
+	// We exclude scanning of the priorityAddresses when doing a sweep
+	// since they were already scanned.
+	return QSet<QHostAddress>::fromList(mPriorityAddresses);
 }
 
 void LocalIpAddressGenerator::setPriorityAddresses(

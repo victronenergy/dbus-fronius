@@ -3,16 +3,20 @@
 
 #include <QHostAddress>
 #include <QList>
+#include <QSet>
+
+class LocalIpAddressGenerator;
 
 class Subnet
 {
 public:
-	Subnet(quint32 first, quint32 last, quint32 localhost);
+	Subnet(LocalIpAddressGenerator *generator, quint32 first, quint32 last, quint32 localhost);
 	bool hasNext() const;
 	QHostAddress next();
 	int size() const { return mLast - mFirst; }
-	int position() const { return mCurrent - mFirst; }
+	int position() const;
 private:
+	LocalIpAddressGenerator *mGenerator;
 	quint32 mFirst;
 	quint32 mCurrent;
 	quint32 mLast;
@@ -34,9 +38,6 @@ class LocalIpAddressGenerator
 {
 public:
 	LocalIpAddressGenerator();
-
-	LocalIpAddressGenerator(const QList<QHostAddress> &priorityAddresses,
-							bool priorityOnly = true);
 
 	/*!
 	 * @brief Returns the next address. Call @ref hasNext first to check if
@@ -82,6 +83,8 @@ public:
 	const QList<QHostAddress> &priorityAddresses() const;
 
 	void setPriorityAddresses(const QList<QHostAddress> &addresses);
+
+	const QSet<QHostAddress> exceptions() const;
 
 	QHostAddress netMaskLimit() const;
 
