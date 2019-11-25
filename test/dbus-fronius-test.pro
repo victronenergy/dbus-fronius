@@ -39,12 +39,8 @@ INCLUDEPATH += \
 
 HEADERS += \
     $$SRCDIR/froniussolar_api.h \
-    $$SRCDIR/gateway_interface.h \
     $$SRCDIR/inverter.h \
-    $$SRCDIR/local_ip_address_generator.h \
     $$SRCDIR/power_info.h \
-    $$SRCDIR/settings.h \
-    $$SRCDIR/inverter_gateway.h \
     $$SRCDIR/inverter_settings.h \
     $$SRCDIR/data_processor.h \
     $$SRCDIR/fronius_device_info.h \
@@ -57,13 +53,9 @@ HEADERS += \
 
 SOURCES += \
     $$SRCDIR/froniussolar_api.cpp \
-    $$SRCDIR/gateway_interface.cpp \
     $$SRCDIR/inverter.cpp \
-    $$SRCDIR/local_ip_address_generator.cpp \
     $$SRCDIR/power_info.cpp \
-    $$SRCDIR/settings.cpp \
     $$SRCDIR/inverter_settings.cpp \
-    $$SRCDIR/inverter_gateway.cpp \
     $$SRCDIR/data_processor.cpp \
     $$SRCDIR/fronius_device_info.cpp \
     $$SRCDIR/ve_qitem_consumer.cpp \
