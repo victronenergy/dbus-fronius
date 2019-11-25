@@ -115,12 +115,17 @@ void InverterGateway::scanHost(QString hostName)
 
 void InverterGateway::onInverterFound(const DeviceInfo &deviceInfo)
 {
-	QList<QHostAddress> addresses = mSettings->knownIpAddresses();
 	QHostAddress addr(deviceInfo.hostName);
 	mDevicesFound.insert(addr);
-	if (!addresses.contains(addr)) {
-		addresses.append(addr);
-		mSettings->setKnownIpAddresses(addresses);
+
+	// If the found address is already in the list of manually configured
+	// addresses, do not append it to the list of discovered addresses.
+	if (!mSettings->ipAddresses().contains(addr)) {
+		QList<QHostAddress> addresses = mSettings->knownIpAddresses();
+		if (!addresses.contains(addr)) {
+			addresses.append(addr);
+			mSettings->setKnownIpAddresses(addresses);
+		}
 	}
 	emit inverterFound(deviceInfo);
 }
