@@ -45,6 +45,17 @@ private:
 		Idle
 	};
 
+	enum OperatingState {
+		SunspecOff = 1,
+		SunspecSleeping = 2,
+		SunspecStarting = 3,
+		SunspecMppt = 4,
+		SunspecThrottled = 5,
+		SunspecShutdown = 6,
+		SunspecFault = 7,
+		SunspecStandby = 8
+	};
+
 	void connectModbusClient();
 
 	void startNextAction(ModbusState state);

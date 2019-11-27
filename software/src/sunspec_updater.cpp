@@ -95,24 +95,24 @@ void SunspecUpdater::setInverterState(int sunSpecState)
 {
 	int froniusState = 0;
 	switch (sunSpecState) {
-	case 1: // Off
+	case SunspecOff:
 		froniusState = 0;
 		break;
-	case 2: // Sleeping
-	case 6: // Shutting down
-	case 8: // Standby
+	case SunspecSleeping:
+	case SunspecShutdown:
+	case SunspecStandby:
 		froniusState = 8;
 		break;
-	case 3: // Starting
+	case SunspecStarting:
 		froniusState = 3;
 		break;
-	case 4: // MPPT
+	case SunspecMppt:
 		froniusState = 11;
 		break;
-	case 5: // Throttled
+	case SunspecThrottled:
 		froniusState = 12;
 		break;
-	case 7: // Fault
+	case SunspecFault:
 		froniusState = 10;
 		break;
 	default:
