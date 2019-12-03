@@ -5,6 +5,9 @@
 #include <QUdpSocket>
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 	#include <QNetworkDatagram>
+	const enum QHostAddress::SpecialAddress AnyIPv4 = QHostAddress::AnyIPv4;
+#else
+	const enum QHostAddress::SpecialAddress AnyIPv4 = QHostAddress::Any;
 #endif
 #include <QsLog.h>
 #include "fronius_udp_detector.h"
@@ -18,7 +21,7 @@ FroniusUdpDetector::FroniusUdpDetector(QObject *parent) :
 	connect(mTimeout, SIGNAL(timeout()), this, SIGNAL(finished()));
 
 	// Fronius inverters respond on this port
-	mUdpSocket->bind(QHostAddress::Any, 50050, QUdpSocket::ReuseAddressHint);
+	mUdpSocket->bind(AnyIPv4, 50050, QUdpSocket::ReuseAddressHint);
 	connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(responseReceived()));
 }
 
