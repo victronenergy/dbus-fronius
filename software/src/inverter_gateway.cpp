@@ -71,8 +71,13 @@ void InverterGateway::scan(enum ScanType scanType)
 	mDevicesFound.clear();
 	setAutoDetect(mScanType == Full);
 
-	// Do a UDP scan
-	mUdpDetector->start();
+	// Do a UDP scan if a full scan was requested.
+	mUdpDetector->reset();
+	if (scanType == Full) {
+		mUdpDetector->start();
+	} else {
+		continueScan();
+	}
 }
 
 void InverterGateway::continueScan()

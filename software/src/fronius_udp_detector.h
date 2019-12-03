@@ -14,6 +14,7 @@ class FroniusUdpDetector: public QObject
 	Q_OBJECT
 public:
 	FroniusUdpDetector(QObject *parent = 0);
+	void reset();
 	void start();
 	QList<QHostAddress> devicesFound() { return mDevicesFound.toList(); }
 

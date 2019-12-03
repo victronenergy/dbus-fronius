@@ -22,10 +22,13 @@ FroniusUdpDetector::FroniusUdpDetector(QObject *parent) :
 	connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(responseReceived()));
 }
 
-void FroniusUdpDetector::start()
+void FroniusUdpDetector::reset()
 {
 	mDevicesFound.clear();
+}
 
+void FroniusUdpDetector::start()
+{
 	// Probe for inverters by broadcasting on 50049
 	QByteArray dgram = "{\"GetFroniusLoggerInfo\":\"all\"}";
 	mUdpSocket->writeDatagram(dgram, QHostAddress::Broadcast, 50049);
