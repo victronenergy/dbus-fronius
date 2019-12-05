@@ -3,9 +3,13 @@
 
 #include <QObject>
 #include <QVariant>
+#include <QList>
+#include <QVariantMap>
 #ifdef QT_DBUS_LIB
 #include <velib/qt/ve_qitems_dbus.hpp>
 #endif // QT_DBUS_LIB
+
+Q_DECLARE_METATYPE (QList<QVariantMap>);
 
 class VeQItem;
 
@@ -24,6 +28,8 @@ public:
 
 	static bool addSetting(VeQItem *root, const QString &path, const QVariant &defaultValue,
 						   const QVariant &minValue, const QVariant &maxValue, bool silent);
+
+	int getDeviceInstance(const QString &uniqueId, const QString &deviceClass, int defaultValue);
 
 protected:
 	VeQItemConsumer(VeQItem *root, QObject *parent = 0);

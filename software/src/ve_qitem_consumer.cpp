@@ -1,6 +1,7 @@
 #ifdef QT_DBUS_LIB
 #include <QDBusMessage>
 #include <QDBusVariant>
+#include <QDBusArgument>
 #include <velib/qt/ve_qitems_dbus.hpp>
 #endif // QT_DBUS_LIB
 #include <qnumeric.h>
@@ -167,5 +168,53 @@ bool VeQItemConsumer::addSetting(VeQItem *root, const QString &path, const QVari
 	if (!newItem->getValue().isValid())
 		newItem->setValue(defaultValue);
 	return true;
+#endif // QT_DBUS_LIB
+}
+
+int VeQItemConsumer::getDeviceInstance(const QString &uniqueId, const QString &deviceClass, int defaultValue)
+{
+	QString value = QString("%1:%2").arg(deviceClass).arg(defaultValue);
+#ifdef QT_DBUS_LIB
+	QVariantMap inner;
+	inner.insert("path",
+		QVariant(QString("%1/ClassAndVrmInstance").arg(uniqueId)));
+	inner.insert("default", QVariant(value));
+
+	QDBusArgument argument;
+	argument.beginArray( QVariant::Map );
+	argument << inner;
+	argument.endArray();
+
+	VeQItemDbusProducer *p = qobject_cast<VeQItemDbusProducer *>(mRoot->producer());
+	QDBusConnection &connection = p->dbusConnection();
+	QDBusMessage m = QDBusMessage::createMethodCall(
+						 "com.victronenergy.settings", "/Settings/Devices",
+						 "com.victronenergy.Settings", "AddSettings")
+						 << QVariant::fromValue(argument);
+	QDBusMessage reply = connection.call(m);
+	if (reply.type() != QDBusMessage::ReplyMessage) {
+		QLOG_ERROR() << "Could not create ClassAndVrmInstance" << uniqueId << reply.errorMessage();
+		return -1;
+	}
+	if (reply.arguments().isEmpty())
+		return -1;
+
+	QList<QVariantMap> replyMap = qdbus_cast<QList<QVariantMap>>(reply.arguments().first());
+	if (replyMap.isEmpty())
+		return -1;
+
+	bool ok;
+	int di = replyMap.first().value(
+		"value", QVariant("err:-1")).toString().split(":").last().toInt(&ok);
+	if (ok)
+		return di;
+
+	return -1;
+#else
+	QString path = QString("/Settings/Devices/%1/ClassAndVrmInstance").arg(uniqueId);
+	VeQItem *newItem = mRoot->itemGetOrCreate(path, true);
+	if (!newItem->getValue().isValid())
+		newItem->setValue(value);
+	return defaultValue;
 #endif // QT_DBUS_LIB
 }

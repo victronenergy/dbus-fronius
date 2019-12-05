@@ -61,9 +61,11 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 	if (!mInverterSettings->isActive())
 		return true;
 	mInverter = createInverter();
-	QLOG_INFO() << "Inverter reactivated:" << mInverter->location();
-	startAcquisition();
-	onSettingsCustomNameChanged();
+	if (mInverter) {
+		QLOG_INFO() << "Inverter reactivated:" << mInverter->location();
+		startAcquisition();
+		onSettingsCustomNameChanged();
+	}
 	return true;
 }
 
@@ -91,9 +93,11 @@ void InverterMediator::onSettingsInitialized()
 
 	Q_ASSERT(mInverter == 0);
 	mInverter = createInverter();
-	QLOG_INFO() << "New inverter:" << mInverter->location();
-	startAcquisition();
-	onSettingsCustomNameChanged();
+	if (mInverter) {
+		QLOG_INFO() << "New inverter:" << mInverter->location();
+		startAcquisition();
+		onSettingsCustomNameChanged();
+	}
 }
 
 void InverterMediator::onIsActivatedChanged()
@@ -170,8 +174,10 @@ void InverterMediator::startAcquisition()
 
 Inverter *InverterMediator::createInverter()
 {
-	mSettings->registerInverter(mDeviceInfo.uniqueId);
-	int deviceInstance = mSettings->getDeviceInstance(mDeviceInfo.uniqueId);
+	int deviceInstance = mSettings->registerInverter(mDeviceInfo.uniqueId);
+	if (deviceInstance < 0)
+		return 0;
+
 	QString path = QString("pub/com.victronenergy.pvinverter.pv_%1").arg(mDeviceInfo.uniqueId);
 	VeQItem *root = VeQItems::getRoot()->itemGetOrCreate(path, false);
 	Inverter *inverter;

@@ -50,22 +50,16 @@ QStringList Settings::inverterIds() const
 	return mInverterIdCache;
 }
 
-void Settings::registerInverter(const QString &uniqueId)
+int Settings::registerInverter(const QString &uniqueId)
 {
 	QString settingsId = createInverterId(uniqueId);
-	if (mInverterIdCache.contains(settingsId))
-		return;
-	mInverterIdCache.append(settingsId);
-	mInverterIds->setValue(mInverterIdCache.join(","));
-}
+	int i = getDeviceInstance(settingsId, "pvinverter", MinDeviceInstance);
 
-int Settings::getDeviceInstance(const QString &uniqueId) const
-{
-	QString settingsId = createInverterId(uniqueId);
-	int i = mInverterIdCache.indexOf(settingsId);
-	if (i == -1)
-		return -1;
-	return MinDeviceInstance + i % (MaxDeviceInstance - MinDeviceInstance + 1);
+	if (!mInverterIdCache.contains(settingsId)) {
+		mInverterIdCache.append(settingsId);
+		mInverterIds->setValue(mInverterIdCache.join(","));
+	}
+	return i;
 }
 
 QString Settings::createInverterId(const QString &deviceSerial)
