@@ -1,14 +1,8 @@
-#include <QtGlobal>
-#include <QNetworkReply>
-#include <QNetworkRequest>
+#include <QHttp>
 #include <QUrl>
 #include <QsLog.h>
 #include <QStringList>
 #include <QTimer>
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-#include <QUrlQuery>
-#endif
 
 #include "froniussolar_api.h"
 #include "json/json.h"
@@ -16,13 +10,14 @@
 FroniusSolarApi::FroniusSolarApi(const QString &hostName, int port,
 								 QObject *parent) :
 	QObject(parent),
-	mReply(0),
+	mHttp(0),
 	mHostName(hostName),
 	mPort(port),
 	mTimeoutTimer(new QTimer(this))
 {
 	mTimeoutTimer->setInterval(15000);
 	connect(mTimeoutTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+	updateHttpClient();
 }
 
 QString FroniusSolarApi::hostName() const
@@ -35,6 +30,7 @@ void FroniusSolarApi::setHostName(const QString &h)
 	if (mHostName == h)
 		return;
 	mHostName = h;
+	updateHttpClient();
 }
 
 int FroniusSolarApi::port() const
@@ -47,111 +43,70 @@ void FroniusSolarApi::setPort(int port)
 	if (mPort == port)
 		return;
 	mPort = port;
-}
-
-const QUrl FroniusSolarApi::baseUrl(const QString &path)
-{
-	QUrl url;
-	url.setHost(mHostName);
-	url.setPort(mPort);
-	url.setScheme("http");
-	url.setPath(path);
-	return url;
+	updateHttpClient();
 }
 
 void FroniusSolarApi::getConverterInfoAsync()
 {
-	QUrl url = baseUrl("/solar_api/v1/GetInverterInfo.cgi");
+	QUrl url;
+	url.setPath("/solar_api/v1/GetInverterInfo.cgi");
 	sendGetRequest(url, "getInverterInfo");
 }
 
 void FroniusSolarApi::getCumulationDataAsync(int deviceId)
 {
-	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
-
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-	QUrlQuery query;
-	query.addQueryItem("Scope", "Device");
-	query.addQueryItem("DeviceId", QString::number(deviceId));
-	query.addQueryItem("DataCollection", "CumulationInverterData");
-	url.setQuery(query);
-	#else
+	QUrl url;
+	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
 	url.addQueryItem("Scope", "Device");
 	url.addQueryItem("DeviceId", QString::number(deviceId));
 	url.addQueryItem("DataCollection", "CumulationInverterData");
-	#endif
 	sendGetRequest(url, "getCumulationData");
 }
 
 void FroniusSolarApi::getCommonDataAsync(int deviceId)
 {
-	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
-
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-	QUrlQuery query;
-	query.addQueryItem("Scope", "Device");
-	query.addQueryItem("DeviceId", QString::number(deviceId));
-	query.addQueryItem("DataCollection", "CommonInverterData");
-	url.setQuery(query);
-	#else
+	QUrl url;
+	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
 	url.addQueryItem("Scope", "Device");
 	url.addQueryItem("DeviceId", QString::number(deviceId));
 	url.addQueryItem("DataCollection", "CommonInverterData");
-	#endif
 	sendGetRequest(url, "getCommonData");
 }
 
 void FroniusSolarApi::getThreePhasesInverterDataAsync(int deviceId)
 {
-	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
-
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-	QUrlQuery query;
-	query.addQueryItem("Scope", "Device");
-	query.addQueryItem("DeviceId", QString::number(deviceId));
-	query.addQueryItem("DataCollection", "3PInverterData");
-	url.setQuery(query);
-	#else
+	QUrl url;
+	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
 	url.addQueryItem("Scope", "Device");
 	url.addQueryItem("DeviceId", QString::number(deviceId));
 	url.addQueryItem("DataCollection", "3PInverterData");
-	#endif
 	sendGetRequest(url, "getThreePhasesInverterData");
 }
 
 void FroniusSolarApi::getSystemDataAsync()
 {
-	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
-
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-	QUrlQuery query;
-	query.addQueryItem("Scope", "System");
-	url.setQuery(query);
-	#else
+	QUrl url;
+	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
 	url.addQueryItem("Scope", "System");
-	#endif
 	sendGetRequest(url, "getSystemData");
 }
 
-void FroniusSolarApi::onDone()
+void FroniusSolarApi::onDone(bool error)
 {
-	mTimeoutTimer->stop();
-	processRequest(mReply);
-	mReply->deleteLater();
+	processRequest(error ? mHttp->errorString() : QString());
 }
 
 void FroniusSolarApi::onTimeout()
 {
-	// For some reason, this signal can fire even with an inactive timer.
-	if (mTimeoutTimer->isActive())
-		mReply->abort();
+	// During call to abort onRequestFinished will be called.
+	mHttp->abort();
 }
 
-void FroniusSolarApi::processConverterInfo(QNetworkReply *reply)
+void FroniusSolarApi::processConverterInfo(const QString &networkError)
 {
 	InverterListData data;
 	QVariantMap map;
-	processReply(reply, data, map);
+	processReply(networkError, data, map);
 	QVariantMap devices = getByPath(map, "Body/Data").toMap();
 	for (QVariantMap::Iterator it = devices.begin();
 		 it != devices.end();
@@ -169,11 +124,11 @@ void FroniusSolarApi::processConverterInfo(QNetworkReply *reply)
 	emit converterInfoFound(data);
 }
 
-void FroniusSolarApi::processCumulationData(QNetworkReply *reply)
+void FroniusSolarApi::processCumulationData(const QString &networkError)
 {
 	CumulationInverterData data;
 	QVariantMap map;
-	processReply(reply, data, map);
+	processReply(networkError, data, map);
 	QVariant d = getByPath(map, "Body/Data");
 	data.acPower = getByPath(d, "PAC/Value").toDouble();
 	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toDouble();
@@ -182,11 +137,11 @@ void FroniusSolarApi::processCumulationData(QNetworkReply *reply)
 	emit cumulationDataFound(data);
 }
 
-void FroniusSolarApi::processCommonData(QNetworkReply *reply)
+void FroniusSolarApi::processCommonData(const QString &networkError)
 {
 	CommonInverterData data;
 	QVariantMap map;
-	processReply(reply, data, map);
+	processReply(networkError, data, map);
 	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").toString();
 	QVariant d = getByPath(map, "Body/Data");
 	data.acPower = getByPath(d, "PAC/Value").toDouble();
@@ -203,11 +158,11 @@ void FroniusSolarApi::processCommonData(QNetworkReply *reply)
 	emit commonDataFound(data);
 }
 
-void FroniusSolarApi::processThreePhasesData(QNetworkReply *reply)
+void FroniusSolarApi::processThreePhasesData(const QString &networkError)
 {
 	ThreePhasesInverterData data;
 	QVariantMap map;
-	processReply(reply, data, map);
+	processReply(networkError, data, map);
 	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").toString();
 	QVariant d = getByPath(map, "Body/Data");
 	data.acCurrentPhase1 = getByPath(d, "IAC_L1/Value").toDouble();
@@ -222,43 +177,44 @@ void FroniusSolarApi::processThreePhasesData(QNetworkReply *reply)
 void FroniusSolarApi::sendGetRequest(const QUrl &request, const QString &id)
 {
 	Q_ASSERT(mRequestType.isEmpty());
-	mReply = networkManager().get(QNetworkRequest(request));
-	connect(mReply, SIGNAL(finished()), this, SLOT(onDone()));
+	mHttp->get(request.toString());
 	mRequestType = id;
 	mTimeoutTimer->start();
 }
 
-void FroniusSolarApi::processRequest(QNetworkReply *reply)
+void FroniusSolarApi::processRequest(const QString &networkError)
 {
 	if (mRequestType == "getInverterInfo") {
-		processConverterInfo(reply);
+		processConverterInfo(networkError);
 	} else if (mRequestType == "getCommonData") {
-		processCommonData(reply);
+		processCommonData(networkError);
 	} else if (mRequestType == "getThreePhasesInverterData") {
-		processThreePhasesData(reply);
+		processThreePhasesData(networkError);
 	} else if (mRequestType == "getCumulationData") {
-		processCumulationData(reply);
+		processCumulationData(networkError);
 	} else if (mRequestType == "getSystemData") {
-		processCumulationData(reply);
+		processCumulationData(networkError);
 	}
 }
 
-void FroniusSolarApi::processReply(QNetworkReply *reply,
+void FroniusSolarApi::processReply(const QString &networkError,
 								   SolarApiReply &apiReply,
 								   QVariantMap &map)
 {
 	mRequestType.clear();
+	mTimeoutTimer->stop();
 	// Some error will be logged with QLOG_DEBUG because they occur often during
 	// a device scan and would fill the log with a lot of useless information.
-	if (reply->error() != QNetworkReply::NoError) {
+	if (!networkError.isEmpty()) {
 		apiReply.error = SolarApiReply::NetworkError;
-		apiReply.errorMessage = reply->errorString();;
+		apiReply.errorMessage = mHttp->errorString();
 		QLOG_DEBUG() << "Network error:" << apiReply.errorMessage << mHostName;
 		return;
 	}
-	QByteArray bytes = reply->readAll();
+	QByteArray bytes = mHttp->readAll();
 	QString result(QString::fromLocal8Bit(bytes));
-	reply->close();
+	// CCGX does not receive reply from subsequent requests if we don't do this.
+	mHttp->close();
 	QLOG_TRACE() << result;
 	if (!result.isEmpty()) {
 		map = JSON::instance().parse(result).toMap();
@@ -281,6 +237,14 @@ void FroniusSolarApi::processReply(QNetworkReply *reply,
 		return;
 	}
 	apiReply.error = SolarApiReply::NoError;
+}
+
+void FroniusSolarApi::updateHttpClient()
+{
+	delete mHttp;
+	mHttp = new QHttp(mHostName, QHttp::ConnectionModeHttp, mPort, this);
+	connect(mHttp, SIGNAL(done(bool)),
+			this, SLOT(onDone(bool)));
 }
 
 QVariant FroniusSolarApi::getByPath(const QVariant &variant,
