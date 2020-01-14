@@ -236,3 +236,9 @@ void Inverter::updateConnectionItem()
 		arg(mDeviceInfo.hostName).arg(mDeviceInfo.networkId).
 		arg(mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi ? "solarapi" : "sunspec"));
 }
+
+bool Inverter::validateSunspecMonitorFrame(QVector<quint16> frame)
+{
+	Q_UNUSED(frame);
+	return true;
+}

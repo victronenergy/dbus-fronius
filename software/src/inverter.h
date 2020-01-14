@@ -76,6 +76,9 @@ public:
 	/// Returns a string describing the location ('<serial>@<ip-address>:<port>').
 	QString location() const;
 
+	// A hook where inverters can filter bad sunspec data
+	virtual bool validateSunspecMonitorFrame(QVector<quint16> frame);
+
 signals:
 	void isConnectedChanged();
 
