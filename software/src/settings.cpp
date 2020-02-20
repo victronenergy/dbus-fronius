@@ -81,7 +81,6 @@ void Settings::onInverterdIdsChanged()
 	if (!mInverterIdCache.isEmpty())
 		return;
 	mInverterIdCache = mInverterIds->getValue().toString().split(',', QString::SkipEmptyParts);
-	if (!mInverterIdCache.isEmpty())
 }
 
 QList<QHostAddress> Settings::toAdressList(const QString &s) const
