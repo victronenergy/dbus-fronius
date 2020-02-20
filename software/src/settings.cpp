@@ -57,7 +57,6 @@ void Settings::registerInverter(const QString &uniqueId)
 		return;
 	mInverterIdCache.append(settingsId);
 	mInverterIds->setValue(mInverterIdCache.join(","));
-	emit inverterIdsChanged();
 }
 
 int Settings::getDeviceInstance(const QString &uniqueId) const
@@ -83,7 +82,6 @@ void Settings::onInverterdIdsChanged()
 		return;
 	mInverterIdCache = mInverterIds->getValue().toString().split(',', QString::SkipEmptyParts);
 	if (!mInverterIdCache.isEmpty())
-		emit inverterIdsChanged();
 }
 
 QList<QHostAddress> Settings::toAdressList(const QString &s) const
