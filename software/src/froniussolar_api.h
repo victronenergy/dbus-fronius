@@ -1,7 +1,6 @@
 #ifndef FRONIUSSOLAR_API_H
 #define FRONIUSSOLAR_API_H
 
-#include <QByteArray>
 #include <QObject>
 #include <QList>
 #include <QString>
@@ -221,6 +220,8 @@ private slots:
 	void onTimeout();
 
 private:
+	const QUrl baseUrl(const QString &path);
+
 	void sendGetRequest(const QUrl &request, const QString &id);
 
 	void processRequest(const QString &networkError);

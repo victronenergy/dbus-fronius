@@ -37,6 +37,10 @@ include(src/json/json.pri)
 include(ext/qslog/QsLog.pri)
 include(ext/velib/src/qt/ve_qitems.pri)
 
+# Fronius SolarAPI still uses QHttp, and porting to QT5 is not possible
+# because QNetworkAccessManager is a CPU hog.
+equals(QT_MAJOR_VERSION, 5): include(src/qhttp/qhttp.pri)
+
 VELIB_INC = ext/velib/inc/velib/qt
 VELIB_SRC = ext/velib/src/qt
 

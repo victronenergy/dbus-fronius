@@ -1,4 +1,11 @@
+#include <QtGlobal>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#include <QUrlQuery>
+#include "qhttp/qhttp.h"
+#else
 #include <QHttp>
+#endif
+
 #include <QUrl>
 #include <QsLog.h>
 #include <QStringList>
@@ -38,6 +45,16 @@ int FroniusSolarApi::port() const
 	return mPort;
 }
 
+const QUrl FroniusSolarApi::baseUrl(const QString &path)
+{
+	QUrl url;
+	url.setHost(mHostName);
+	url.setPort(mPort);
+	url.setScheme("http");
+	url.setPath(path);
+	return url;
+}
+
 void FroniusSolarApi::setPort(int port)
 {
 	if (mPort == port)
@@ -48,46 +65,72 @@ void FroniusSolarApi::setPort(int port)
 
 void FroniusSolarApi::getConverterInfoAsync()
 {
-	QUrl url;
-	url.setPath("/solar_api/v1/GetInverterInfo.cgi");
+	QUrl url = baseUrl("/solar_api/v1/GetInverterInfo.cgi");
 	sendGetRequest(url, "getInverterInfo");
 }
 
 void FroniusSolarApi::getCumulationDataAsync(int deviceId)
 {
-	QUrl url;
-	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
+	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
+	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+	QUrlQuery query;
+	query.addQueryItem("Scope", "Device");
+	query.addQueryItem("DeviceId", QString::number(deviceId));
+	query.addQueryItem("DataCollection", "CumulationInverterData");
+	url.setQuery(query);
+	#else
 	url.addQueryItem("Scope", "Device");
 	url.addQueryItem("DeviceId", QString::number(deviceId));
 	url.addQueryItem("DataCollection", "CumulationInverterData");
+	#endif
 	sendGetRequest(url, "getCumulationData");
 }
 
 void FroniusSolarApi::getCommonDataAsync(int deviceId)
 {
-	QUrl url;
-	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
+	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
+
+	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+	QUrlQuery query;
+	query.addQueryItem("Scope", "Device");
+	query.addQueryItem("DeviceId", QString::number(deviceId));
+	query.addQueryItem("DataCollection", "CommonInverterData");
+	url.setQuery(query);
+	#else
 	url.addQueryItem("Scope", "Device");
 	url.addQueryItem("DeviceId", QString::number(deviceId));
 	url.addQueryItem("DataCollection", "CommonInverterData");
+	#endif
 	sendGetRequest(url, "getCommonData");
 }
 
 void FroniusSolarApi::getThreePhasesInverterDataAsync(int deviceId)
 {
-	QUrl url;
-	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
+	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
+	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+	QUrlQuery query;
+	query.addQueryItem("Scope", "Device");
+	query.addQueryItem("DeviceId", QString::number(deviceId));
+	query.addQueryItem("DataCollection", "3PInverterData");
+	url.setQuery(query);
+	#else
 	url.addQueryItem("Scope", "Device");
 	url.addQueryItem("DeviceId", QString::number(deviceId));
 	url.addQueryItem("DataCollection", "3PInverterData");
+	#endif
 	sendGetRequest(url, "getThreePhasesInverterData");
 }
 
 void FroniusSolarApi::getSystemDataAsync()
 {
-	QUrl url;
-	url.setPath("/solar_api/v1/GetInverterRealtimeData.cgi");
+	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
+	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+	QUrlQuery query;
+	query.addQueryItem("Scope", "System");
+	url.setQuery(query);
+	#else
 	url.addQueryItem("Scope", "System");
+	#endif
 	sendGetRequest(url, "getSystemData");
 }
 
