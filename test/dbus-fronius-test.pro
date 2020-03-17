@@ -30,6 +30,8 @@ include($$EXTDIR/qslog/QsLog.pri)
 include($$SRCDIR/json/json.pri)
 include($$EXTDIR/velib/src/qt/ve_qitems.pri)
 
+equals(QT_MAJOR_VERSION, 5): include($$SRCDIR/qhttp/qhttp.pri)
+
 INCLUDEPATH += \
     $$EXTDIR/velib/inc \
     $$EXTDIR/googletest/include \

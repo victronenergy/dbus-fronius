@@ -48,9 +48,6 @@ int FroniusSolarApi::port() const
 const QUrl FroniusSolarApi::baseUrl(const QString &path)
 {
 	QUrl url;
-	url.setHost(mHostName);
-	url.setPort(mPort);
-	url.setScheme("http");
 	url.setPath(path);
 	return url;
 }
