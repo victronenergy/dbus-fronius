@@ -102,10 +102,17 @@ void LocalIpAddressGenerator::reset()
 					netMask |= mNetMaskLimit.toIPv4Address();
 
 					quint32 localHost = address.toIPv4Address();
-					quint32 first = localHost & netMask;
-					quint32 last = (first | ~netMask) - 1;
-					mSubnets.append(
-						Subnet(this, first, last, localHost));
+					// For link-local, scan only 169.254.0.180. This
+					// is the static address used by Fronius inverters.
+					if ((localHost & 0xffff0000) == 0xa9fe0000) {
+						mSubnets.append(
+							Subnet(this, 0xa9fe00b3, 0xa9fe00b4, localHost));
+					} else {
+						quint32 first = localHost & netMask;
+						quint32 last = (first | ~netMask) - 1;
+						mSubnets.append(
+							Subnet(this, first, last, localHost));
+					}
 				}
 			}
 		}
