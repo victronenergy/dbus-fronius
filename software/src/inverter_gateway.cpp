@@ -5,7 +5,7 @@
 #include "settings.h"
 #include "fronius_udp_detector.h"
 
-static const int MaxSimultaneousRequests = 32;
+static const int MaxSimultaneousRequests = 64;
 
 InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	QObject(parent),
