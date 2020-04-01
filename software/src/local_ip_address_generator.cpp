@@ -30,7 +30,7 @@ QHostAddress Subnet::next()
 
 int Subnet::position() const
 {
-	return mCurrent - 1 - mGenerator->exceptions().size() - mFirst;
+	return mCurrent - mFirst;
 }
 
 LocalIpAddressGenerator::LocalIpAddressGenerator():

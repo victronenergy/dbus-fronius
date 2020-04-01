@@ -13,7 +13,7 @@ public:
 	Subnet(LocalIpAddressGenerator *generator, quint32 first, quint32 last, quint32 localhost);
 	bool hasNext() const;
 	QHostAddress next();
-	int size() const { return mLast - mFirst; }
+	int size() const { return mLast - mFirst + 1; }
 	int position() const;
 private:
 	LocalIpAddressGenerator *mGenerator;
