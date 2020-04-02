@@ -157,11 +157,8 @@ void InverterGateway::onDetectionDone()
 		// For TryPriority scans, we switch to a full scan if we're a few
 		// piggies short, and if autoScan is enabled.
 		if ((scanType == TryPriority) && mSettings->autoScan()) {
-			// FIXME only check that we found all known ones, not all priority
-			// ones. Otherwise we do a full scan whenever a manually defined one
-			// is missing
 			QSet<QHostAddress> addresses = QSet<QHostAddress>::fromList(
-					mAddressGenerator.priorityAddresses());
+					mSettings->knownIpAddresses());
 
 			// Do a full scan if not all devices were found and we haven't
 			// tried a full scan yet. That means we'll fall back to a full
