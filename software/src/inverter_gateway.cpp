@@ -72,9 +72,10 @@ void InverterGateway::scan(enum ScanType scanType)
 	mDevicesFound.clear();
 	setAutoDetect(mScanType == Full);
 
-	// Do a UDP scan if a full scan was requested.
+	// Do a UDP scan if a full scan was requested, or on the periodic priority
+	// scan (but only if autoScan permitted).
 	mUdpDetector->reset();
-	if (scanType == Full) {
+	if ((scanType == Full) || ((scanType == TryPriority) && mSettings->autoScan())) {
 		mUdpDetector->start();
 	} else {
 		continueScan();
