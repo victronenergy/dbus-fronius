@@ -13,6 +13,7 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	mTimer(new QTimer(this)),
 	mUdpDetector(new FroniusUdpDetector(this)),
 	mAutoDetect(false),
+	mTriedFull(false),
 	mScanType(None)
 {
 	Q_ASSERT(settings != 0);
@@ -161,10 +162,14 @@ void InverterGateway::onDetectionDone()
 			QSet<QHostAddress> addresses = QSet<QHostAddress>::fromList(
 					mAddressGenerator.priorityAddresses());
 
-			// Do a full scan if not all devices were found
-			if ((addresses - mDevicesFound).size()) {
+			// Do a full scan if not all devices were found and we haven't
+			// tried a full scan yet. That means we'll fall back to a full
+			// scan only once. After that a manual scan will be required
+			// to find PV-inverters that changed IP address.
+			if ((addresses - mDevicesFound).size() && !mTriedFull) {
 				QLOG_INFO() << "Not all devices found, starting full IP scan";
 				mScanType = Full;
+				mTriedFull = true;
 				setAutoDetect(true);
 				continueScan();
 				return;

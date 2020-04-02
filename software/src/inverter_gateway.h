@@ -88,7 +88,7 @@ private:
 	QTimer *mTimer;
 	FroniusUdpDetector *mUdpDetector;
 	bool mAutoDetect;
-	bool mScanning;
+	bool mTriedFull;
 	enum ScanType mScanType;
 };
 
