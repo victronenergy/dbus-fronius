@@ -66,23 +66,6 @@ void FroniusSolarApi::getConverterInfoAsync()
 	sendGetRequest(url, "getInverterInfo");
 }
 
-void FroniusSolarApi::getCumulationDataAsync(int deviceId)
-{
-	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-	QUrlQuery query;
-	query.addQueryItem("Scope", "Device");
-	query.addQueryItem("DeviceId", QString::number(deviceId));
-	query.addQueryItem("DataCollection", "CumulationInverterData");
-	url.setQuery(query);
-	#else
-	url.addQueryItem("Scope", "Device");
-	url.addQueryItem("DeviceId", QString::number(deviceId));
-	url.addQueryItem("DataCollection", "CumulationInverterData");
-	#endif
-	sendGetRequest(url, "getCumulationData");
-}
-
 void FroniusSolarApi::getCommonDataAsync(int deviceId)
 {
 	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
@@ -118,19 +101,6 @@ void FroniusSolarApi::getThreePhasesInverterDataAsync(int deviceId)
 	sendGetRequest(url, "getThreePhasesInverterData");
 }
 
-void FroniusSolarApi::getSystemDataAsync()
-{
-	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-	QUrlQuery query;
-	query.addQueryItem("Scope", "System");
-	url.setQuery(query);
-	#else
-	url.addQueryItem("Scope", "System");
-	#endif
-	sendGetRequest(url, "getSystemData");
-}
-
 void FroniusSolarApi::onDone(bool error)
 {
 	processRequest(error ? mHttp->errorString() : QString());
@@ -162,19 +132,6 @@ void FroniusSolarApi::processConverterInfo(const QString &networkError)
 		data.inverters.push_back(ii);
 	}
 	emit converterInfoFound(data);
-}
-
-void FroniusSolarApi::processCumulationData(const QString &networkError)
-{
-	CumulationInverterData data;
-	QVariantMap map;
-	processReply(networkError, data, map);
-	QVariant d = getByPath(map, "Body/Data");
-	data.acPower = getByPath(d, "PAC/Value").toDouble();
-	data.dayEnergy = getByPath(d, "DAY_ENERGY/Value").toDouble();
-	data.yearEnergy = getByPath(d, "YEAR_ENERGY/Value").toDouble();
-	data.totalEnergy = getByPath(d, "TOTAL_ENERGY/Value").toDouble();
-	emit cumulationDataFound(data);
 }
 
 void FroniusSolarApi::processCommonData(const QString &networkError)
@@ -230,10 +187,6 @@ void FroniusSolarApi::processRequest(const QString &networkError)
 		processCommonData(networkError);
 	} else if (mRequestType == "getThreePhasesInverterData") {
 		processThreePhasesData(networkError);
-	} else if (mRequestType == "getCumulationData") {
-		processCumulationData(networkError);
-	} else if (mRequestType == "getSystemData") {
-		processCumulationData(networkError);
 	}
 }
 

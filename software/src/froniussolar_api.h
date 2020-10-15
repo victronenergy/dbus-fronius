@@ -75,23 +75,6 @@ struct InverterListData : public SolarApiReply
 	QList<InverterInfo> inverters;
 };
 
-struct CumulationInverterData : public SolarApiReply
-{
-	double acPower;
-	/*!
-	 * @brief Energy generated on current day
-	 */
-	double dayEnergy;
-	/*!
-	 * @brief Energy generated in current year
-	 */
-	double yearEnergy;
-	/*!
-	 * @brief Energy generated overall
-	 */
-	double totalEnergy;
-};
-
 struct CommonInverterData : public SolarApiReply
 {
 	QString deviceId;
@@ -159,11 +142,6 @@ public:
 	void getConverterInfoAsync();
 
 	/*!
-	 * @brief returns cumulated data from all connected inverters.
-	 */
-	void getCumulationDataAsync(int deviceId);
-
-	/*!
 	 * @brief retrieves common data from the specified inverter. Common data
 	 * is available from all inverters (with or without 3 phases).
 	 * @param deviceId The ID of the inverter. This should be the content of
@@ -184,20 +162,12 @@ public:
 	 */
 	void getThreePhasesInverterDataAsync(int deviceId);
 
-	void getSystemDataAsync();
-
 signals:
 	/*!
 	 * @brief emitted when getConverterInfo request has been completed.
 	 * @param data payload
 	 */
 	void converterInfoFound(const InverterListData &data);
-
-	/*!
-	 * @brief emitted when getCumulationData request has been completed.
-	 * @param data payload
-	 */
-	void cumulationDataFound(const CumulationInverterData &data);
 
 	/*!
 	 * @brief emitted when getCommonData request has been completed.
@@ -212,8 +182,6 @@ signals:
 	 */
 	void threePhasesDataFound(const ThreePhasesInverterData &data);
 
-	void systemDataFound(const CumulationInverterData &data);
-
 private slots:
 	void onDone(bool error);
 
@@ -227,8 +195,6 @@ private:
 	void processRequest(const QString &networkError);
 
 	void processConverterInfo(const QString &networkError);
-
-	void processCumulationData(const QString &networkError);
 
 	void processCommonData(const QString &networkError);
 

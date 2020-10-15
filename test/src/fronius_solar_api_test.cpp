@@ -90,19 +90,6 @@ TEST_F(FroniusSolarApiTest, getConverterInfo)
 	EXPECT_EQ(7, ii.statusCode);
 }
 
-TEST_F(FroniusSolarApiTest, getCumulationData)
-{
-	mApi.getCumulationDataAsync(2);
-	waitForCompletion(mCumulationData);
-
-	EXPECT_EQ(SolarApiReply::NoError, mCumulationData->error);
-	EXPECT_TRUE(mCumulationData->errorMessage.isEmpty());
-	EXPECT_EQ(3373.0, mCumulationData->acPower);
-	EXPECT_EQ(8000.0, mCumulationData->dayEnergy);
-	EXPECT_EQ(44000.0, mCumulationData->yearEnergy);
-	EXPECT_EQ(45000.0, mCumulationData->totalEnergy);
-}
-
 TEST_F(FroniusSolarApiTest, getCommonData)
 {
 	mApi.getCommonDataAsync(2);
@@ -132,17 +119,4 @@ TEST_F(FroniusSolarApiTest, getThreePhasesInverterDataSinglePhase)
 
 	EXPECT_EQ(SolarApiReply::ApiError, m3PData->error);
 	EXPECT_FALSE(m3PData->errorMessage.isEmpty());
-}
-
-TEST_F(FroniusSolarApiTest, getSystemData)
-{
-	mApi.getSystemDataAsync();
-	waitForCompletion(mCumulationData);
-
-	EXPECT_EQ(SolarApiReply::NoError, mCumulationData->error);
-	EXPECT_TRUE(mCumulationData->errorMessage.isEmpty());
-	EXPECT_EQ(3373.0, mCumulationData->acPower);
-	EXPECT_EQ(8000.0, mCumulationData->dayEnergy);
-	EXPECT_EQ(44000.0, mCumulationData->yearEnergy);
-	EXPECT_EQ(45000.0, mCumulationData->totalEnergy);
 }
