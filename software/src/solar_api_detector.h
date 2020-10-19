@@ -50,6 +50,13 @@ private:
 		FroniusSolarApi *api;
 	};
 
+	class Api: public FroniusSolarApi
+	{
+	public:
+		Api(const QString &hostName, int port, Reply *parent = 0) :
+			FroniusSolarApi(hostName, port, parent) {}
+	};
+
 	struct ReplyToInverter {
 		ReplyToInverter():
 			reply(0),
@@ -64,7 +71,6 @@ private:
 	void checkFinished(Reply *reply);
 
 	static QList<QString> mInvalidDevices;
-	QHash<FroniusSolarApi *, Reply *> mApiToReply;
 	QHash<DetectorReply *, ReplyToInverter> mDetectorReplyToInverter;
 	SunspecDetector *mSunspecDetector;
 	const Settings *mSettings;

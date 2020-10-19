@@ -19,8 +19,7 @@ SolarApiDetector::SolarApiDetector(const Settings *settings, QObject *parent):
 DetectorReply *SolarApiDetector::start(const QString &hostName)
 {
 	Reply *reply = new Reply(this);
-	reply->api = new FroniusSolarApi(hostName, mSettings->portNumber(), reply);
-	mApiToReply[reply->api] = reply;
+	reply->api = new Api(hostName, mSettings->portNumber(), reply);
 	connect(reply->api, SIGNAL(converterInfoFound(InverterListData)),
 		this, SLOT(onConverterInfoFound(InverterListData)));
 	reply->api->getConverterInfoAsync();
@@ -29,8 +28,8 @@ DetectorReply *SolarApiDetector::start(const QString &hostName)
 
 void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
 {
-	FroniusSolarApi *api = static_cast<FroniusSolarApi *>(sender());
-	Reply *reply = mApiToReply.value(api);
+	Api *api = static_cast<Api *>(sender());
+	Reply *reply = static_cast<Reply *>(api->parent());
 	bool setFinished = true;
 	for (QList<InverterInfo>::const_iterator it = data.inverters.begin();
 		 it != data.inverters.end();
