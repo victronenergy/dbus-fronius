@@ -101,6 +101,19 @@ void FroniusSolarApi::getThreePhasesInverterDataAsync(int deviceId)
 	sendGetRequest(url, "getThreePhasesInverterData");
 }
 
+void FroniusSolarApi::getDeviceInfoAsync()
+{
+	QUrl url = baseUrl("/solar_api/v1/GetActiveDeviceInfo.cgi");
+	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+	QUrlQuery query;
+	query.addQueryItem("DeviceClass", "Inverter");
+	url.setQuery(query);
+	#else
+	url.addQueryItem("DeviceClass", "Inverter");
+	#endif
+	sendGetRequest(url, "getDeviceInfo");
+}
+
 void FroniusSolarApi::onDone(bool error)
 {
 	processRequest(error ? mHttp->errorString() : QString());
@@ -171,6 +184,19 @@ void FroniusSolarApi::processThreePhasesData(const QString &networkError)
 	emit threePhasesDataFound(data);
 }
 
+void FroniusSolarApi::processDeviceInfo(const QString &networkError)
+{
+	QVariantMap map;
+	DeviceInfoData data;
+	processReply(networkError, data, map);
+	QVariantMap devices = getByPath(map, "Body/Data").toMap();
+	for (QVariantMap::Iterator it = devices.begin(); it != devices.end(); ++it) {
+		QVariantMap di = it.value().toMap();
+		data.serialInfo[it.key().toInt()] = di["Serial"].toString();
+	}
+	emit deviceInfoFound(data);
+}
+
 void FroniusSolarApi::sendGetRequest(const QUrl &request, const QString &id)
 {
 	Q_ASSERT(mRequestType.isEmpty());
@@ -187,6 +213,8 @@ void FroniusSolarApi::processRequest(const QString &networkError)
 		processCommonData(networkError);
 	} else if (mRequestType == "getThreePhasesInverterData") {
 		processThreePhasesData(networkError);
+	} else if (mRequestType == "getDeviceInfo") {
+		processDeviceInfo(networkError);
 	}
 }
 

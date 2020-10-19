@@ -18,6 +18,8 @@ public:
 	virtual DetectorReply *start(const QString &hostName);
 
 private slots:
+	void onDeviceInfoFound(const DeviceInfoData &data);
+
 	void onConverterInfoFound(const InverterListData &data);
 
 	void onSunspecDeviceFound(const DeviceInfo &info);
@@ -48,6 +50,7 @@ private:
 		}
 
 		FroniusSolarApi *api;
+		QMap<int, QString> serialInfo; // A place to store serial info for later use
 	};
 
 	class Api: public FroniusSolarApi

@@ -20,10 +20,20 @@ DetectorReply *SolarApiDetector::start(const QString &hostName)
 {
 	Reply *reply = new Reply(this);
 	reply->api = new Api(hostName, mSettings->portNumber(), reply);
+	connect(reply->api, SIGNAL(deviceInfoFound(DeviceInfoData)),
+		this, SLOT(onDeviceInfoFound(DeviceInfoData)));
 	connect(reply->api, SIGNAL(converterInfoFound(InverterListData)),
 		this, SLOT(onConverterInfoFound(InverterListData)));
-	reply->api->getConverterInfoAsync();
+	reply->api->getDeviceInfoAsync();
 	return reply;
+}
+
+void SolarApiDetector::onDeviceInfoFound(const DeviceInfoData &data)
+{
+	Api *api = static_cast<Api *>(sender());
+	Reply *reply = static_cast<Reply *>(api->parent());
+	reply->serialInfo = data.serialInfo; // Store for later use
+	reply->api->getConverterInfoAsync();
 }
 
 void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
@@ -104,6 +114,7 @@ void SolarApiDetector::onSunspecDone()
 	info.deviceType = device.inverter.deviceType;
 	info.productId = VE_PROD_ID_PV_INVERTER_FRONIUS;
 	info.maxPower = qQNaN();
+	info.serialNumber = device.reply->serialInfo.value(device.inverter.id, QString());
 	const FroniusDeviceInfo *deviceInfo = FroniusDeviceInfo::find(device.inverter.deviceType);
 	if (deviceInfo == 0) {
 		QLOG_WARN() << "Unknown inverter type:" << device.inverter.deviceType;

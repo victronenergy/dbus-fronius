@@ -111,6 +111,11 @@ struct ThreePhasesInverterData : public SolarApiReply
 	double acVoltagePhase3;
 };
 
+struct DeviceInfoData : public SolarApiReply
+{
+	QMap<int, QString> serialInfo;
+};
+
 /*!
  * @brief Implements the Fronius solar API.
  * This is the API running on the data manager extension cards which may be
@@ -162,6 +167,8 @@ public:
 	 */
 	void getThreePhasesInverterDataAsync(int deviceId);
 
+	void getDeviceInfoAsync();
+
 signals:
 	/*!
 	 * @brief emitted when getConverterInfo request has been completed.
@@ -182,6 +189,8 @@ signals:
 	 */
 	void threePhasesDataFound(const ThreePhasesInverterData &data);
 
+	void deviceInfoFound(const DeviceInfoData &data);
+
 private slots:
 	void onDone(bool error);
 
@@ -199,6 +208,8 @@ private:
 	void processCommonData(const QString &networkError);
 
 	void processThreePhasesData(const QString &networkError);
+
+	void processDeviceInfo(const QString &networkError);
 
 	void processReply(const QString &networkError, SolarApiReply &apiReply,
 					  QVariantMap &map);

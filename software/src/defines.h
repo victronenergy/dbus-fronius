@@ -46,6 +46,7 @@ struct DeviceInfo
 	QString uniqueId;
 	QString productName;
 	QString firmwareVersion;
+	QString serialNumber;
 	int networkId;
 	int port; // Fronius solar API only
 	int deviceType; // Fronius solar API only
