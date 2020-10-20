@@ -40,6 +40,8 @@ public:
 
 	void setEnergy(InverterPhase phase, double value);
 
+	void setSerialNumber(const QString &s);
+
 signals:
 	void phaseChanged();
 
@@ -64,6 +66,7 @@ private:
 	VeQItem *mL1Energy;
 	VeQItem *mL2Energy;
 	VeQItem *mL3Energy;
+	VeQItem *mSerialNumber;
 };
 
 #endif // INVERTERSETTINGS_H

@@ -13,7 +13,8 @@ InverterSettings::InverterSettings(VeQItem *root, QObject *parent) :
 	mIsActive(connectItem("IsActive", 1, SIGNAL(isActiveChanged()))),
 	mL1Energy(connectItem("L1Energy", 0.0, 0.0, 1e6, SIGNAL(l1EnergyChanged()), true)),
 	mL2Energy(connectItem("L2Energy", 0.0, 0.0, 1e6, SIGNAL(l2EnergyChanged()), true)),
-	mL3Energy(connectItem("L3Energy", 0.0, 0.0, 1e6, SIGNAL(l3EnergyChanged()), true))
+	mL3Energy(connectItem("L3Energy", 0.0, 0.0, 1e6, SIGNAL(l3EnergyChanged()), true)),
+	mSerialNumber(connectItem("SerialNumber", "", 0, false))
 {
 }
 
@@ -115,4 +116,9 @@ void InverterSettings::setEnergy(InverterPhase phase, double value)
 		QLOG_ERROR() <<"Incorrect phase:" << phase;
 		break;
 	}
+}
+
+void InverterSettings::setSerialNumber(const QString &s)
+{
+	mSerialNumber->setValue(s);
 }

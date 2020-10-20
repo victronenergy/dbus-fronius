@@ -88,8 +88,10 @@ void InverterMediator::onSettingsInitialized()
 		mInverterSettings->setPhase(MultiPhase);
 	}
 
-	/* Persist the phase count to settings so the GUI has access to it. */
+	/* Persist the phase count and serial number to settings so the GUI has
+	 * access to it. */
 	mInverterSettings->setPhaseCount(mDeviceInfo.phaseCount);
+	mInverterSettings->setSerialNumber(mDeviceInfo.serialNumber);
 
 	Q_ASSERT(mInverter == 0);
 	mInverter = createInverter();
