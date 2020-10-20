@@ -30,7 +30,7 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	produceValue(createItem("ProductName"), deviceInfo.productName);
 	produceValue(createItem("ProductId"), deviceInfo.productId,
 		QString::number(deviceInfo.productId, 16));
-	produceValue(createItem("Serial"), deviceInfo.uniqueId);
+	produceValue(createItem("Serial"), deviceInfo.serialNumber.isEmpty() ? deviceInfo.uniqueId : deviceInfo.serialNumber);
 	produceValue(mDeviceInstance, deviceInstance);
 	produceDouble(createItem("Ac/MaxPower"), deviceInfo.maxPower, 0, "W");
 	produceValue(createItem("FirmwareVersion"), deviceInfo.firmwareVersion.isEmpty() ?
