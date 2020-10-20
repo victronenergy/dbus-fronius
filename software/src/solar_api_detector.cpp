@@ -80,8 +80,9 @@ void SolarApiDetector::onSunspecDeviceFound(const DeviceInfo &info)
 	DeviceInfo i2(info);
 	// unique ID is used to find inverter settings, and to determine the device instance. In
 	// previous versions, the unique ID constructed from data retrieved using the solar API.
-	// The sunspec detector uses the serial number of the inverter as unique ID, which is not
-	// available in the solar API.
+	// The sunspec detector uses the serial number of the inverter as unique ID, which was
+	// not available in the solar API in older firmware versions. To keep things consistent
+	// across models, continue to use the uniqueId even for sunspec inverters.
 	i2.uniqueId = fixUniqueId(device.inverter);
 
 	// Fronius inverters have a deviceType that is exposed on solarAPI but not

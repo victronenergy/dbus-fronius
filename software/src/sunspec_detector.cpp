@@ -141,7 +141,7 @@ void SunspecDetector::onFinished()
 				// 'version' (offset 42) for the inverter version.
 				di->di.firmwareVersion = getString(
 					values, di->di.productId == VE_PROD_ID_PV_INVERTER_FRONIUS ? 34 : 42, 8);
-				di->di.uniqueId = getString(values, 50, 16);
+				di->di.uniqueId = di->di.serialNumber = getString(values, 50, 16);
 			}
 			break;
 		case 120: // Nameplate ratings
