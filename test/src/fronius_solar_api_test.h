@@ -25,8 +25,6 @@ public:
 public slots:
 	void onConverterInfoFound(const InverterListData &data);
 
-	void onCumulationDataFound(const CumulationInverterData &data);
-
 	void onCommonDataFound(const CommonInverterData &data);
 
 	void onThreePhasesDataFound(const ThreePhasesInverterData &data);
@@ -60,7 +58,6 @@ protected:
 
 	FroniusSolarApi mApi;
 	QScopedPointer<InverterListData> mInverterListData;
-	QScopedPointer<CumulationInverterData> mCumulationData;
 	QScopedPointer<CommonInverterData> mCommonData;
 	QScopedPointer<ThreePhasesInverterData> m3PData;
 

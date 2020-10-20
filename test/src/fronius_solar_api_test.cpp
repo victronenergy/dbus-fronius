@@ -14,26 +14,17 @@ FroniusSolarApiTest::FroniusSolarApiTest(QObject *parent) :
 {
 	connect(&mApi, SIGNAL(converterInfoFound(InverterListData)),
 			this, SLOT(onConverterInfoFound(InverterListData)));
-	connect(&mApi, SIGNAL(cumulationDataFound(CumulationInverterData)),
-			this, SLOT(onCumulationDataFound(CumulationInverterData)));
 	connect(&mApi, SIGNAL(commonDataFound(CommonInverterData)),
 			this, SLOT(onCommonDataFound(CommonInverterData)));
 	connect(&mApi, SIGNAL(commonDataFound(CommonInverterData)),
 			this, SLOT(onCommonDataFound(CommonInverterData)));
 	connect(&mApi, SIGNAL(threePhasesDataFound(ThreePhasesInverterData)),
 			this, SLOT(onThreePhasesDataFound(ThreePhasesInverterData)));
-	connect(&mApi, SIGNAL(systemDataFound(CumulationInverterData)),
-			this, SLOT(onCumulationDataFound(CumulationInverterData)));
 }
 
 void FroniusSolarApiTest::onConverterInfoFound(const InverterListData &data)
 {
 	mInverterListData.reset(new InverterListData(data));
-}
-
-void FroniusSolarApiTest::onCumulationDataFound(const CumulationInverterData &data)
-{
-	mCumulationData.reset(new CumulationInverterData(data));
 }
 
 void FroniusSolarApiTest::onCommonDataFound(const CommonInverterData &data)

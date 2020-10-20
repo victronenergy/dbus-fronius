@@ -82,6 +82,8 @@ void DBusInverterBridgeTest::SetUp()
 	mPosition->setValue(static_cast<int>(Input2));
 	mPhase = settingsRoot->itemGetOrCreate("Phase");
 	mPhase->setValue(static_cast<int>(PhaseL2));
+	mSerialNumber = settingsRoot->itemGetOrCreate("SerialNumber");
+	mSerialNumber->setValue("12345");
 	mSettings.reset(new InverterSettings(settingsRoot));
 }
 

@@ -47,6 +47,7 @@ protected:
 	QScopedPointer<VeQItemProducer> mItemSubscriber;
 	VeQItem *mPosition;
 	VeQItem *mPhase;
+	VeQItem *mSerialNumber;
 };
 
 #endif // DBUS_INVERTER_BRIDGE_TEST
