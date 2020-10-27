@@ -35,6 +35,8 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	produceDouble(createItem("Ac/MaxPower"), deviceInfo.maxPower, 0, "W");
 	produceValue(createItem("FirmwareVersion"), deviceInfo.firmwareVersion.isEmpty() ?
 		QVariant() : deviceInfo.firmwareVersion);
+	produceValue(createItem("DataManagerVersion"), deviceInfo.dataManagerVersion.isEmpty() ?
+		QVariant() : deviceInfo.dataManagerVersion);
 	updateConnectionItem();
 	root->produceValue(QVariant(), VeQItem::Synchronized);
 }

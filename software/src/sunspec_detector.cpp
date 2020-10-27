@@ -137,10 +137,13 @@ void SunspecDetector::onFinished()
 					di->di.productId = VE_PROD_ID_PV_INVERTER_SUNSPEC;
 				QString model = getString(values, 18, 16);
 				di->di.productName = QString("%1 %2").arg(manufacturer).arg(model);
-				// Fronius uses 'options' (offset 34) for the data manager version, and
-				// 'version' (offset 42) for the inverter version.
-				di->di.firmwareVersion = getString(
-					values, di->di.productId == VE_PROD_ID_PV_INVERTER_FRONIUS ? 34 : 42, 8);
+
+				// Fronius uses 'options' (offset 34) for the data manager version
+				if (di->di.productId == VE_PROD_ID_PV_INVERTER_FRONIUS) {
+					di->di.dataManagerVersion = getString(values, 34, 8);
+				}
+
+				di->di.firmwareVersion = getString(values, 42, 8);
 				di->di.uniqueId = di->di.serialNumber = getString(values, 50, 16);
 			}
 			break;

@@ -45,6 +45,7 @@ struct DeviceInfo
 	QString hostName;
 	QString uniqueId;
 	QString productName;
+	QString dataManagerVersion;
 	QString firmwareVersion;
 	QString serialNumber;
 	int networkId;
