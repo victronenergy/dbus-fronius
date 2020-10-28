@@ -219,7 +219,7 @@ HostScan::HostScan(QList<AbstractDetector *> detectors, QString hostname, QObjec
 void HostScan::scan()
 {
 	if (mDetectors.size()) {
-		DetectorReply *reply = mDetectors.takeFirst()->start(mHostname);
+		DetectorReply *reply = mDetectors.takeFirst()->start(mHostname, 15000);
 		connect(reply, SIGNAL(deviceFound(const DeviceInfo &)),
 			this, SLOT(onDeviceFound(const DeviceInfo &)));
 		connect(reply, SIGNAL(finished()), this, SLOT(continueScan()));

@@ -15,7 +15,7 @@ class SolarApiDetector: public AbstractDetector
 public:
 	SolarApiDetector(const Settings *settings, QObject *parent = 0);
 
-	virtual DetectorReply *start(const QString &hostName);
+	virtual DetectorReply *start(const QString &hostName, int timeout);
 
 private slots:
 	void onDeviceInfoFound(const DeviceInfoData &data);
@@ -56,8 +56,8 @@ private:
 	class Api: public FroniusSolarApi
 	{
 	public:
-		Api(const QString &hostName, int port, Reply *parent = 0) :
-			FroniusSolarApi(hostName, port, parent) {}
+		Api(const QString &hostName, int port, int timeout, Reply *parent = 0) :
+			FroniusSolarApi(hostName, port, timeout, parent) {}
 	};
 
 	struct ReplyToInverter {

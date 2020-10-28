@@ -16,7 +16,7 @@ public:
 
 	SunspecDetector(quint8 unitId, QObject *parent = 0);
 
-	virtual DetectorReply *start(const QString &hostName);
+	virtual DetectorReply *start(const QString &hostName, int timeout);
 
 	quint8 unitId() const
 	{

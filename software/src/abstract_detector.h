@@ -43,7 +43,7 @@ public:
 	 * called `deleteLater` in the slot handling the `finished` signal (do not delete the reply
 	 * there).
 	 */
-	virtual DetectorReply *start(const QString &hostName) = 0;
+	virtual DetectorReply *start(const QString &hostName, int timeout) = 0;
 
 protected:
 	explicit AbstractDetector(QObject *parent = 0);

@@ -16,10 +16,10 @@ SolarApiDetector::SolarApiDetector(const Settings *settings, QObject *parent):
 {
 }
 
-DetectorReply *SolarApiDetector::start(const QString &hostName)
+DetectorReply *SolarApiDetector::start(const QString &hostName, int timeout)
 {
 	Reply *reply = new Reply(this);
-	reply->api = new Api(hostName, mSettings->portNumber(), reply);
+	reply->api = new Api(hostName, mSettings->portNumber(), timeout, reply);
 	connect(reply->api, SIGNAL(deviceInfoFound(DeviceInfoData)),
 		this, SLOT(onDeviceInfoFound(DeviceInfoData)));
 	connect(reply->api, SIGNAL(converterInfoFound(InverterListData)),
@@ -58,7 +58,12 @@ void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
 			device.inverter = *it;
 
 			mSunspecDetector->setUnitId(it->id);
-			DetectorReply *dr = mSunspecDetector->start(api->hostName());
+
+			// We already know we have a Fronius DataManager on this address.
+			// Allowing a longer timeout for sunspec only slows us down where
+			// we already know there is a Fronius PV-inverter, and this caters
+			// for very slow DataManagers with several PV-inverters connected.
+			DetectorReply *dr = mSunspecDetector->start(api->hostName(), 25000);
 			connect(dr, SIGNAL(deviceFound(DeviceInfo)),
 					this, SLOT(onSunspecDeviceFound(DeviceInfo)));
 			connect(dr, SIGNAL(finished()), this, SLOT(onSunspecDone()));

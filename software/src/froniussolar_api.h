@@ -127,7 +127,7 @@ class FroniusSolarApi : public QObject
 {
 	Q_OBJECT
 public:
-	FroniusSolarApi(const QString &hostName, int port, QObject *parent = 0);
+	FroniusSolarApi(const QString &hostName, int port, int timeout, QObject *parent = 0);
 
 	QString hostName() const;
 

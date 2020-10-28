@@ -14,7 +14,7 @@
 #include "froniussolar_api.h"
 #include "json/json.h"
 
-FroniusSolarApi::FroniusSolarApi(const QString &hostName, int port,
+FroniusSolarApi::FroniusSolarApi(const QString &hostName, int port, int timeout,
 								 QObject *parent) :
 	QObject(parent),
 	mHttp(0),
@@ -22,7 +22,7 @@ FroniusSolarApi::FroniusSolarApi(const QString &hostName, int port,
 	mPort(port),
 	mTimeoutTimer(new QTimer(this))
 {
-	mTimeoutTimer->setInterval(15000);
+	mTimeoutTimer->setInterval(timeout);
 	connect(mTimeoutTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
 	updateHttpClient();
 }

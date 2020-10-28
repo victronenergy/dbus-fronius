@@ -10,7 +10,7 @@ QProcess *FroniusSolarApiTest::mProcess = 0;
 
 FroniusSolarApiTest::FroniusSolarApiTest(QObject *parent) :
 	QObject(parent),
-	mApi("localhost", 8080)
+	mApi("localhost", 8080, 15000)
 {
 	connect(&mApi, SIGNAL(converterInfoFound(InverterListData)),
 			this, SLOT(onConverterInfoFound(InverterListData)));
