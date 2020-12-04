@@ -91,7 +91,8 @@ void InverterMediator::onSettingsInitialized()
 	/* Persist the phase count and serial number to settings so the GUI has
 	 * access to it. */
 	mInverterSettings->setPhaseCount(mDeviceInfo.phaseCount);
-	mInverterSettings->setSerialNumber(mDeviceInfo.serialNumber);
+	mInverterSettings->setSerialNumber(
+		mDeviceInfo.serialNumber.isEmpty() ? mDeviceInfo.uniqueId : mDeviceInfo.serialNumber);
 
 	Q_ASSERT(mInverter == 0);
 	mInverter = createInverter();
