@@ -5,7 +5,6 @@
 #include <QPointer>
 #include <QStringList>
 #include "defines.h"
-#include "gateway_interface.h"
 #include "local_ip_address_generator.h"
 
 class AbstractDetector;
@@ -25,7 +24,7 @@ class HostScan;
  * The diagram below shows in which order devices are scanned.
  * @dotfile ipaddress_scanning.dot
  */
-class InverterGateway : public QObject, public GatewayInterface
+class InverterGateway : public QObject
 {
 	Q_OBJECT
 public:

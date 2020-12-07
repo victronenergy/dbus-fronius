@@ -60,10 +60,13 @@ void DBusFronius::onInverterFound(const DeviceInfo &deviceInfo)
 	}
 
 
+	// Check if any of our mediators know about this inverter already
 	foreach (InverterMediator *m, mMediators) {
 		if (m->processNewInverter(deviceInfo))
 			return;
 	}
+
+	// Allocate a new one
 	InverterMediator *m = new InverterMediator(deviceInfo, this, mSettings, this);
 	mMediators.append(m);
 }

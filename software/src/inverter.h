@@ -80,8 +80,6 @@ public:
 	virtual bool validateSunspecMonitorFrame(QVector<quint16> frame);
 
 signals:
-	void isConnectedChanged();
-
 	void customNameChanged();
 
 	void hostNameChanged();
