@@ -99,7 +99,7 @@ void ModbusTcpClient::timerEvent(QTimerEvent *event)
 		return;
 	killTimer(mConnectTimerId);
 	mConnectTimerId = 0;
-	mSocket->disconnect();
+	mSocket->disconnectFromHost();
 	emit disconnected();
 }
 
