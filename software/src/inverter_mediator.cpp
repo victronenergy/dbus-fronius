@@ -43,7 +43,13 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 		}
 		return false;
 	}
-	if (mInverter != 0 && mDeviceInfo.retrievalMode != deviceInfo.retrievalMode) {
+
+	// Don't allow retrievalMode to go backwards to solarapi. In the unlikely event that
+	// the user really did disable modbus-tcp on the inverter, rather let it time out
+	// and do a rescan. This prevents switching back to a less capable protocol
+	// repeatedly because of a slow network or datamanager.
+	if (mInverter != 0 && mDeviceInfo.retrievalMode != deviceInfo.retrievalMode &&
+			deviceInfo.retrievalMode != ProtocolFroniusSolarApi) {
 		QLOG_INFO() << "Inverter retrieval mode has changed @" << mInverter->location();
 		delete mInverter;
 		mInverter = 0;
