@@ -57,13 +57,11 @@ void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
 			device.reply = reply;
 			device.inverter = *it;
 
-			mSunspecDetector->setUnitId(it->id);
-
 			// We already know we have a Fronius DataManager on this address.
 			// Allowing a longer timeout for sunspec only slows us down where
 			// we already know there is a Fronius PV-inverter, and this caters
 			// for very slow DataManagers with several PV-inverters connected.
-			DetectorReply *dr = mSunspecDetector->start(api->hostName(), 25000);
+			DetectorReply *dr = mSunspecDetector->start(api->hostName(), 25000, it->id);
 			connect(dr, SIGNAL(deviceFound(DeviceInfo)),
 					this, SLOT(onSunspecDeviceFound(DeviceInfo)));
 			connect(dr, SIGNAL(finished()), this, SLOT(onSunspecDone()));

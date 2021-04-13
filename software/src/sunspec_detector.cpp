@@ -19,7 +19,12 @@ SunspecDetector::SunspecDetector(quint8 unitId, QObject *parent):
 
 DetectorReply *SunspecDetector::start(const QString &hostName, int timeout)
 {
-	Q_ASSERT(mUnitId != 0);
+	return start(hostName, timeout, mUnitId);
+}
+
+DetectorReply *SunspecDetector::start(const QString &hostName, int timeout, quint8 unitId)
+{
+	Q_ASSERT(unitId != 0);
 	ModbusTcpClient *client = new ModbusTcpClient(this);
 	connect(client, SIGNAL(connected()), this, SLOT(onConnected()));
 	connect(client, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
@@ -27,7 +32,7 @@ DetectorReply *SunspecDetector::start(const QString &hostName, int timeout)
 	client->connectToServer(hostName);
 	Reply *reply = new Reply(this);
 	reply->client = client;
-	reply->di.networkId = mUnitId;
+	reply->di.networkId = unitId;
 	reply->di.hostName = hostName;
 	mClientToReply[client] = reply;
 	return reply;
