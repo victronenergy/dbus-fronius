@@ -2,6 +2,7 @@
 #include <velib/vecan/products.h>
 #include "modbus_tcp_client.h"
 #include "modbus_reply.h"
+#include "sunspec_updater.h"
 #include "sunspec_detector.h"
 #include "sunspec_tools.h"
 
@@ -25,6 +26,13 @@ DetectorReply *SunspecDetector::start(const QString &hostName, int timeout)
 DetectorReply *SunspecDetector::start(const QString &hostName, int timeout, quint8 unitId)
 {
 	Q_ASSERT(unitId != 0);
+
+	// If we already have a connection to this inverter, then there is
+	// no need to scan it again.
+	if (SunspecUpdater::hasConnectionTo(hostName, unitId)) {
+		return 0;
+	}
+
 	ModbusTcpClient *client = new ModbusTcpClient(this);
 	connect(client, SIGNAL(connected()), this, SLOT(onConnected()));
 	connect(client, SIGNAL(disconnected()), this, SLOT(onDisconnected()));

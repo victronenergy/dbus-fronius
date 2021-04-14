@@ -21,6 +21,8 @@ static const int PowerLimitTimeout = 120;
 // the algorithm in hub4control, 1% should only work.
 static const int PowerLimitScale = 100;
 
+QList<SunspecUpdater::SunSpecConnection> SunspecUpdater::mConnectedDevices;
+
 SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent):
 	QObject(parent),
 	mInverter(inverter),
@@ -151,6 +153,12 @@ void SunspecUpdater::handleError()
 	++mRetryCount;
 	if (mRetryCount > 5) {
 		mRetryCount = 0;
+
+		// Remove inverter from connected list
+		DeviceInfo i = mInverter->deviceInfo();
+		mConnectedDevices.removeAll((SunSpecConnection){i.hostName, i.networkId});
+
+		// Let the others know the connection could not be recovered.
 		emit connectionLost();
 	}
 	startIdleTimer();
@@ -338,6 +346,11 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 
 void SunspecUpdater::onConnected()
 {
+	DeviceInfo i = mInverter->deviceInfo();
+	SunSpecConnection j = { i.hostName, i.networkId };
+	if (!mConnectedDevices.contains(j)) {
+		mConnectedDevices.append(j);
+	}
 	startNextAction(getInitState());
 }
 
@@ -380,4 +393,9 @@ void SunspecUpdater::updateSplitPhase(double power, double energy)
 	l2->setPower(power);
 	l1->setTotalEnergy(energy);
 	l2->setTotalEnergy(energy);
+}
+
+bool SunspecUpdater::hasConnectionTo(QString host, int id)
+{
+	return mConnectedDevices.contains((SunSpecConnection){host, id});
 }

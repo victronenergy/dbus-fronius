@@ -53,15 +53,21 @@ void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
 				QLOG_WARN() << "PV inverter reported type 255. Serial:" << it->uniqueId;
 			}
 		} else {
-			ReplyToInverter device;
-			device.reply = reply;
-			device.inverter = *it;
-
 			// We already know we have a Fronius DataManager on this address.
 			// Allowing a longer timeout for sunspec only slows us down where
 			// we already know there is a Fronius PV-inverter, and this caters
 			// for very slow DataManagers with several PV-inverters connected.
 			DetectorReply *dr = mSunspecDetector->start(api->hostName(), 25000, it->id);
+			if (dr == 0) {
+				// If we already have a connection to this inverter, the detector will return
+				// null.
+				QLOG_INFO() << QString("SunSpec scan skipped for %1:%2").arg(api->hostName()).arg(it->id);
+				continue;
+			}
+
+			ReplyToInverter device;
+			device.reply = reply;
+			device.inverter = *it;
 			connect(dr, SIGNAL(deviceFound(DeviceInfo)),
 					this, SLOT(onSunspecDeviceFound(DeviceInfo)));
 			connect(dr, SIGNAL(finished()), this, SLOT(onSunspecDone()));

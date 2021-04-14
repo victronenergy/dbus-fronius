@@ -2,7 +2,9 @@
 #define INVERTER_MODBUS_UPDATER_H
 
 #include <QObject>
+#include <QList>
 #include <QAbstractSocket>
+#include <QString>
 
 class DataProcessor;
 class Inverter;
@@ -16,6 +18,8 @@ class SunspecUpdater: public QObject
 	Q_OBJECT
 public:
 	explicit SunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
+
+	static bool hasConnectionTo(QString host, int id);
 
 signals:
 	void connectionLost();
@@ -76,6 +80,16 @@ private:
 
 	void updateSplitPhase(double power, double energy);
 
+	struct SunSpecConnection {
+		QString hostName;
+		int networkId;
+
+		bool operator==(const SunSpecConnection& a) const
+		{
+			return hostName == a.hostName && networkId == a.networkId;
+		}
+	};
+
 	Inverter *mInverter;
 	InverterSettings *mSettings;
 	ModbusTcpClient *mModbusClient;
@@ -85,6 +99,7 @@ private:
 	double mPowerLimitPct;
 	int mRetryCount;
 	bool mWritePowerLimitRequested;
+	static QList<SunSpecConnection> mConnectedDevices; // to keep track of inverters we have a connection with
 };
 
 #endif // INVERTER_MODBUS_UPDATER_H
