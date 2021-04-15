@@ -7,7 +7,7 @@ class PowerInfo:
 		self._lastEnergy = 0
 		self._prevPower = 0
 		# Use time.perf_counter() instead of time.clock() when using python 3
-		self._lastTimeStamp = time.clock()
+		self._lastTimeStamp = time.perf_counter()
 
 	@property
 	def current(self):
@@ -20,7 +20,7 @@ class PowerInfo:
 	@property
 	def power(self):
 		p = random.gauss(3000, 100)
-		t = time.clock()
+		t = time.perf_counter()
 		self._lastEnergy += (self._prevPower + p) * (t - self._lastTimeStamp) / (2 * 3600)
 		self._lastTimeStamp = t
 		self._prevPower = p

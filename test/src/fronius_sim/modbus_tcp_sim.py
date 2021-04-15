@@ -1,6 +1,6 @@
 import bisect
 import traceback
-from pymodbus.server.async import ModbusSocketFramer, ModbusServerFactory
+from pymodbus.server.asynchronous import ModbusSocketFramer, ModbusServerFactory
 from pymodbus.datastore.context import ModbusServerContext, ModbusSlaveContext
 
 

@@ -48,7 +48,7 @@ void FroniusSolarApiTest::SetUpTestCase()
 	// used when starting python without using its full path. This version does
 	// not contain all modules needed by our simulation script, so we assume
 	// a full python install is present and installed in /usr/bin
-	mProcess->start("/usr/bin/python", arguments);
+	mProcess->start("/usr/bin/python3", arguments);
 	if (!mProcess->waitForStarted())
 		throw std::logic_error("Could not start python interpreter");
 	// Give the python interpreter some time to load the script.
