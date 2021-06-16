@@ -47,6 +47,14 @@ SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, Q
 	connect(mSettings, SIGNAL(phaseChanged()), this, SLOT(onPhaseChanged()));
 }
 
+SunspecUpdater::~SunspecUpdater()
+{
+	// If the updater is being deleted, the connection is lost. Remove the
+	// device from static member mConnectedDevices.
+	DeviceInfo i = mInverter->deviceInfo();
+	mConnectedDevices.removeAll((SunSpecConnection){i.hostName, i.networkId});
+}
+
 void SunspecUpdater::startNextAction(ModbusState state)
 {
 	mCurrentState = state;

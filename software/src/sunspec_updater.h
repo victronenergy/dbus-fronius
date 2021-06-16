@@ -19,6 +19,8 @@ class SunspecUpdater: public QObject
 public:
 	explicit SunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
 
+	virtual ~SunspecUpdater();
+
 	static bool hasConnectionTo(QString host, int id);
 
 signals:
