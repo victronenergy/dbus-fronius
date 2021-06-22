@@ -21,7 +21,7 @@ static const int PowerLimitTimeout = 120;
 // the algorithm in hub4control, 1% should only work.
 static const int PowerLimitScale = 100;
 
-QList<SunspecUpdater::SunSpecConnection> SunspecUpdater::mConnectedDevices;
+QList<SunspecUpdater*> SunspecUpdater::mUpdaters;
 
 SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent):
 	QObject(parent),
@@ -45,14 +45,15 @@ SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, Q
 	mTimer->setSingleShot(true);
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
 	connect(mSettings, SIGNAL(phaseChanged()), this, SLOT(onPhaseChanged()));
+
+	mUpdaters.append(this);
 }
 
 SunspecUpdater::~SunspecUpdater()
 {
 	// If the updater is being deleted, the connection is lost. Remove the
-	// device from static member mConnectedDevices.
-	DeviceInfo i = mInverter->deviceInfo();
-	mConnectedDevices.removeAll((SunSpecConnection){i.hostName, i.networkId});
+	// updater from static member mUpdaters.
+	mUpdaters.removeAll(this);
 }
 
 void SunspecUpdater::startNextAction(ModbusState state)
@@ -161,10 +162,6 @@ void SunspecUpdater::handleError()
 	++mRetryCount;
 	if (mRetryCount > 5) {
 		mRetryCount = 0;
-
-		// Remove inverter from connected list
-		DeviceInfo i = mInverter->deviceInfo();
-		mConnectedDevices.removeAll((SunSpecConnection){i.hostName, i.networkId});
 
 		// Let the others know the connection could not be recovered.
 		emit connectionLost();
@@ -354,11 +351,6 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 
 void SunspecUpdater::onConnected()
 {
-	DeviceInfo i = mInverter->deviceInfo();
-	SunSpecConnection j = { i.hostName, i.networkId };
-	if (!mConnectedDevices.contains(j)) {
-		mConnectedDevices.append(j);
-	}
 	startNextAction(getInitState());
 }
 
@@ -405,5 +397,10 @@ void SunspecUpdater::updateSplitPhase(double power, double energy)
 
 bool SunspecUpdater::hasConnectionTo(QString host, int id)
 {
-	return mConnectedDevices.contains((SunSpecConnection){host, id});
+	foreach (SunspecUpdater *u, mUpdaters) {
+		if ((host == u->mInverter->hostName()) && (id == u->mInverter->networkId())) {
+			return true;
+		}
+	}
+	return false;
 }

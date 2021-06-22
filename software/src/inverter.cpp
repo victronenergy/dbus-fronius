@@ -118,6 +118,11 @@ QString Inverter::hostName() const
 	return mDeviceInfo.hostName;
 }
 
+int Inverter::networkId() const
+{
+	return mDeviceInfo.networkId;
+}
+
 void Inverter::setHostName(const QString &h)
 {
 	if (mDeviceInfo.hostName== h)

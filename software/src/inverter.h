@@ -42,6 +42,8 @@ public:
 
 	QString hostName() const;
 
+	int networkId() const;
+
 	void setHostName(const QString &h);
 
 	int port() const;

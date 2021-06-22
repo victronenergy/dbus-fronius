@@ -82,16 +82,6 @@ private:
 
 	void updateSplitPhase(double power, double energy);
 
-	struct SunSpecConnection {
-		QString hostName;
-		int networkId;
-
-		bool operator==(const SunSpecConnection& a) const
-		{
-			return hostName == a.hostName && networkId == a.networkId;
-		}
-	};
-
 	Inverter *mInverter;
 	InverterSettings *mSettings;
 	ModbusTcpClient *mModbusClient;
@@ -101,7 +91,7 @@ private:
 	double mPowerLimitPct;
 	int mRetryCount;
 	bool mWritePowerLimitRequested;
-	static QList<SunSpecConnection> mConnectedDevices; // to keep track of inverters we have a connection with
+	static QList<SunspecUpdater*> mUpdaters; // to keep track of inverters we have a connection with
 };
 
 #endif // INVERTER_MODBUS_UPDATER_H
