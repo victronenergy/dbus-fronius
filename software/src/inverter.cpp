@@ -2,7 +2,6 @@
 #include <QCoreApplication>
 #include <QsLog.h>
 #include <QStringList>
-#include <velib/vecan/products.h>
 #include "fronius_device_info.h"
 #include "inverter.h"
 #include "power_info.h"
@@ -33,12 +32,6 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	produceValue(createItem("Serial"), deviceInfo.serialNumber.isEmpty() ? deviceInfo.uniqueId : deviceInfo.serialNumber);
 	produceValue(mDeviceInstance, deviceInstance);
 	produceDouble(createItem("Ac/MaxPower"), deviceInfo.maxPower, 0, "W");
-
-	// For now, enable power limiting only for ABB. Fronius is already handled
-	// in the FroniusInverter class
-	if (deviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB && deviceInfo.powerLimitScale)
-		produceDouble(mPowerLimit, deviceInfo.maxPower, 0, "W");
-
 	produceValue(createItem("FirmwareVersion"), deviceInfo.firmwareVersion.isEmpty() ?
 		QVariant() : deviceInfo.firmwareVersion);
 	produceValue(createItem("DataManagerVersion"), deviceInfo.dataManagerVersion.isEmpty() ?
@@ -254,4 +247,14 @@ bool Inverter::validateSunspecMonitorFrame(QVector<quint16> frame)
 {
 	Q_UNUSED(frame);
 	return true;
+}
+
+ThrottledInverter::ThrottledInverter(VeQItem *root, const DeviceInfo &deviceInfo,
+					int deviceInstance, QObject *parent) :
+	Inverter(root, deviceInfo, deviceInstance, parent)
+{
+	// If it has sunspec model 123, powerLimitScale will be non-zero.
+	// Enable the power limiter and initialise it to maxPower.
+	if (deviceInfo.powerLimitScale)
+		setPowerLimit(deviceInfo.maxPower);
 }

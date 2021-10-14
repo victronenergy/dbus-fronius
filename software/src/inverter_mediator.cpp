@@ -1,4 +1,5 @@
 #include <QsLog.h>
+#include <velib/vecan/products.h>
 #include "defines.h"
 #include "inverter.h"
 #include "fronius_inverter.h"
@@ -191,7 +192,10 @@ Inverter *InverterMediator::createInverter()
 	VeQItem *root = VeQItems::getRoot()->itemGetOrCreate(path, false);
 	Inverter *inverter;
 	if (mDeviceInfo.deviceType != 0) {
+		// Fronius inverters have a deviceType (obtained through the initial solarAPI detection)
 		inverter = new FroniusInverter(root, mDeviceInfo, deviceInstance, this);
+	} else if (mDeviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB) {
+		inverter = new ThrottledInverter(root, mDeviceInfo, deviceInstance, this);
 	} else {
 		inverter = new Inverter(root, mDeviceInfo, deviceInstance, this);
 	}
