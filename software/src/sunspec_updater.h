@@ -45,7 +45,6 @@ private slots:
 
 private:
 	enum ModbusState {
-		ReadPowerLimit,
 		ReadPowerAndVoltage,
 		WritePowerLimit,
 		Idle
@@ -77,8 +76,6 @@ private:
 	bool handleModbusError(ModbusReply *reply);
 
 	void handleError();
-
-	ModbusState getInitState() const;
 
 	void updateSplitPhase(double power, double energy);
 

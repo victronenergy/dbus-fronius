@@ -33,6 +33,12 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	produceValue(createItem("Serial"), deviceInfo.serialNumber.isEmpty() ? deviceInfo.uniqueId : deviceInfo.serialNumber);
 	produceValue(mDeviceInstance, deviceInstance);
 	produceDouble(createItem("Ac/MaxPower"), deviceInfo.maxPower, 0, "W");
+
+	// For now, enable power limiting only for ABB. Fronius is already handled
+	// in the FroniusInverter class
+	if (deviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB && deviceInfo.powerLimitScale)
+		produceDouble(mPowerLimit, deviceInfo.maxPower, 0, "W");
+
 	produceValue(createItem("FirmwareVersion"), deviceInfo.firmwareVersion.isEmpty() ?
 		QVariant() : deviceInfo.firmwareVersion);
 	produceValue(createItem("DataManagerVersion"), deviceInfo.dataManagerVersion.isEmpty() ?

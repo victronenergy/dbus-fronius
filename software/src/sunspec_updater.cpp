@@ -61,9 +61,6 @@ void SunspecUpdater::startNextAction(ModbusState state)
 	mCurrentState = state;
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	switch (mCurrentState) {
-	case ReadPowerLimit:
-		readHoldingRegisters(deviceInfo.immediateControlOffset + 5, 5);
-		break;
 	case ReadPowerAndVoltage:
 		if (deviceInfo.retrievalMode == ProtocolSunSpecFloat)
 			readHoldingRegisters(deviceInfo.inverterModelOffset, 62);
@@ -81,9 +78,11 @@ void SunspecUpdater::startNextAction(ModbusState state)
 			values.append(0); // unused
 			values.append(1); // enabled power throttle mode
 			writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 5, values);
+			mInverter->setPowerLimit(mPowerLimitPct * deviceInfo.maxPower);
 		} else {
 			values.append(0);
 			writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 9, values);
+			mInverter->setPowerLimit(deviceInfo.maxPower);
 		}
 		break;
 	}
@@ -167,23 +166,6 @@ void SunspecUpdater::handleError()
 		emit connectionLost();
 	}
 	startIdleTimer();
-}
-
-SunspecUpdater::ModbusState SunspecUpdater::getInitState() const
-{
-	// This is a workaround. SMA power limiting is not fully compatible with the standard: the
-	// registers controlling the limiter are write only (and should be read write). Because we
-	// are reading from the WMaxLimPct register. It is unclear how other sunspec inverters handle
-	// this, and if they are compatible. There may also be issues with the power limit controller
-	// in hub4control. So for now, we only allow power limiting when the inverter is a Fronius.
-
-	// To explicitly disable power limiting we take ReadPowerLimit from the state machine.
-	// Problem is that it is the first state, which is used in several places when the engine is
-	// reset. Hence this function.
-	return (
-		mInverter->deviceInfo().productId == VE_PROD_ID_PV_INVERTER_FRONIUS ||
-		mInverter->deviceInfo().productId == VE_PROD_ID_PV_INVERTER_ABB) ?
-		ReadPowerLimit : ReadPowerAndVoltage;
 }
 
 void SunspecUpdater::onReadCompleted()
@@ -295,25 +277,9 @@ void SunspecUpdater::onReadCompleted()
 		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
 		break;
 	}
-	case ReadPowerLimit:
-		if (values.size() == 5) {
-			double powerLimit = qQNaN();
-			const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-			if (deviceInfo.powerLimitScale >= PowerLimitScale) {
-				if (values[4] == 1) {
-					if (values[0] != 0xFFFF)
-						powerLimit = values[0] * deviceInfo.maxPower / deviceInfo.powerLimitScale;
-				} else {
-					powerLimit = deviceInfo.maxPower;
-				}
-			}
-			mInverter->setPowerLimit(powerLimit);
-			nextState = ReadPowerAndVoltage;
-		}
-		break;
 	default:
 		Q_ASSERT(false);
-		nextState = getInitState();
+		nextState = ReadPowerAndVoltage;
 		break;
 	}
 	startNextAction(nextState);
@@ -324,7 +290,7 @@ void SunspecUpdater::onWriteCompleted()
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
 	mWritePowerLimitRequested = false;
-	startNextAction(getInitState());
+	startNextAction(ReadPowerAndVoltage);
 }
 
 void SunspecUpdater::onPowerLimitRequested(double value)
@@ -334,10 +300,9 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 	if (powerLimitScale < PowerLimitScale)
 		return;
 	// An invalid power limit means that power limiting is not supported. So we ignore the request.
-	// See comment in the getInitState function.
 	if (!qIsFinite(mInverter->powerLimit()))
 		return;
-	mPowerLimitPct = qBound(0.0, value / deviceInfo.maxPower, 100.0);
+	mPowerLimitPct = qBound(0.0, value / deviceInfo.maxPower, 1.0);
 	if (mTimer->isActive()) {
 		mTimer->stop();
 		if (mCurrentState == Idle) {
@@ -351,12 +316,12 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 
 void SunspecUpdater::onConnected()
 {
-	startNextAction(getInitState());
+	startNextAction(ReadPowerAndVoltage);
 }
 
 void SunspecUpdater::onDisconnected()
 {
-	mCurrentState = getInitState();
+	mCurrentState = ReadPowerAndVoltage;
 	handleError();
 }
 
@@ -364,7 +329,7 @@ void SunspecUpdater::onTimer()
 {
 	Q_ASSERT(!mTimer->isActive());
 	if (mModbusClient->isConnected())
-		startNextAction(mCurrentState == Idle ? getInitState() : mCurrentState);
+		startNextAction(mCurrentState == Idle ? ReadPowerAndVoltage : mCurrentState);
 	else
 		mModbusClient->connectToServer(mInverter->hostName());
 }
