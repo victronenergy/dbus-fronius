@@ -29,9 +29,10 @@ SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, Q
 	mSettings(settings),
 	mModbusClient(new ModbusTcpClient(this)),
 	mTimer(new QTimer(this)),
+	mPowerLimitTimer(new QTimer(this)),
 	mDataProcessor(new DataProcessor(inverter, settings, this)),
 	mCurrentState(Idle),
-	mPowerLimitPct(100),
+	mPowerLimitPct(1.0),
 	mRetryCount(0),
 	mWritePowerLimitRequested(false)
 {
@@ -44,6 +45,9 @@ SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, Q
 		this, SLOT(onPowerLimitRequested(double)));
 	mTimer->setSingleShot(true);
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
+	mPowerLimitTimer->setSingleShot(true);
+	mPowerLimitTimer->setInterval(60000);
+	connect(mPowerLimitTimer, SIGNAL(timeout()), this, SLOT(onPowerLimitExpired()));
 	connect(mSettings, SIGNAL(phaseChanged()), this, SLOT(onPhaseChanged()));
 
 	mUpdaters.append(this);
@@ -70,7 +74,7 @@ void SunspecUpdater::startNextAction(ModbusState state)
 	case WritePowerLimit:
 	{
 		QVector<quint16> values;
-		if (mPowerLimitPct < 100) {
+		if (mPowerLimitPct < 1.0) {
 			quint16 pct = static_cast<quint16>(qRound(mPowerLimitPct * deviceInfo.powerLimitScale));
 			values.append(pct);
 			values.append(0); // unused
@@ -79,6 +83,7 @@ void SunspecUpdater::startNextAction(ModbusState state)
 			values.append(1); // enabled power throttle mode
 			writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 5, values);
 			mInverter->setPowerLimit(mPowerLimitPct * deviceInfo.maxPower);
+			mPowerLimitTimer->start();
 		} else {
 			values.append(0);
 			writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 9, values);
@@ -332,6 +337,11 @@ void SunspecUpdater::onTimer()
 		startNextAction(mCurrentState == Idle ? ReadPowerAndVoltage : mCurrentState);
 	else
 		mModbusClient->connectToServer(mInverter->hostName());
+}
+
+void SunspecUpdater::onPowerLimitExpired()
+{
+	onPowerLimitRequested(mInverter->deviceInfo().maxPower);
 }
 
 void SunspecUpdater::onPhaseChanged()

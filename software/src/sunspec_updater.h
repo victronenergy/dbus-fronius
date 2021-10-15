@@ -41,6 +41,8 @@ private slots:
 
 	void onTimer();
 
+	void onPowerLimitExpired();
+
 	void onPhaseChanged();
 
 private:
@@ -83,6 +85,7 @@ private:
 	InverterSettings *mSettings;
 	ModbusTcpClient *mModbusClient;
 	QTimer *mTimer;
+	QTimer *mPowerLimitTimer;
 	DataProcessor *mDataProcessor;
 	ModbusState mCurrentState;
 	double mPowerLimitPct;
