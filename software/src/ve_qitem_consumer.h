@@ -9,8 +9,6 @@
 #include <velib/qt/ve_qitems_dbus.hpp>
 #endif // QT_DBUS_LIB
 
-Q_DECLARE_METATYPE (QList<QVariantMap>);
-
 class VeQItem;
 
 class VeQItemConsumer : public QObject

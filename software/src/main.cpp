@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 	}
 
 	VeQItemDbusProducer producer(VeQItems::getRoot(), "sub", true, false);
-	producer.setListenIndividually(true);
+	producer.setAutoCreateItems(false);
 	producer.open(dbusAddress);
 
 	VeProducer dbusExportProducer(VeQItems::getRoot(), "pub");
