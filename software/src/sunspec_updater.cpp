@@ -74,21 +74,15 @@ void SunspecUpdater::startNextAction(ModbusState state)
 	case WritePowerLimit:
 	{
 		QVector<quint16> values;
-		if (mPowerLimitPct < 1.0) {
-			quint16 pct = static_cast<quint16>(qRound(mPowerLimitPct * deviceInfo.powerLimitScale));
-			values.append(pct);
-			values.append(0); // unused
-			values.append(PowerLimitTimeout);
-			values.append(0); // unused
-			values.append(1); // enabled power throttle mode
-			writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 5, values);
-			mInverter->setPowerLimit(mPowerLimitPct * deviceInfo.maxPower);
-			mPowerLimitTimer->start();
-		} else {
-			values.append(0);
-			writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 9, values);
-			mInverter->setPowerLimit(deviceInfo.maxPower);
-		}
+		quint16 pct = static_cast<quint16>(qRound(mPowerLimitPct * deviceInfo.powerLimitScale));
+		values.append(pct);
+		values.append(0); // unused
+		values.append(PowerLimitTimeout);
+		values.append(0); // unused
+		values.append(1); // enabled power throttle mode
+		writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 5, values);
+		mInverter->setPowerLimit(mPowerLimitPct * deviceInfo.maxPower);
+		mPowerLimitTimer->start();
 		break;
 	}
 	case Idle:
@@ -341,7 +335,12 @@ void SunspecUpdater::onTimer()
 
 void SunspecUpdater::onPowerLimitExpired()
 {
-	onPowerLimitRequested(mInverter->deviceInfo().maxPower);
+	// Cancel limiter by resetting WMaxLim_Ena to zero.  Depending on the
+	// PV-inverter and its configuration, this will either cause it to go to
+	// full power, or to go to zero.
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+	writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 9, QVector<quint16>() << 0);
+	mInverter->setPowerLimit(deviceInfo.maxPower);
 }
 
 void SunspecUpdater::onPhaseChanged()
