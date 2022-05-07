@@ -7,14 +7,20 @@ Data bus in Venus OS.
 The Venus OS gui application contains several pages to change the behaviour
 of this application, especially settings on how to detect the inverters on the LAN.
 
-In order to build the application for the color control you need a linux system,
-a recent version of QT creator and the CCGX SDK. You can find the SDK here:
+In order to build the application, you need a linux system,
+a recent version of QT creator, the Venus OS SDK and a not publicly available
+library called velib.
 
-https://www.victronenergy.com/live/open_source:ccgx:setup_development_environment
+You can find the SDK here:
 
-This page also contains information on how to configure QT creator to use the CCGX cross compiler.
-Next you can load the project file software/dbus-fronius.pro in QT creator and create the
-CCGX binary.
+https://github.com/victronenergy/venus/wiki
+
+The there linked documentation also contains information on how to configure QT creator to use the
+cross compiler that comes with the SDK.
+
+Next you can load the project file software/dbus-fronius.pro in QT creator and create the binary.
+
+WARNING: this repository depends on a closed source library, velib.
 
 PV Inverter Compatibility
 =============
