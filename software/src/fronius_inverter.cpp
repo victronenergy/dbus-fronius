@@ -5,7 +5,7 @@
 // want to filter for those.
 static const QVector<quint16> FroniusNullFrame = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 10 };
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7 };
 
 
 FroniusInverter::FroniusInverter(VeQItem *root, const DeviceInfo &deviceInfo,
@@ -28,7 +28,7 @@ bool FroniusInverter::validateSunspecMonitorFrame(QVector<quint16> frame)
 	// state of 7 (Fault) and a vendor state of 10. Fronius recommendeds
 	// that we simply filter these values.
 	if (deviceInfo().retrievalMode == ProtocolSunSpecIntSf &&
-			frame.mid(2, 38) == FroniusNullFrame)
+			frame.mid(2, 37) == FroniusNullFrame)
 		return false;
 	return true;
 }
