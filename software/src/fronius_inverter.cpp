@@ -1,3 +1,4 @@
+#include <QsLog.h>
 #include "ve_service.h"
 #include "fronius_inverter.h"
 
@@ -29,6 +30,9 @@ bool FroniusInverter::validateSunspecMonitorFrame(QVector<quint16> frame)
 	// that we simply filter these values.
 	if (deviceInfo().retrievalMode == ProtocolSunSpecIntSf &&
 			frame.mid(2, 37) == FroniusNullFrame)
-		return false;
+		{
+			QLOG_INFO() << "Fronius Null-frame detected" << frame;
+			return false;
+		}
 	return true;
 }
