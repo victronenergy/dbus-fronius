@@ -21,9 +21,7 @@ unix {
 MOC_DIR=.moc
 OBJECTS_DIR=.obj
 
-# Note: we need the script module to parse JSON fragments as part of the
-# fronius solar API.
-QT += core network dbus script xml
+QT += core network dbus xml
 QT -= gui
 
 TARGET = dbus-fronius
@@ -33,13 +31,15 @@ DEFINES += VERSION=\\\"$${VERSION}\\\"
 
 TEMPLATE = app
 
-include(src/json/json.pri)
 include(ext/qslog/QsLog.pri)
 include(ext/velib/src/qt/ve_qitems.pri)
 
 # Fronius SolarAPI still uses QHttp, and porting to QT5 is not possible
 # because QNetworkAccessManager is a CPU hog.
 equals(QT_MAJOR_VERSION, 5): include(src/qhttp/qhttp.pri)
+
+# QT4 needs external json library
+equals(QT_MAJOR_VERSION, 4): include(src/json/json.pri)
 
 VELIB_INC = ext/velib/inc/velib/qt
 VELIB_SRC = ext/velib/src/qt

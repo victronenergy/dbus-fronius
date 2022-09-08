@@ -1,9 +1,11 @@
 #include <QtGlobal>
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#include <QJsonDocument>
 #include <QUrlQuery>
 #include "qhttp/qhttp.h"
 #else
 #include <QHttp>
+#include "json/json.h"
 #endif
 
 #include <QUrl>
@@ -12,7 +14,6 @@
 #include <QTimer>
 
 #include "froniussolar_api.h"
-#include "json/json.h"
 
 FroniusSolarApi::FroniusSolarApi(const QString &hostName, int port, int timeout,
 								 QObject *parent) :
@@ -233,13 +234,11 @@ void FroniusSolarApi::processReply(const QString &networkError,
 		return;
 	}
 	QByteArray bytes = mHttp->readAll();
-	QString result(QString::fromLocal8Bit(bytes));
 	// CCGX does not receive reply from subsequent requests if we don't do this.
 	mHttp->close();
-	QLOG_TRACE() << result;
-	if (!result.isEmpty()) {
-		map = JSON::instance().parse(result).toMap();
-	}
+	QLOG_TRACE() << QString::fromLocal8Bit(bytes);
+	map = parseJson(bytes);
+
 	QVariantMap status = getByPath(map, "Head/Status").toMap();
 	if (!status.contains("Code")) {
 		apiReply.error = SolarApiReply::NetworkError;
@@ -278,4 +277,25 @@ QVariant FroniusSolarApi::getByPath(const QVariant &variant,
 		m = m.toMap()[*it];
 	}
 	return m;
+}
+
+QVariantMap FroniusSolarApi::parseJson(const QByteArray bytes)
+{
+		#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+		// QT5/6 version
+		QJsonDocument doc = QJsonDocument::fromJson(bytes);
+		if (doc.isNull())
+			return QVariantMap();
+
+		return doc.toVariant().toMap();
+		#else
+		// QT4 version
+		QString result(QString::fromLocal8Bit(bytes));
+		if (!result.isEmpty())
+		{
+			return JSON::instance().parse(result).toMap();
+		} else {
+			return QVariantMap();
+		}
+		#endif
 }

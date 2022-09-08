@@ -224,6 +224,7 @@ private:
 	 * found.
 	 */
 	static QVariant getByPath(const QVariant &map, const QString &path);
+	static QVariantMap parseJson(const QByteArray);
 
 	QHttp *mHttp;
 	QString mHostName;
