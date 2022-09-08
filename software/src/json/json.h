@@ -10,7 +10,6 @@ public:
 	static JSON& instance();
 
 	QVariant parse(const QString& string) const;
-	QString serialize(const QVariant& value) const;
 
 protected:
 	JSON();
