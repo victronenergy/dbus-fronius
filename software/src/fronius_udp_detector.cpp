@@ -9,7 +9,6 @@
 #else
 	const enum QHostAddress::SpecialAddress AnyIPv4 = QHostAddress::Any;
 #endif
-#include <QsLog.h>
 #include "fronius_udp_detector.h"
 
 FroniusUdpDetector::FroniusUdpDetector(QObject *parent) :

@@ -1,8 +1,8 @@
-#include <QsLog.h>
 #include <velib/qt/ve_qitem.hpp>
 #include "defines.h"
 #include "inverter_settings.h"
 #include "settings.h"
+#include "logging.h"
 
 InverterSettings::InverterSettings(VeQItem *root, QObject *parent) :
 	VeQItemConsumer(root, parent),
@@ -95,7 +95,7 @@ double InverterSettings::getEnergy(InverterPhase phase) const
 	case PhaseL3:
 		return l3Energy();
 	default:
-		QLOG_ERROR() <<"Incorrect phase:" << phase;
+		qCritical() <<"Incorrect phase:" << phase;
 		return 0;
 	}
 }
@@ -113,7 +113,7 @@ void InverterSettings::setEnergy(InverterPhase phase, double value)
 		setL3Energy(value);
 		break;
 	default:
-		QLOG_ERROR() <<"Incorrect phase:" << phase;
+		qCritical() << "Incorrect phase:" << phase;
 		break;
 	}
 }

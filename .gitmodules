@@ -2,10 +2,6 @@
 	path = software/ext/velib
 	url = git@github.com:victronenergy/velib.git
 	branch = master
-[submodule "software/ext/qslog"]
-	path = software/ext/qslog
-	url = https://github.com/victronenergy/QsLog.git
-	branch = master
 [submodule "software/ext/bottle"]
 	path = software/ext/bottle
 	url = https://github.com/bottlepy/bottle.git

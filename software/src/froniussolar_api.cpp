@@ -9,9 +9,9 @@
 #endif
 
 #include <QUrl>
-#include <QsLog.h>
 #include <QStringList>
 #include <QTimer>
+#include "logging.h"
 
 #include "froniussolar_api.h"
 
@@ -225,18 +225,18 @@ void FroniusSolarApi::processReply(const QString &networkError,
 {
 	mRequestType.clear();
 	mTimeoutTimer->stop();
-	// Some error will be logged with QLOG_DEBUG because they occur often during
+	// Some error will be logged with qDebug because they occur often during
 	// a device scan and would fill the log with a lot of useless information.
 	if (!networkError.isEmpty()) {
 		apiReply.error = SolarApiReply::NetworkError;
 		apiReply.errorMessage = mHttp->errorString();
-		QLOG_DEBUG() << "Network error:" << apiReply.errorMessage << mHostName;
+		qDebug() << "Network error:" << apiReply.errorMessage << mHostName;
 		return;
 	}
 	QByteArray bytes = mHttp->readAll();
 	// CCGX does not receive reply from subsequent requests if we don't do this.
 	mHttp->close();
-	QLOG_TRACE() << QString::fromLocal8Bit(bytes);
+	qDebug() << QString::fromLocal8Bit(bytes);
 	map = parseJson(bytes);
 
 	QVariantMap status = getByPath(map, "Head/Status").toMap();
@@ -245,7 +245,7 @@ void FroniusSolarApi::processReply(const QString &networkError,
 		apiReply.errorMessage = "Reply message has no status "
 								"(we're probably talking to a device "
 								"that does not support the Fronius Solar API)";
-		QLOG_DEBUG() << "Network error:" << apiReply.errorMessage << mHostName;
+		qDebug() << "Network error:" << apiReply.errorMessage << mHostName;
 		return;
 	}
 	int errorCode = status["Code"].toInt();
@@ -253,7 +253,7 @@ void FroniusSolarApi::processReply(const QString &networkError,
 	{
 		apiReply.error = SolarApiReply::ApiError;
 		apiReply.errorMessage = status["Reason"].toString();
-		QLOG_DEBUG() << "Fronius solar API error:" << apiReply.errorMessage;
+		qDebug() << "Fronius solar API error:" << apiReply.errorMessage;
 		return;
 	}
 	apiReply.error = SolarApiReply::NoError;

@@ -1,4 +1,3 @@
-#include <QsLog.h>
 #include <velib/vecan/products.h>
 #include "defines.h"
 #include "inverter.h"
@@ -10,6 +9,7 @@
 #include "solar_api_updater.h"
 #include "settings.h"
 #include "ve_qitem_init_monitor.h"
+#include "logging.h"
 
 InverterMediator::InverterMediator(const DeviceInfo &device, GatewayInterface *gateway,
 								   Settings *settings, QObject *parent):
@@ -32,7 +32,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 		if (mInverter != 0 &&
 			mInverter->hostName() == deviceInfo.hostName &&
 			mInverter->deviceInfo().networkId == deviceInfo.networkId) {
-			QLOG_INFO() << "Another inverter found @"
+			qInfo() << "Another inverter found @"
 						<< deviceInfo.hostName
 						<< ':' << deviceInfo.networkId
 						<< "closing down" << deviceInfo.uniqueId;
@@ -51,7 +51,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 	// repeatedly because of a slow network or datamanager.
 	if (mInverter != 0 && mDeviceInfo.retrievalMode != deviceInfo.retrievalMode &&
 			deviceInfo.retrievalMode != ProtocolFroniusSolarApi) {
-		QLOG_INFO() << "Inverter retrieval mode has changed @" << mInverter->location();
+		qInfo() << "Inverter retrieval mode has changed @" << mInverter->location();
 		delete mInverter;
 		mInverter = 0;
 	}
@@ -61,7 +61,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 			mInverter->port() != deviceInfo.port) {
 			mInverter->setHostName(deviceInfo.hostName);
 			mInverter->setPort(deviceInfo.port);
-			QLOG_INFO() << "Updated connection settings:" << mInverter->location();
+			qInfo() << "Updated connection settings:" << mInverter->location();
 		}
 		return true;
 	}
@@ -69,7 +69,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 		return true;
 	mInverter = createInverter();
 	if (mInverter) {
-		QLOG_INFO() << "Inverter reactivated:" << mInverter->location();
+		qInfo() << "Inverter reactivated:" << mInverter->location();
 		startAcquisition();
 		onSettingsCustomNameChanged();
 	}
@@ -104,7 +104,7 @@ void InverterMediator::onSettingsInitialized()
 	Q_ASSERT(mInverter == 0);
 	mInverter = createInverter();
 	if (mInverter) {
-		QLOG_INFO() << "New inverter:" << mInverter->location();
+		qInfo() << "New inverter:" << mInverter->location();
 		startAcquisition();
 		onSettingsCustomNameChanged();
 	}
@@ -117,7 +117,7 @@ void InverterMediator::onIsActivatedChanged()
 	} else {
 		if (mInverter == 0)
 			return;
-		QLOG_INFO() << "Inverter deactivated:" << mInverter->location();
+		qInfo() << "Inverter deactivated:" << mInverter->location();
 		delete mInverter;
 		mInverter = 0;
 	}
@@ -125,7 +125,7 @@ void InverterMediator::onIsActivatedChanged()
 
 void InverterMediator::onConnectionLost()
 {
-	QLOG_WARN() << "Lost connection with: " << mInverter->location();
+	qWarning() << "Lost connection with: " << mInverter->location();
 	// Start device scan, maybe the IP address of the data card has changed.
 	mGateway->startDetection();
 	// Do not delete the inverter here because right now a function within The updater is emitting
@@ -137,7 +137,7 @@ void InverterMediator::onConnectionLost()
 
 void InverterMediator::onInverterModelChanged()
 {
-	QLOG_WARN() << "Config change in: " << mInverter->location();
+	qWarning() << "Config change in: " << mInverter->location();
 	// Start device scan, which will force a config reread.
 	mGateway->startDetection();
 	// Do not delete the inverter here because right now a function within The updater is emitting

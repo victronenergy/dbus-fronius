@@ -31,7 +31,6 @@ DEFINES += VERSION=\\\"$${VERSION}\\\"
 
 TEMPLATE = app
 
-include(ext/qslog/QsLog.pri)
 include(ext/velib/src/qt/ve_qitems.pri)
 
 # Fronius SolarAPI still uses QHttp, and porting to QT5 is not possible
@@ -51,6 +50,7 @@ INCLUDEPATH += \
     src/modbus_tcp_client
 
 SOURCES += \
+    src/logging.cpp \
     src/main.cpp \
     src/froniussolar_api.cpp \
     src/inverter.cpp \
@@ -80,6 +80,7 @@ SOURCES += \
     src/data_processor.cpp
 
 HEADERS += \
+    src/logging.h \
     src/froniussolar_api.h \
     src/inverter.h \
     src/fronius_inverter.h \

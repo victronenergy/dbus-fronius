@@ -1,11 +1,11 @@
 #include <qnumeric.h>
-#include <QsLog.h>
 #include <velib/vecan/products.h>
 #include "froniussolar_api.h"
 #include "fronius_device_info.h"
 #include "settings.h"
 #include "solar_api_detector.h"
 #include "sunspec_detector.h"
+#include "logging.h"
 
 QList<QString> SolarApiDetector::mInvalidDevices;
 
@@ -50,7 +50,7 @@ void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
 		if (it->deviceType == 255) {
 			if (!mInvalidDevices.contains(it->uniqueId)) {
 				mInvalidDevices.append(it->uniqueId);
-				QLOG_WARN() << "PV inverter reported type 255. Serial:" << it->uniqueId;
+				qWarning() << "PV inverter reported type 255. Serial:" << it->uniqueId;
 			}
 		} else {
 			// We already know we have a Fronius DataManager on this address.
@@ -61,7 +61,7 @@ void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
 			if (dr == 0) {
 				// If we already have a connection to this inverter, the detector will return
 				// null.
-				QLOG_INFO() << QString("SunSpec scan skipped for %1:%2").arg(api->hostName()).arg(it->id);
+				qInfo() << QString("SunSpec scan skipped for %1:%2").arg(api->hostName()).arg(it->id);
 				continue;
 			}
 
@@ -127,7 +127,7 @@ void SolarApiDetector::onSunspecDone()
 	info.serialNumber = device.reply->serialInfo.value(device.inverter.id, QString());
 	const FroniusDeviceInfo *deviceInfo = FroniusDeviceInfo::find(device.inverter.deviceType);
 	if (deviceInfo == 0) {
-		QLOG_WARN() << "Unknown inverter type:" << device.inverter.deviceType;
+		qWarning() << "Unknown inverter type:" << device.inverter.deviceType;
 		info.productName = "Unknown PV Inverter";
 		info.phaseCount = 1;
 	} else {

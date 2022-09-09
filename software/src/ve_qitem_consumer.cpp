@@ -5,9 +5,9 @@
 #include <velib/qt/ve_qitems_dbus.hpp>
 #endif // QT_DBUS_LIB
 #include <qnumeric.h>
-#include <QsLog.h>
 #include <velib/qt/ve_qitem.hpp>
 #include "ve_qitem_consumer.h"
+#include "logging.h"
 
 VeQItemConsumer::VeQItemConsumer(VeQItem *root, QObject *parent):
 	QObject(parent),
@@ -22,7 +22,7 @@ void VeQItemConsumer::setRoot(VeQItem *root)
 
 void VeQItemConsumer::onValueChanged(VeQItem *item, QVariant value)
 {
-	QLOG_WARN() << __func__ << item->uniqueId() << value.toString();
+	qWarning() << __func__ << item->uniqueId() << value.toString();
 }
 
 VeQItem *VeQItemConsumer::connectItem(const QString &path, const char *signal, bool forceSync)
@@ -108,17 +108,17 @@ bool VeQItemConsumer::addSetting(VeQItem *root, const QString &path, const QVari
 	px.replace("/com.victronenergy.settings", "");
 	int pos = px.startsWith('/') ? 1 : 0;
 	if (px.midRef(pos, 8) != "Settings") {
-		QLOG_ERROR() << "Settings path should start with Settings: " << px;
+		qCritical() << "Settings path should start with Settings: " << px;
 		return false;
 	}
 	int groupStart = px.indexOf('/', pos);
 	if (groupStart == -1) {
-		QLOG_ERROR() << "Settings path should contain group name: " << px;
+		qCritical() << "Settings path should contain group name: " << px;
 		return false;
 	}
 	int nameStart = px.lastIndexOf('/');
 	if (nameStart <= groupStart) {
-		QLOG_ERROR() << "Settings path should contain name: " << px;
+		qCritical() << "Settings path should contain name: " << px;
 		return false;
 	}
 	QChar type;
@@ -137,7 +137,7 @@ bool VeQItemConsumer::addSetting(VeQItem *root, const QString &path, const QVari
 	}
 	VeQItemDbusProducer *p = qobject_cast<VeQItemDbusProducer *>(root->producer());
 	if (p == 0) {
-		QLOG_ERROR() << "No D-Bus producer found";
+		qCritical() << "No D-Bus producer found";
 		return false;
 	}
 	QString group = px.mid(groupStart + 1, nameStart - groupStart - 1);
@@ -156,7 +156,7 @@ bool VeQItemConsumer::addSetting(VeQItem *root, const QString &path, const QVari
 					 << QVariant::fromValue(QDBusVariant(maxValue));
 	QDBusMessage reply = connection.call(m);
 	if (reply.type() != QDBusMessage::ReplyMessage) {
-		QLOG_ERROR() << "Could not create setting" << px << reply.errorMessage();
+		qCritical() << "Could not create setting" << px << reply.errorMessage();
 		return false;
 	}
 	return true;
@@ -193,7 +193,7 @@ int VeQItemConsumer::getDeviceInstance(const QString &uniqueId, const QString &d
 						 << QVariant::fromValue(argument);
 	QDBusMessage reply = connection.call(m);
 	if (reply.type() != QDBusMessage::ReplyMessage) {
-		QLOG_ERROR() << "Could not create ClassAndVrmInstance" << uniqueId << reply.errorMessage();
+		qCritical() << "Could not create ClassAndVrmInstance" << uniqueId << reply.errorMessage();
 		return -1;
 	}
 	if (reply.arguments().isEmpty())

@@ -5,8 +5,6 @@
 #include "modbus_tcp_client.h"
 #include "modbus_reply.h"
 
-#include <QsLog.h>
-
 ModbusTcpClient::ModbusTcpClient(QObject *parent):
 	ModbusClient(parent),
 	mSocket(new QTcpSocket(this)),

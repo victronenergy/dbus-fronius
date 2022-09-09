@@ -1,9 +1,9 @@
 #include <QTimer>
-#include <QsLog.h>
 #include "inverter_gateway.h"
 #include "abstract_detector.h"
 #include "settings.h"
 #include "fronius_udp_detector.h"
+#include "logging.h"
 
 static const int MaxSimultaneousRequests = 64;
 
@@ -98,14 +98,14 @@ void InverterGateway::continueScan()
 	if (mScanType == Priority && addresses.isEmpty())
 		return;
 
-	QLOG_TRACE() << "Starting IP scan (" << mScanType << ")";
+	qDebug() << "Starting IP scan (" << mScanType << ")";
 	mAddressGenerator.setPriorityAddresses(addresses);
 	mAddressGenerator.setPriorityOnly(mScanType != Full);
 	mAddressGenerator.reset();
 
 	while (mActiveHosts.size() < MaxSimultaneousRequests && mAddressGenerator.hasNext()) {
 		QString host = mAddressGenerator.next().toString();
-		QLOG_TRACE() << "Starting scan for" << host;
+		qDebug() << "Starting scan for" << host;
 		scanHost(host);
 	}
 }
@@ -140,7 +140,7 @@ void InverterGateway::onInverterFound(const DeviceInfo &deviceInfo)
 void InverterGateway::onDetectionDone()
 {
 	HostScan *host = static_cast<HostScan *>(sender());
-	QLOG_TRACE() << "Done scanning" << host->hostName();
+	qDebug() << "Done scanning" << host->hostName();
 	mActiveHosts.removeOne(host);
 	host->deleteLater();
 	updateScanProgress();
@@ -165,7 +165,7 @@ void InverterGateway::onDetectionDone()
 			// scan only once. After that a manual scan will be required
 			// to find PV-inverters that changed IP address.
 			if ((addresses - mDevicesFound).size() && !mTriedFull) {
-				QLOG_INFO() << "Not all devices found, starting full IP scan";
+				qInfo() << "Not all devices found, starting full IP scan";
 				mScanType = Full;
 				mTriedFull = true;
 				setAutoDetect(true);
@@ -178,7 +178,7 @@ void InverterGateway::onDetectionDone()
 		// Restart the timer to ensure at least 60 seconds space before
 		// we scan again.
 		mTimer->start();
-		QLOG_INFO() << "Auto IP scan completed. Detection finished";
+		qInfo() << "Auto IP scan completed. Detection finished";
 	}
 }
 

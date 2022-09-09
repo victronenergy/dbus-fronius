@@ -1,10 +1,10 @@
-#include <QsLog.h>
 #include <QTimer>
 #include "froniussolar_api.h"
 #include "inverter.h"
 #include "inverter_settings.h"
 #include "solar_api_updater.h"
 #include "power_info.h"
+#include "logging.h"
 
 static const int UpdateInterval = 5000;
 static const int UpdateSettingsInterval = 10 * 60 * 1000;
@@ -79,17 +79,17 @@ void SolarApiUpdater::onCommonDataFound(const CommonInverterData &data)
 		break;
 	}
 	case SolarApiReply::NetworkError:
-		QLOG_DEBUG() << "[Solar API] Network error: " << data.errorMessage;
+		qDebug() << "[Solar API] Network error: " << data.errorMessage;
 		handleError();
 		scheduleRetrieval();
 		break;
 	case SolarApiReply::ApiError:
-		QLOG_DEBUG() << "[Solar API] CommonInverterData retrieval error:" << data.errorMessage;
+		qDebug() << "[Solar API] CommonInverterData retrieval error:" << data.errorMessage;
 		handleError();
 		scheduleRetrieval();
 		break;
 	default:
-		QLOG_DEBUG() << "[Solar API] Unknown error" << data.error << data.errorMessage;
+		qDebug() << "[Solar API] Unknown error" << data.error << data.errorMessage;
 		break;
 	}
 }
@@ -104,16 +104,16 @@ void SolarApiUpdater::onThreePhasesDataFound(const ThreePhasesInverterData &data
 		setInitialized();
 		break;
 	case SolarApiReply::NetworkError:
-		QLOG_DEBUG() << "[Solar API] Network error: " << data.errorMessage;
+		qDebug() << "[Solar API] Network error: " << data.errorMessage;
 		handleError();
 		break;
 	case SolarApiReply::ApiError:
-		QLOG_DEBUG() << "[Solar API] Fronius 3Phase inverter data retrieval error:"
+		qDebug() << "[Solar API] Fronius 3Phase inverter data retrieval error:"
 					 << data.errorMessage;
 		handleError();
 		break;
 	default:
-		QLOG_DEBUG() << "[Solar API] Unknown error" << data.error << data.errorMessage;
+		qDebug() << "[Solar API] Unknown error" << data.error << data.errorMessage;
 		break;
 	}
 	scheduleRetrieval();

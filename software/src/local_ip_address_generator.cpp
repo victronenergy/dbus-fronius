@@ -1,6 +1,6 @@
 #include <QNetworkInterface>
-#include <QsLog.h>
 #include "local_ip_address_generator.h"
+#include "logging.h"
 
 Subnet::Subnet(LocalIpAddressGenerator *generator, quint32 first, quint32 last, quint32 localhost):
 	mGenerator(generator),
@@ -96,8 +96,8 @@ void LocalIpAddressGenerator::reset()
 						address != QHostAddress::Any &&
 						address != QHostAddress::AnyIPv6 &&
 						address.protocol() == QAbstractSocket::IPv4Protocol) {
-					QLOG_INFO() << "IP Address:" << address
-								<< "Netmask:" << entry.netmask();
+					qInfo() << "IP Address:" << address
+							<< "Netmask:" << entry.netmask();
 					quint32 netMask = entry.netmask().toIPv4Address();
 					netMask |= mNetMaskLimit.toIPv4Address();
 

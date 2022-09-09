@@ -1,5 +1,4 @@
 #include <qnumeric.h>
-#include <QsLog.h>
 #include <QTimer>
 #include <velib/vecan/products.h>
 #include "froniussolar_api.h"

@@ -1,10 +1,10 @@
 #include <qnumeric.h>
 #include <QCoreApplication>
-#include <QsLog.h>
 #include <QStringList>
 #include "fronius_device_info.h"
 #include "inverter.h"
 #include "power_info.h"
+#include "logging.h"
 
 Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstance,
 				   QObject *parent) :
@@ -200,7 +200,7 @@ PowerInfo *Inverter::getPowerInfo(InverterPhase phase)
 	case PhaseL3:
 		return mL3PowerInfo;
 	default:
-		QLOG_ERROR() << "Incorrect phase:" << phase;
+		qCritical() << "Incorrect phase:" << phase;
 		return 0;
 	}
 }

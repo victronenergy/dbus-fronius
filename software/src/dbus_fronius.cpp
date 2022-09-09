@@ -1,4 +1,3 @@
-#include <QsLog.h>
 #include "dbus_fronius.h"
 #include "defines.h"
 #include "inverter_gateway.h"
@@ -7,6 +6,7 @@
 #include "solar_api_detector.h"
 #include "sunspec_detector.h"
 #include "ve_qitem_init_monitor.h"
+#include "logging.h"
 
 DBusFronius::DBusFronius(QObject *parent) :
 	VeService(VeQItems::getRoot()->itemGetOrCreate("pub/com.victronenergy.fronius"), parent),
@@ -55,7 +55,7 @@ void DBusFronius::onInverterFound(const DeviceInfo &deviceInfo)
 		QString location = QString("%1@%2:%3").arg(deviceInfo.uniqueId).
 			arg(deviceInfo.hostName).
 			arg(deviceInfo.networkId);
-		QLOG_INFO() << "Skipping storage inverter" << deviceInfo.productName << "@" << location;
+		qInfo() << "Skipping storage inverter" << deviceInfo.productName << "@" << location;
 		return;
 	}
 

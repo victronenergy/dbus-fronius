@@ -1,4 +1,3 @@
-#include <QsLog.h>
 #include <velib/vecan/products.h>
 #include "modbus_tcp_client.h"
 #include "modbus_reply.h"

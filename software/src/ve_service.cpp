@@ -1,6 +1,6 @@
 #include <qnumeric.h>
-#include <QsLog.h>
 #include "ve_service.h"
+#include "logging.h"
 
 VeService::VeService(VeQItem *root, QObject *parent):
 	QObject(parent),
@@ -27,7 +27,7 @@ VeQItem *VeService::createItem(const QString &path)
 
 void VeService::registerService()
 {
-	QLOG_INFO() << "Registering service" << mRoot->id();
+	qInfo() << "Registering service" << mRoot->id();
 	mRoot->produceValue(QVariant(), VeQItem::Synchronized);
 }
 
