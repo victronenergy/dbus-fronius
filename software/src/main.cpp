@@ -36,14 +36,15 @@ int main(int argc, char *argv[])
 	qInfo() << "Built with Qt" << QT_VERSION_STR << "running on" << qVersion();
 	qInfo() << "Built on" << __DATE__ << "at" << __TIME__;
 
-	bool expectDBusAddress = false;
+	QStringList args = a.arguments();
+	a.setApplicationName(args.takeFirst());
+
 	QString dbusAddress = "system";
 	bool debug = false;
-	foreach (QString arg, a.arguments()) {
-		if (expectDBusAddress) {
-			dbusAddress = arg;
-			expectDBusAddress = false;
-		}
+
+	while (!args.isEmpty()) {
+		QString arg = args.takeFirst();
+
 		if (arg == "-h" || arg == "--help") {
 			qInfo() << a.arguments().first();
 			qInfo() << "\t-h, --help";
@@ -62,7 +63,8 @@ int main(int argc, char *argv[])
 		} else if (arg == "-d" || arg == "--debug") {
 			debug = true;
 		} else if (arg == "-b" || arg == "--dbus") {
-			expectDBusAddress = true;
+			if (!args.isEmpty())
+				dbusAddress = args.takeFirst();
 		}
 	}
 
