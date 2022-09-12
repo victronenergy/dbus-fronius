@@ -7,6 +7,9 @@ QMAKE_CXXFLAGS += -Wno-psabi
 # gcc 4.8 and newer don't like the QOMPILE_ASSERT in qt
 QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 
+# Silence a heap of moaning about internal QT4 definitions
+equals(QT_MAJOR_VERSION, 4): QMAKE_CXXFLAGS += -Wno-deprecated-copy -Wno-class-memaccess
+
 # Add more folders to ship with the application here
 unix {
     bindir = $$(bindir)
