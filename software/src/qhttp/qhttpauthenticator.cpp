@@ -40,16 +40,22 @@
 ****************************************************************************/
 
 #include "qhttpauthenticator_p.h"
-#include <qdebug.h>
-#include <qhash.h>
-#include <qbytearray.h>
-#include <qcryptographichash.h>
+#include <QDebug>
+#include <QHash>
+#include <QByteArray>
+#include <QCryptographicHash>
 #include "qhttp.h"
-#include <qiodevice.h>
-#include <qdatastream.h>
-#include <qendian.h>
-#include <qstring.h>
-#include <qdatetime.h>
+#include <QIODevice>
+#include <QDataStream>
+#include <QtEndian>
+#include <QString>
+#include <QDateTime>
+#include <QRandomGenerator>
+
+quint32 _rand()
+{
+    return QRandomGenerator::global()->generate();
+}
 
 //#define NTLMV1_CLIENT
 
@@ -244,7 +250,7 @@ void QHttpAuthenticator::setUser(const QString &user)
         } else {
             d->extractedUser = user;
             d->user = user;
-	    d->realm.clear();
+            d->realm.clear();
             d->userDomain.clear();
         }
         break;
@@ -281,7 +287,7 @@ void QHttpAuthenticator::detach()
 {
     if (!d) {
         d = new QHttpAuthenticatorPrivate;
-        d->ref.store(1);
+        d->ref.fetchAndStoreRelaxed(1);
         return;
     }
 
@@ -353,7 +359,7 @@ QHttpAuthenticatorPrivate::QHttpAuthenticatorPrivate()
     , phase(Start)
     , nonceCount(0)
 {
-    cnonce = QCryptographicHash::hash(QByteArray::number(qrand(), 16) + QByteArray::number(qrand(), 16),
+    cnonce = QCryptographicHash::hash(QByteArray::number(_rand(), 16) + QByteArray::number(_rand(), 16),
                                       QCryptographicHash::Md5).toHex();
     nonceCount = 0;
 }
@@ -1280,7 +1286,7 @@ static QByteArray qEncodeNtlmv2Response(const QHttpAuthenticatorPrivate *ctx,
         // 369 years, 89 leap years
         // ((369 * 365) + 89) * 24 * 3600 = 11644473600
 
-        time = Q_UINT64_C(currentTime.toTime_t() + 11644473600);
+        time = currentTime.toSecsSinceEpoch() + 11644473600;
 
         // represented as 100 nano seconds
         time = Q_UINT64_C(time * 10000000);
