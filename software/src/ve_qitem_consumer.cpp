@@ -9,6 +9,23 @@
 #include "ve_qitem_consumer.h"
 #include "logging.h"
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QMetaType>
+
+#define META_INT QMetaType::Int
+#define META_DOUBLE QMetaType::Double
+#define META_STRING QMetaType::QString
+#define TYPE_ID(x) x.typeId()
+
+#else
+
+#define META_INT QVariant::Int
+#define META_DOUBLE QVariant::Double
+#define META_STRING QVariant::String
+#define TYPE_ID(x) x.type()
+
+#endif
+
 VeQItemConsumer::VeQItemConsumer(VeQItem *root, QObject *parent):
 	QObject(parent),
 	mRoot(root)
@@ -107,7 +124,7 @@ bool VeQItemConsumer::addSetting(VeQItem *root, const QString &path, const QVari
 	QString px = root->getRelId(root->producer()->services()) + "/" + path;
 	px.replace("/com.victronenergy.settings", "");
 	int pos = px.startsWith('/') ? 1 : 0;
-	if (px.midRef(pos, 8) != "Settings") {
+	if (px.mid(pos, 8) != "Settings") {
 		qCritical() << "Settings path should start with Settings: " << px;
 		return false;
 	}
@@ -122,14 +139,14 @@ bool VeQItemConsumer::addSetting(VeQItem *root, const QString &path, const QVari
 		return false;
 	}
 	QChar type;
-	switch (defaultValue.type()) {
-	case QVariant::Int:
+	switch (TYPE_ID(defaultValue)) {
+	case META_INT:
 		type = 'i';
 		break;
-	case QVariant::Double:
+	case META_DOUBLE:
 		type = 'f';
 		break;
-	case QVariant::String:
+	case META_STRING:
 		type = 's';
 		break;
 	default:

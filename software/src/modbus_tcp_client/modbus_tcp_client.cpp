@@ -16,8 +16,13 @@ ModbusTcpClient::ModbusTcpClient(QObject *parent):
 	connect(mSocket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
 	connect(mSocket, SIGNAL(connected()), this, SLOT(onConnected()));
 	connect(mSocket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
+	#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 	connect(mSocket, SIGNAL(error(QAbstractSocket::SocketError)),
 			this, SLOT(onSocketErrorReceived(QAbstractSocket::SocketError)));
+	#else
+	connect(mSocket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)),
+			this, SLOT(onSocketErrorReceived(QAbstractSocket::SocketError)));
+	#endif
 }
 
 void ModbusTcpClient::connectToServer(const QString &hostName, quint16 tcpPort)

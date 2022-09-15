@@ -39,6 +39,7 @@ include(ext/velib/src/qt/ve_qitems.pri)
 # Fronius SolarAPI still uses QHttp, and porting to QT5 is not possible
 # because QNetworkAccessManager is a CPU hog.
 equals(QT_MAJOR_VERSION, 5): include(src/qhttp/qhttp.pri)
+equals(QT_MAJOR_VERSION, 6): include(src/qhttp/qhttp.pri)
 
 # QT4 needs external json library
 equals(QT_MAJOR_VERSION, 4): include(src/json/json.pri)
@@ -83,6 +84,7 @@ SOURCES += \
     src/data_processor.cpp
 
 HEADERS += \
+    src/compat.h \
     src/logging.h \
     src/froniussolar_api.h \
     src/inverter.h \

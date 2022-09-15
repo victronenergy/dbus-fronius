@@ -1,8 +1,21 @@
-#include <QsLog.h>
-#include <QRegExp>
+#include <Qt>
 #include <velib/qt/ve_qitem.hpp>
 #include "defines.h"
 #include "settings.h"
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QRegularExpression>
+#else
+#include <QRegExp>
+#define QRegularExpression QRegExp
+#endif
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+#define SkipEmptyParts Qt::SkipEmptyParts
+#else
+#define SkipEmptyParts QString::SkipEmptyParts
+#endif
+
 
 Settings::Settings(VeQItem *root, QObject *parent) :
 	VeQItemConsumer(root, parent),
@@ -67,19 +80,19 @@ QString Settings::createInverterId(const QString &deviceSerial)
 	// DBus paths may only contain [A-Z][a-z][0-9]_, therefore we must
 	// limit serial numbers to those.
 	return QString("I%1").arg(deviceSerial).replace(
-		QRegExp("[^A-Za-z0-9_]"), "_");
+		QRegularExpression("[^A-Za-z0-9_]"), "_");
 }
 
 void Settings::onInverterdIdsChanged()
 {
 	if (!mInverterIdCache.isEmpty())
 		return;
-	mInverterIdCache = mInverterIds->getValue().toString().split(',', QString::SkipEmptyParts);
+	mInverterIdCache = mInverterIds->getValue().toString().split(',', SkipEmptyParts);
 }
 
 QList<QHostAddress> Settings::toAdressList(const QString &s) const
 {
-	QStringList addresses = s.split(',', QString::SkipEmptyParts);
+	QStringList addresses = s.split(',', SkipEmptyParts);
 	QList<QHostAddress> result;
 	foreach (QString address, addresses)
 		result.append(QHostAddress(address));

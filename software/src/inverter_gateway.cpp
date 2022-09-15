@@ -3,6 +3,7 @@
 #include "abstract_detector.h"
 #include "settings.h"
 #include "fronius_udp_detector.h"
+#include "compat.h"
 #include "logging.h"
 
 static const int MaxSimultaneousRequests = 64;
@@ -157,8 +158,7 @@ void InverterGateway::onDetectionDone()
 		// For TryPriority scans, we switch to a full scan if we're a few
 		// piggies short, and if autoScan is enabled.
 		if ((scanType == TryPriority) && mSettings->autoScan()) {
-			QSet<QHostAddress> addresses = QSet<QHostAddress>::fromList(
-					mSettings->knownIpAddresses());
+			QSet<QHostAddress> addresses = listToSet<QHostAddress>(mSettings->knownIpAddresses());
 
 			// Do a full scan if not all devices were found and we haven't
 			// tried a full scan yet. That means we'll fall back to a full
