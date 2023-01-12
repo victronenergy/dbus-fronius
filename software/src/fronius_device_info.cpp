@@ -3,9 +3,18 @@
 
 static FroniusDeviceInfo Devices[] =
 {
-	{  71, 3, false, "FRONIUS Symo 15.0-3 208" },
-	{  72, 3, false, "FRONIUS Eco 27.0-3-S" },
-	{  73, 3, false, "FRONIUS Eco 25.0-3-S" },
+	// Assuming 3-phase for DT=1. Device type 1 is either a Tauro or a Gen24.
+	// The Gen24 is single-phase, but with battery storage and we don't support
+	// inverters with battery storage anyway.
+	// TODO: isMultiString parameter is unused and can go away some day.
+	{   1, 3, true, "Fronius Tauro" },
+	{  67, 1, false, "Fronius Primo 15.0-1 208-240" },
+	{  68, 1, false, "Fronius Primo 12.5-1 208-240" },
+	{  69, 1, false, "Fronius Primo 11.4-1 208-240" },
+	{  70, 1, false, "Fronius Primo 10.0-1 208-240" },
+	{  71, 3, false, "Fronius Symo 15.0-3 208" },
+	{  72, 3, false, "Fronius Eco 27.0-3-S" },
+	{  73, 3, false, "Fronius Eco 25.0-3-S" },
 	{  74, 1, false, "Remote Plant" },
 	{  75, 1, false, "Fronius Primo 6.0-1" },
 	{  76, 1, false, "Fronius Primo 5.0-1" },
