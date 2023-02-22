@@ -70,6 +70,7 @@ private:
 	};
 
 	static QString fixUniqueId(const InverterInfo &inverterInfo);
+	static QString fixUniqueId(int deviceType, QString uniqueId, int id);
 
 	void checkFinished(Reply *reply);
 

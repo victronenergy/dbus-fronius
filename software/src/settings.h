@@ -28,6 +28,8 @@ public:
 
 	bool autoScan() const;
 
+	bool idBySerial() const;
+
 	/*!
 	 * Returns the list with D-Bus object names for each registered inverter.
 	 * The names in the list are based on the device type and the serial
@@ -68,6 +70,7 @@ private:
 	VeQItem *mKnownIpAddresses;
 	VeQItem *mInverterIds;
 	VeQItem *mAutoScan;
+	VeQItem *mIdBySerial;
 	QStringList mInverterIdCache;
 };
 

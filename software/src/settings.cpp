@@ -23,7 +23,8 @@ Settings::Settings(VeQItem *root, QObject *parent) :
 	mIpAddresses(connectItem("IPAddresses", "", SIGNAL(ipAddressesChanged()), false)),
 	mKnownIpAddresses(connectItem("KnownIPAddresses", "", 0, false)),
 	mInverterIds(connectItem("InverterIds", "", SLOT(onInverterdIdsChanged()), false)),
-	mAutoScan(connectItem("AutoScan", 1, 0))
+	mAutoScan(connectItem("AutoScan", 1, 0)),
+	mIdBySerial(connectItem("IdentifyBySerialNumber", 0, 0))
 {
 }
 
@@ -56,6 +57,11 @@ void Settings::setKnownIpAddresses(const QList<QHostAddress> &addresses)
 bool Settings::autoScan() const
 {
 	return mAutoScan->getValue().toBool();
+}
+
+bool Settings::idBySerial() const
+{
+	return mIdBySerial->getValue().toBool();
 }
 
 QStringList Settings::inverterIds() const

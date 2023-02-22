@@ -92,7 +92,18 @@ void SolarApiDetector::onSunspecDeviceFound(const DeviceInfo &info)
 	// The sunspec detector uses the serial number of the inverter as unique ID, which was
 	// not available in the solar API in older firmware versions. To keep things consistent
 	// across models, continue to use the uniqueId even for sunspec inverters.
-	i2.uniqueId = fixUniqueId(device.inverter);
+	//
+	// At least, that was the theory until 2023.  A bug in some datamanagers
+	// causes PV-inverters to have uniqueId 16777215.  This is 2^24-1, the max
+	// 24-bit number. With these datamanagers, the uniqueId isn't unique, and
+	// we switch to the serial number instead (which is known at this point,
+	// because the SunSpec probe is done)). This breaks consistency somewhat
+	// between solarapi and sunspec, but is better than ignoring one of the
+	// PV-inverters.
+	if (mSettings->idBySerial())
+		i2.uniqueId = fixUniqueId(device.inverter.deviceType, info.serialNumber, device.inverter.id);
+	else
+		i2.uniqueId = fixUniqueId(device.inverter);
 
 	// Fronius inverters have a deviceType that is exposed on solarAPI but not
 	// via sunspec. Transplant it here. If this is not a Fronius inverter
@@ -141,9 +152,14 @@ void SolarApiDetector::onSunspecDone()
 
 QString SolarApiDetector::fixUniqueId(const InverterInfo &inverterInfo)
 {
+	return fixUniqueId(inverterInfo.deviceType, inverterInfo.uniqueId, inverterInfo.id);
+}
+
+QString SolarApiDetector::fixUniqueId(int deviceType, QString uniqueId, int id)
+{
 	bool isOk = false;
 	QString result;
-	foreach (QChar c, inverterInfo.uniqueId) {
+	foreach (QChar c, uniqueId) {
 		c = c.toLatin1();
 		if (!c.isLetterOrNumber()) {
 			c = '_';
@@ -153,8 +169,8 @@ QString SolarApiDetector::fixUniqueId(const InverterInfo &inverterInfo)
 		result += c;
 	}
 	if (!isOk)
-		result = QString("T%1").arg(inverterInfo.id);
-	return QString("%1_%2").arg(inverterInfo.deviceType).arg(result);
+		result = QString("T%1").arg(id);
+	return QString("%1_%2").arg(deviceType).arg(result);
 }
 
 void SolarApiDetector::checkFinished(Reply *reply)
