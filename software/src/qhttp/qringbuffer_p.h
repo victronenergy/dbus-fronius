@@ -60,7 +60,6 @@ class QRingBuffer
 {
 public:
     inline QRingBuffer(int growth = 4096) : basicBlockSize(growth) {
-        buffers << QByteArray();
         clear();
     }
 
@@ -256,9 +255,8 @@ public:
     }
 
     inline void clear() {
-        buffers.erase(buffers.begin() + 1, buffers.end());
-        buffers[0].resize(0);
-        buffers[0].squeeze();
+        buffers.clear();
+        buffers << QByteArray();
 
         head = tail = 0;
         tailBuffer = 0;
