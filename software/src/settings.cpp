@@ -22,7 +22,6 @@ Settings::Settings(VeQItem *root, QObject *parent) :
 	mPortNumber(connectItem("PortNumber", 80, SIGNAL(portNumberChanged()), false)),
 	mIpAddresses(connectItem("IPAddresses", "", SIGNAL(ipAddressesChanged()), false)),
 	mKnownIpAddresses(connectItem("KnownIPAddresses", "", 0, false)),
-	mInverterIds(connectItem("InverterIds", "", SLOT(onInverterdIdsChanged()), false)),
 	mAutoScan(connectItem("AutoScan", 1, 0)),
 	mIdBySerial(connectItem("IdentifyBySerialNumber", 0, 0))
 {
@@ -64,21 +63,10 @@ bool Settings::idBySerial() const
 	return mIdBySerial->getValue().toBool();
 }
 
-QStringList Settings::inverterIds() const
-{
-	return mInverterIdCache;
-}
-
 int Settings::registerInverter(const QString &uniqueId)
 {
 	QString settingsId = createInverterId(uniqueId);
-	int i = getDeviceInstance(settingsId, "pvinverter", MinDeviceInstance);
-
-	if (!mInverterIdCache.contains(settingsId)) {
-		mInverterIdCache.append(settingsId);
-		mInverterIds->setValue(mInverterIdCache.join(","));
-	}
-	return i;
+	return getDeviceInstance(settingsId, "pvinverter", MinDeviceInstance);
 }
 
 QString Settings::createInverterId(const QString &deviceSerial)
@@ -87,13 +75,6 @@ QString Settings::createInverterId(const QString &deviceSerial)
 	// limit serial numbers to those.
 	return QString("I%1").arg(deviceSerial).replace(
 		QRegularExpression("[^A-Za-z0-9_]"), "_");
-}
-
-void Settings::onInverterdIdsChanged()
-{
-	if (!mInverterIdCache.isEmpty())
-		return;
-	mInverterIdCache = mInverterIds->getValue().toString().split(',', SkipEmptyParts);
 }
 
 QList<QHostAddress> Settings::toAdressList(const QString &s) const

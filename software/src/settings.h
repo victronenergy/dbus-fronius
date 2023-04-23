@@ -31,15 +31,7 @@ public:
 	bool idBySerial() const;
 
 	/*!
-	 * Returns the list with D-Bus object names for each registered inverter.
-	 * The names in the list are based on the device type and the serial
-	 * (unique ID).
-	 */
-	QStringList inverterIds() const;
-
-	/*!
 	 * Registers an inverter.
-	 * If the inverter is unknown, it will be added to `inverterIds`.
 	 * @param deviceType The device type as specified by Fronius.
 	 * @param unique The inverter serial (called unique ID by Fronius).
 	 */
@@ -57,9 +49,6 @@ signals:
 
 	void ipAddressesChanged();
 
-private slots:
-	void onInverterdIdsChanged();
-
 private:
 	QList<QHostAddress> toAdressList(const QString &s) const;
 
@@ -68,10 +57,8 @@ private:
 	VeQItem *mPortNumber;
 	VeQItem *mIpAddresses;
 	VeQItem *mKnownIpAddresses;
-	VeQItem *mInverterIds;
 	VeQItem *mAutoScan;
 	VeQItem *mIdBySerial;
-	QStringList mInverterIdCache;
 };
 
 #endif // SETTINGS_H
