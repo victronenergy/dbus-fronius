@@ -2,7 +2,7 @@
 #define VESERVICE_H
 
 #include <QObject>
-#include <velib/qt/ve_qitem.hpp>
+#include <veutil/qt/ve_qitem.hpp>
 
 class VeService: public QObject
 {

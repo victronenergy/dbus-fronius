@@ -6,7 +6,7 @@
 #include <QList>
 #include <QVariantMap>
 #ifdef QT_DBUS_LIB
-#include <velib/qt/ve_qitems_dbus.hpp>
+#include <veutil/qt/ve_qitems_dbus.hpp>
 #endif // QT_DBUS_LIB
 
 class VeQItem;

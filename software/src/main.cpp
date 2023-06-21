@@ -1,9 +1,9 @@
 #include <QCoreApplication>
 #include <QStringList>
 #include <unistd.h>
-#include <velib/qt/ve_qitem.hpp>
-#include <velib/qt/ve_qitems_dbus.hpp>
-#include <velib/qt/ve_qitem_dbus_publisher.hpp>
+#include <veutil/qt/ve_qitem.hpp>
+#include <veutil/qt/ve_qitems_dbus.hpp>
+#include <veutil/qt/ve_qitem_exported_dbus_services.hpp>
 #include "dbus_fronius.h"
 #include "ve_service.h"
 #include "logging.h"
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	producer.open(dbusAddress);
 
 	VeProducer dbusExportProducer(VeQItems::getRoot(), "pub");
-	VeQItemDbusPublisher publisher(dbusExportProducer.services());
+	VeQItemExportedDbusServices publisher(dbusExportProducer.services());
 	publisher.open(dbusAddress);
 
 	initDBus();

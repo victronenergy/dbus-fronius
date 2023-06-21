@@ -1,4 +1,4 @@
-#include <velib/qt/ve_qitem.hpp>
+#include <veutil/qt/ve_qitem.hpp>
 #include "defines.h"
 #include "inverter_settings.h"
 #include "settings.h"

@@ -2,10 +2,10 @@
 #include <QDBusMessage>
 #include <QDBusVariant>
 #include <QDBusArgument>
-#include <velib/qt/ve_qitems_dbus.hpp>
+#include <veutil/qt/ve_qitems_dbus.hpp>
 #endif // QT_DBUS_LIB
 #include <qnumeric.h>
-#include <velib/qt/ve_qitem.hpp>
+#include <veutil/qt/ve_qitem.hpp>
 #include "ve_qitem_consumer.h"
 #include "logging.h"
 

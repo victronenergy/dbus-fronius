@@ -34,7 +34,7 @@ DEFINES += VERSION=\\\"$${VERSION}\\\"
 
 TEMPLATE = app
 
-include(ext/velib/src/qt/ve_qitems.pri)
+include(ext/veutil/veutil.pri)
 
 # Fronius SolarAPI still uses QHttp, and porting to QT5 is not possible
 # because QNetworkAccessManager is a CPU hog.

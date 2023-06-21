@@ -1,5 +1,5 @@
 #include <Qt>
-#include <velib/qt/ve_qitem.hpp>
+#include <veutil/qt/ve_qitem.hpp>
 #include "defines.h"
 #include "settings.h"
 
