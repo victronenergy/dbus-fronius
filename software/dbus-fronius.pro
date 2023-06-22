@@ -10,6 +10,13 @@ QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 # Silence a heap of moaning about internal QT4 definitions
 equals(QT_MAJOR_VERSION, 4): QMAKE_CXXFLAGS += -Wno-deprecated-copy -Wno-class-memaccess
 
+!lessThan(QT_VERSION, 5) {
+    QMAKE_CXXFLAGS += "-Wsuggest-override"
+    CONFIG(debug, debug|release) {
+        QMAKE_CXXFLAGS += "-Werror=suggest-override"
+    }
+}
+
 # Add more folders to ship with the application here
 unix {
     bindir = $$(bindir)
