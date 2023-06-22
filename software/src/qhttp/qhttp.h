@@ -122,13 +122,13 @@ public:
     int statusCode() const;
     QString reasonPhrase() const;
 
-    int majorVersion() const;
-    int minorVersion() const;
+    int majorVersion() const override;
+    int minorVersion() const override;
 
-    QString toString() const;
+    QString toString() const override;
 
 protected:
-    bool parseLine(const QString &line, int number);
+    bool parseLine(const QString &line, int number) override;
 
 private:
     Q_DECLARE_PRIVATE(QHttpResponseHeader)
@@ -150,13 +150,13 @@ public:
     QString method() const;
     QString path() const;
 
-    int majorVersion() const;
-    int minorVersion() const;
+    int majorVersion() const override;
+    int minorVersion() const override;
 
-    QString toString() const;
+    QString toString() const override;
 
 protected:
-    bool parseLine(const QString &line, int number);
+    bool parseLine(const QString &line, int number) override;
 
 private:
     Q_DECLARE_PRIVATE(QHttpRequestHeader)

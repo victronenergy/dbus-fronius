@@ -16,7 +16,7 @@ public:
 
 	SunspecDetector(quint8 unitId, QObject *parent = 0);
 
-	virtual DetectorReply *start(const QString &hostName, int timeout);
+	DetectorReply *start(const QString &hostName, int timeout) override;
 	DetectorReply *start(const QString &hostName, int timeout, quint8 unitId);
 
 	quint8 unitId() const
@@ -44,7 +44,7 @@ private:
 
 		virtual ~Reply();
 
-		virtual QString hostName() const
+		QString hostName() const override
 		{
 			return di.hostName;
 		}

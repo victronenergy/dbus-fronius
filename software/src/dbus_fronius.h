@@ -23,9 +23,9 @@ class DBusFronius : public VeService, public GatewayInterface
 public:
 	DBusFronius(QObject *parent = 0);
 
-	virtual void startDetection();
+	void startDetection() override;
 
-	virtual int handleSetValue(VeQItem *item, const QVariant &variant);
+	int handleSetValue(VeQItem *item, const QVariant &variant) override;
 
 private slots:
 	void onSettingsInitialized();

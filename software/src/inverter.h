@@ -73,7 +73,7 @@ public:
 
 	void setPowerLimit(double p);
 
-	virtual int handleSetValue(VeQItem *item, const QVariant &variant);
+	int handleSetValue(VeQItem *item, const QVariant &variant) override;
 
 	/// Returns a string describing the location ('<serial>@<ip-address>:<port>').
 	QString location() const;

@@ -74,7 +74,7 @@ public:
 	{
 	}
 
-	virtual int setValue(QVariant const &value)
+	int setValue(QVariant const &value) override
 	{
 		int i = VeQItemDbus::setValue(value);
 		if (!mForceSync || i != 0)
@@ -105,7 +105,7 @@ public:
 	{
 	}
 
-	virtual VeQItem *createItem()
+	VeQItem *createItem() override
 	{
 		return new NoStorageQItem(this);
 	}

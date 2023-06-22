@@ -70,7 +70,7 @@ public:
 			mService = 0;
 	}
 
-	virtual int setValue(QVariant const &value)
+	int setValue(QVariant const &value) override
 	{
 		if (mService == 0)
 			return VeQItem::setValue(value);
@@ -90,7 +90,7 @@ public:
 	{
 	}
 
-	virtual VeQItem *createItem()
+	VeQItem *createItem() override
 	{
 		return new VeProducerItem(this);
 	}

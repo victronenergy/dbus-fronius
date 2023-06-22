@@ -20,22 +20,22 @@ public:
 
 	bool isConnected() const;
 
-	virtual ModbusReply *readHoldingRegisters(quint8 unitId, quint16 startReg, quint16 count);
+	ModbusReply *readHoldingRegisters(quint8 unitId, quint16 startReg, quint16 count) override;
 
-	virtual ModbusReply *readInputRegisters(quint8 unitId, quint16 startReg, quint16 count);
+	ModbusReply *readInputRegisters(quint8 unitId, quint16 startReg, quint16 count) override;
 
-	virtual ModbusReply *writeSingleHoldingRegister(quint8 unitId, quint16 reg, quint16 value);
+	ModbusReply *writeSingleHoldingRegister(quint8 unitId, quint16 reg, quint16 value) override;
 
-	virtual ModbusReply *writeMultipleHoldingRegisters(quint8 unitId, quint16 startReg,
-													   const QVector<quint16> &values);
+	ModbusReply *writeMultipleHoldingRegisters(quint8 unitId, quint16 startReg,
+													   const QVector<quint16> &values) override;
 
 	QString hostName() const;
 
 	quint16 portName() const;
 
-	virtual int timeout() const;
+	int timeout() const override;
 
-	virtual void setTimeout(int t);
+	void setTimeout(int t) override;
 
 signals:
 	void connected();
@@ -43,7 +43,7 @@ signals:
 	void disconnected();
 
 protected:
-	virtual void timerEvent(QTimerEvent *event);
+	virtual void timerEvent(QTimerEvent *event) override;
 
 private slots:
 	void onConnected();
@@ -84,12 +84,12 @@ private:
 
 		using ModbusReply::setResult;
 
-		virtual bool isFinished() const;
+		bool isFinished() const override;
 
-		virtual void timerEvent(QTimerEvent *event);
+		void timerEvent(QTimerEvent *event) override;
 
 	private:
-		virtual void onFinished();
+		void onFinished() override;
 
 		int mTimerId;
 		quint16 mTransactionId;

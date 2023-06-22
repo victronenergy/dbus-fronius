@@ -15,7 +15,7 @@ class SolarApiDetector: public AbstractDetector
 public:
 	SolarApiDetector(const Settings *settings, QObject *parent = 0);
 
-	virtual DetectorReply *start(const QString &hostName, int timeout);
+	DetectorReply *start(const QString &hostName, int timeout) override;
 
 private slots:
 	void onDeviceInfoFound(const DeviceInfoData &data);
@@ -34,7 +34,7 @@ private:
 
 		virtual ~Reply();
 
-		virtual QString hostName() const
+		QString hostName() const override
 		{
 			return api->hostName();
 		}
