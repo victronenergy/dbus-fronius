@@ -11,6 +11,13 @@
 #include "ve_qitem_init_monitor.h"
 #include "logging.h"
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QRegularExpression>
+#else
+#include <QRegExp>
+#define QRegularExpression QRegExp
+#endif
+
 InverterMediator::InverterMediator(const DeviceInfo &device, GatewayInterface *gateway,
 								   Settings *settings, QObject *parent):
 	QObject(parent),
@@ -188,7 +195,8 @@ Inverter *InverterMediator::createInverter()
 	if (deviceInstance < 0)
 		return 0;
 
-	QString path = QString("pub/com.victronenergy.pvinverter.pv_%1").arg(mDeviceInfo.uniqueId);
+	QString path = QString("pub/com.victronenergy.pvinverter.pv_%1").arg(
+		mDeviceInfo.uniqueId.replace(QRegularExpression("[^A-Za-z0-9_-]"), "_"));
 	VeQItem *root = VeQItems::getRoot()->itemGetOrCreate(path, false);
 	Inverter *inverter;
 	if (mDeviceInfo.deviceType != 0) {
