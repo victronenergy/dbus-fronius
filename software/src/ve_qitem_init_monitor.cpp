@@ -27,7 +27,7 @@ void VeQItemInitMonitor::start()
 		return;
 	}
 	foreach (VeQItem *item, mItems) {
-		connect(item, SIGNAL(stateChanged(VeQItem *, State)),
+		connect(item, SIGNAL(stateChanged(VeQItem::State)),
 				this, SLOT(onStateChanged()));
 		if (item->getState() == VeQItem::Idle)
 			item->getValue();

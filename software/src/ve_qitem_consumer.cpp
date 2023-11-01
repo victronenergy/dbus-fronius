@@ -78,11 +78,11 @@ void VeQItemConsumer::connectItem(VeQItem *&item, const QString &path, const cha
 	if (item == newItem)
 		return;
 	if (item != 0 && signal != 0) {
-		QObject::disconnect(item, SIGNAL(valueChanged(VeQItem*,QVariant)), this, signal);
+		QObject::disconnect(item, SIGNAL(valueChanged(QVariant)), this, signal);
 	}
 	item = newItem;
 	if (signal != 0)
-		QObject::connect(item, SIGNAL(valueChanged(VeQItem*,QVariant)), this, signal);
+		QObject::connect(item, SIGNAL(valueChanged(QVariant)), this, signal);
 #ifdef QT_DBUS_LIB
 	if (forceSync) {
 		NoStorageQItem *i = qobject_cast<NoStorageQItem *>(item);
