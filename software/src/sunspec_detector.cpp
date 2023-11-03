@@ -107,6 +107,7 @@ void SunspecDetector::onFinished()
 			di->di.inverterModelOffset = di->currentRegister;
 			break;
 		case 120: // Nameplate ratings
+		case 702: // IEEE 1547 DERCapacity page
 			di->state = Reply::ModuleContent;
 			break;
 		case 123: // Immediate controls
@@ -165,6 +166,10 @@ void SunspecDetector::onFinished()
 				di->di.maxPower = getScaledValue(values, 3, 1, 4, false);
 			if (values.size() > 22)
 				di->di.storageCapacity = getScaledValue(values, 21, 1, 22, false);
+			break;
+		case 702: // DERCapacity, new IEEE 1547 alternative for 120
+			if (values.size() > 45)
+				di->di.maxPower = getScaledValue(values, 2, 1, 45, false);
 			break;
 		case 123: // Immediate controls
 			if (values.size() > 23)
