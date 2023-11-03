@@ -106,6 +106,15 @@ void SunspecDetector::onFinished()
 			di->di.phaseCount = modelId % 10;
 			di->di.inverterModelOffset = di->currentRegister;
 			break;
+		case 701:
+			di->di.retrievalMode = ProtocolSunSpec2018;
+			di->di.inverterModelOffset = di->currentRegister;
+			// Call startNextRequest directly and ask for only 3 registers.
+			// This avoids the issue that model 701 is 153 long, too long for
+			// a single request.
+			startNextRequest(di, 3); // We Only need ACType
+			di->state = Reply::ModuleContent;
+			return;
 		case 120: // Nameplate ratings
 		case 702: // IEEE 1547 DERCapacity page
 			di->state = Reply::ModuleContent;
@@ -160,6 +169,10 @@ void SunspecDetector::onFinished()
 				di->di.firmwareVersion = getString(values, 42, 8);
 				di->di.uniqueId = di->di.serialNumber = getString(values, 50, 16);
 			}
+			break;
+		case 701: // DERMeasureAC
+			if (values.size() > 2)
+				di->di.phaseCount = values[2] + 1;
 			break;
 		case 120: // Nameplate ratings
 			if (values.size() > 4)
