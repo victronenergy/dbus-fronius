@@ -35,7 +35,6 @@ struct DeviceInfo
 		productId(0),
 		retrievalMode(ProtocolFroniusSolarApi),
 		inverterModelOffset(0),
-		namePlateModelOffset(0),
 		immediateControlOffset(0),
 		powerLimitScale(0),
 		maxPower(0),
@@ -56,7 +55,6 @@ struct DeviceInfo
 	ProtocolType retrievalMode;
 	// Sunspec only
 	quint16 inverterModelOffset;
-	quint16 namePlateModelOffset;
 	quint16 immediateControlOffset;
 	double powerLimitScale;
 	double maxPower;

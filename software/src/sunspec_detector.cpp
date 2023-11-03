@@ -107,7 +107,6 @@ void SunspecDetector::onFinished()
 			di->di.inverterModelOffset = di->currentRegister;
 			break;
 		case 120: // Nameplate ratings
-			di->di.namePlateModelOffset = di->currentRegister;
 			di->state = Reply::ModuleContent;
 			break;
 		case 123: // Immediate controls
@@ -118,7 +117,7 @@ void SunspecDetector::onFinished()
 			if ( !di->di.productName.isEmpty() && // Model 1 is present
 					di->di.phaseCount > 0 && // Model 1xx present
 					di->di.networkId > 0 &&
-					di->di.namePlateModelOffset > 0) // Model 120 is present
+					di->di.maxPower > 0) // Model 120 is present
 				di->setResult();
 			setDone(di);
 			return;
