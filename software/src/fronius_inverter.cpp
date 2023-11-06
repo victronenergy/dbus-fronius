@@ -20,19 +20,3 @@ FroniusInverter::FroniusInverter(VeQItem *root, const DeviceInfo &deviceInfo,
 	if (deviceInfo.powerLimitScale)
 		setPowerLimit(deviceInfo.maxPower);
 }
-
-bool FroniusInverter::validateSunspecMonitorFrame(QVector<quint16> frame)
-{
-	// When there are communication timeouts between a Fronius
-	// datamanager and the PV-inverters, we will sometimes receive a
-	// frame consisting entirely of zeroes, except for an operating
-	// state of 7 (Fault) and a vendor state of 10. Fronius recommendeds
-	// that we simply filter these values.
-	if (deviceInfo().retrievalMode == ProtocolSunSpecIntSf &&
-			frame.mid(2, 37) == FroniusNullFrame)
-		{
-			qInfo() << "Fronius Null-frame detected" << frame;
-			return false;
-		}
-	return true;
-}

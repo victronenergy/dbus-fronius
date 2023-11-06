@@ -243,12 +243,6 @@ void Inverter::updateConnectionItem()
 		arg(mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi ? "solarapi" : "sunspec"));
 }
 
-bool Inverter::validateSunspecMonitorFrame(QVector<quint16> frame)
-{
-	Q_UNUSED(frame);
-	return true;
-}
-
 ThrottledInverter::ThrottledInverter(VeQItem *root, const DeviceInfo &deviceInfo,
 					int deviceInstance, QObject *parent) :
 	Inverter(root, deviceInfo, deviceInstance, parent)

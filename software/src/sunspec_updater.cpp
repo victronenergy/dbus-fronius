@@ -174,15 +174,6 @@ void SunspecUpdater::onReadCompleted()
 		if (values.isEmpty())
 			break;
 
-		// Allow the inverter object to decide if this frame is useable. This
-		// allows filtering bad frames on a per-inverter level. We use this
-		// for Fronius inverters that send a frame consisting of all zeros,
-		// with Status=7, Vendor State=10. By breaking out of the switch,
-		// the register will be fetched again immediately. See fronius_inverter.cpp
-		// for the implementation.
-		if (!mInverter->validateSunspecMonitorFrame(values))
-			break;
-
 		if (!parsePowerAndVoltage(values)) {
 			nextState = Idle;
 			break;
@@ -398,4 +389,29 @@ bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 		setInverterState(values[38]);
 	}
 	return true;
+}
+
+// Fronius inverters send a null payload during certain solar net timeouts. We
+// want to filter for those.
+static const QVector<quint16> FroniusNullFrame = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7 };
+
+FroniusSunspecUpdater::FroniusSunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent):
+	SunspecUpdater(inverter, settings, parent)
+{
+}
+
+bool FroniusSunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
+{
+	// Filter data for Fronius inverters that send a frame consisting of all
+	// zeros, with Status=7. By returning true, the register will be fetched
+	// again immediately.
+	if (inverter()->deviceInfo().retrievalMode == ProtocolSunSpecIntSf &&
+			values.mid(2, 37) == FroniusNullFrame) {
+		qInfo() << "Fronius Null-frame detected" << values;
+		return true;
+	}
+
+	return SunspecUpdater::parsePowerAndVoltage(values);
 }

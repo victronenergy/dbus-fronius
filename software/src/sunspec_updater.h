@@ -46,11 +46,13 @@ private slots:
 	void onPhaseChanged();
 
 protected:
-	void readPowerAndVoltage();
+	virtual void readPowerAndVoltage();
 
-	void writePowerLimit(double powerLimitPct);
+	virtual void writePowerLimit(double powerLimitPct);
 
-	bool parsePowerAndVoltage(QVector<quint16> values);
+	virtual bool parsePowerAndVoltage(QVector<quint16> values);
+
+	Inverter *inverter() { return mInverter; }
 
 private:
 	enum ModbusState {
@@ -99,6 +101,15 @@ private:
 	int mRetryCount;
 	bool mWritePowerLimitRequested;
 	static QList<SunspecUpdater*> mUpdaters; // to keep track of inverters we have a connection with
+};
+
+class FroniusSunspecUpdater : public SunspecUpdater
+{
+	Q_OBJECT
+public:
+	explicit FroniusSunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
+private:
+	bool parsePowerAndVoltage(QVector<quint16> values) override;
 };
 
 #endif // INVERTER_MODBUS_UPDATER_H
