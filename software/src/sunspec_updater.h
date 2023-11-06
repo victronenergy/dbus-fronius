@@ -45,6 +45,13 @@ private slots:
 
 	void onPhaseChanged();
 
+protected:
+	void readPowerAndVoltage();
+
+	void writePowerLimit(double powerLimitPct);
+
+	bool parsePowerAndVoltage(QVector<quint16> values);
+
 private:
 	enum ModbusState {
 		ReadPowerAndVoltage,

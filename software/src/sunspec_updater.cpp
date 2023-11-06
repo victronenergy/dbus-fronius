@@ -65,21 +65,11 @@ void SunspecUpdater::startNextAction(ModbusState state)
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	switch (mCurrentState) {
 	case ReadPowerAndVoltage:
-		if (deviceInfo.retrievalMode == ProtocolSunSpecFloat)
-			readHoldingRegisters(deviceInfo.inverterModelOffset, 62);
-		else
-			readHoldingRegisters(deviceInfo.inverterModelOffset, 52);
+		readPowerAndVoltage();
 		break;
 	case WritePowerLimit:
 	{
-		QVector<quint16> values;
-		quint16 pct = static_cast<quint16>(qRound(mPowerLimitPct * deviceInfo.powerLimitScale));
-		values.append(pct);
-		values.append(0); // unused
-		values.append(PowerLimitTimeout);
-		values.append(0); // unused
-		values.append(1); // enabled power throttle mode
-		writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 5, values);
+		writePowerLimit(mPowerLimitPct);
 		mInverter->setPowerLimit(mPowerLimitPct * deviceInfo.maxPower);
 		mPowerLimitTimer->start();
 		break;
@@ -193,85 +183,11 @@ void SunspecUpdater::onReadCompleted()
 		if (!mInverter->validateSunspecMonitorFrame(values))
 			break;
 
-		int modelId = values[0];
-		const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-		ProtocolType retrievalMode = modelId > 103 ? ProtocolSunSpecFloat : ProtocolSunSpecIntSf;
-		int phaseCount = modelId % 10;
-		if (retrievalMode != deviceInfo.retrievalMode || phaseCount != deviceInfo.phaseCount) {
-			emit inverterModelChanged();
+		if (!parsePowerAndVoltage(values)) {
 			nextState = Idle;
 			break;
 		}
-		if (deviceInfo.retrievalMode == ProtocolSunSpecFloat) {
-			if (values.size() != 62)
-				break;
-			double power = getFloat(values, 22);
-			if (qIsFinite(power)) {
-				CommonInverterData cid;
-				cid.acCurrent = getFloat(values, 2);
-				cid.acPower = power;
-				// sunspec does not provide a voltage for the system as a whole. This does not
-				// make a lot of sense. Since previous versions of dbus-fronius published this
-				// value (retrieved via the Solar API) we use the value from phase 1.
-				cid.acVoltage = getFloat(values, 16);
-				cid.totalEnergy = getFloat(values, 32);
-				mDataProcessor->process(cid);
 
-				if (deviceInfo.phaseCount > 1) {
-					ThreePhasesInverterData tpid;
-					tpid.acCurrentPhase1 = getFloat(values, 4);
-					tpid.acCurrentPhase2 = getFloat(values, 6);
-					tpid.acCurrentPhase3 = getFloat(values, 8);
-					tpid.acVoltagePhase1 = getFloat(values, 16);
-					tpid.acVoltagePhase2 = getFloat(values, 18);
-					tpid.acVoltagePhase3 = getFloat(values, 20);
-					mDataProcessor->process(tpid);
-				} else if (mSettings->phase() == MultiPhase) {
-					// A single phase inverter used as a Multiphase
-					// generator. This only makes sense in a split-phase
-					// system. Typical in North America, and fully
-					// supported by Fronius.
-					updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
-				}
-			}
-			setInverterState(values[48]);
-		} else {
-			if (values.size() != 52)
-				break;
-			// In older versions of the Fronius firmware, power value and its scaling were sometimes
-			// 0 even when it was obvious that the value should have been different. It seemed to
-			// be indicating some kind of error situation.
-			double power = getScaledValue(values, 14, 1, 15, true);
-			if (qIsFinite(power)) {
-				CommonInverterData cid;
-				cid.acCurrent = getScaledValue(values, 2, 1, 6, false);
-				cid.acPower = power;
-				// sunspec does not provide a voltage for the system as a whole. This does not
-				// make a lot of sense. Since previous versions of dbus-fronius published this
-				// value (retrieved via the Solar API) we use the value from phase 1.
-				cid.acVoltage = getScaledValue(values, 10, 1, 13, false);
-				cid.totalEnergy = getScaledValue(values, 24, 2, 26, false);
-				mDataProcessor->process(cid);
-
-				if (deviceInfo.phaseCount > 1) {
-					ThreePhasesInverterData tpid;
-					tpid.acCurrentPhase1 = getScaledValue(values, 3, 1, 6, false);
-					tpid.acCurrentPhase2 = getScaledValue(values, 4, 1, 6, false);
-					tpid.acCurrentPhase3 = getScaledValue(values, 5, 1, 6, false);
-					tpid.acVoltagePhase1 = getScaledValue(values, 10, 1, 13, false);
-					tpid.acVoltagePhase2 = getScaledValue(values, 11, 1, 13, false);
-					tpid.acVoltagePhase3 = getScaledValue(values, 12, 1, 13, false);
-					mDataProcessor->process(tpid);
-				} else if (mSettings->phase() == MultiPhase) {
-					// A single phase inverter used as a Multiphase
-					// generator. This only makes sense in a split-phase
-					// system. Typical in North America, and fully
-					// supported by Fronius.
-					updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
-				}
-			}
-			setInverterState(values[38]);
-		}
 		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
 		break;
 	}
@@ -376,4 +292,110 @@ bool SunspecUpdater::hasConnectionTo(QString host, int id)
 		}
 	}
 	return false;
+}
+
+void SunspecUpdater::readPowerAndVoltage()
+{
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+	if (deviceInfo.retrievalMode == ProtocolSunSpecFloat)
+		readHoldingRegisters(deviceInfo.inverterModelOffset, 62);
+	else
+		readHoldingRegisters(deviceInfo.inverterModelOffset, 52);
+}
+
+void SunspecUpdater::writePowerLimit(double powerLimitPct)
+{
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+
+	QVector<quint16> values;
+	quint16 pct = static_cast<quint16>(qRound(powerLimitPct * deviceInfo.powerLimitScale));
+	values.append(pct);
+	values.append(0); // unused
+	values.append(PowerLimitTimeout);
+	values.append(0); // unused
+	values.append(1); // enabled power throttle mode
+	writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 5, values);
+}
+
+bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
+{
+	int modelId = values[0];
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+	ProtocolType retrievalMode = modelId > 103 ? ProtocolSunSpecFloat : ProtocolSunSpecIntSf;
+	int phaseCount = modelId % 10;
+	if (retrievalMode != deviceInfo.retrievalMode || phaseCount != deviceInfo.phaseCount) {
+		emit inverterModelChanged();
+		return false; // go to idle
+	}
+	if (deviceInfo.retrievalMode == ProtocolSunSpecFloat) {
+		if (values.size() != 62)
+			return false;
+		double power = getFloat(values, 22);
+		if (qIsFinite(power)) {
+			CommonInverterData cid;
+			cid.acCurrent = getFloat(values, 2);
+			cid.acPower = power;
+			// sunspec does not provide a voltage for the system as a whole. This does not
+			// make a lot of sense. Since previous versions of dbus-fronius published this
+			// value (retrieved via the Solar API) we use the value from phase 1.
+			cid.acVoltage = getFloat(values, 16);
+			cid.totalEnergy = getFloat(values, 32);
+			mDataProcessor->process(cid);
+
+			if (deviceInfo.phaseCount > 1) {
+				ThreePhasesInverterData tpid;
+				tpid.acCurrentPhase1 = getFloat(values, 4);
+				tpid.acCurrentPhase2 = getFloat(values, 6);
+				tpid.acCurrentPhase3 = getFloat(values, 8);
+				tpid.acVoltagePhase1 = getFloat(values, 16);
+				tpid.acVoltagePhase2 = getFloat(values, 18);
+				tpid.acVoltagePhase3 = getFloat(values, 20);
+				mDataProcessor->process(tpid);
+			} else if (mSettings->phase() == MultiPhase) {
+				// A single phase inverter used as a Multiphase
+				// generator. This only makes sense in a split-phase
+				// system. Typical in North America, and fully
+				// supported by Fronius.
+				updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
+			}
+		}
+		setInverterState(values[48]);
+	} else {
+		if (values.size() != 52)
+			return false;
+		// In older versions of the Fronius firmware, power value and its scaling were sometimes
+		// 0 even when it was obvious that the value should have been different. It seemed to
+		// be indicating some kind of error situation.
+		double power = getScaledValue(values, 14, 1, 15, true);
+		if (qIsFinite(power)) {
+			CommonInverterData cid;
+			cid.acCurrent = getScaledValue(values, 2, 1, 6, false);
+			cid.acPower = power;
+			// sunspec does not provide a voltage for the system as a whole. This does not
+			// make a lot of sense. Since previous versions of dbus-fronius published this
+			// value (retrieved via the Solar API) we use the value from phase 1.
+			cid.acVoltage = getScaledValue(values, 10, 1, 13, false);
+			cid.totalEnergy = getScaledValue(values, 24, 2, 26, false);
+			mDataProcessor->process(cid);
+
+			if (deviceInfo.phaseCount > 1) {
+				ThreePhasesInverterData tpid;
+				tpid.acCurrentPhase1 = getScaledValue(values, 3, 1, 6, false);
+				tpid.acCurrentPhase2 = getScaledValue(values, 4, 1, 6, false);
+				tpid.acCurrentPhase3 = getScaledValue(values, 5, 1, 6, false);
+				tpid.acVoltagePhase1 = getScaledValue(values, 10, 1, 13, false);
+				tpid.acVoltagePhase2 = getScaledValue(values, 11, 1, 13, false);
+				tpid.acVoltagePhase3 = getScaledValue(values, 12, 1, 13, false);
+				mDataProcessor->process(tpid);
+			} else if (mSettings->phase() == MultiPhase) {
+				// A single phase inverter used as a Multiphase
+				// generator. This only makes sense in a split-phase
+				// system. Typical in North America, and fully
+				// supported by Fronius.
+				updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
+			}
+		}
+		setInverterState(values[38]);
+	}
+	return true;
 }
