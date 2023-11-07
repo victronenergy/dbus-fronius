@@ -391,6 +391,8 @@ bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 	return true;
 }
 
+// Extended classes relating to Fronius specific updating
+// ======================================================
 // Fronius inverters send a null payload during certain solar net timeouts. We
 // want to filter for those.
 static const QVector<quint16> FroniusNullFrame = {
@@ -414,4 +416,57 @@ bool FroniusSunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 	}
 
 	return SunspecUpdater::parsePowerAndVoltage(values);
+}
+
+
+// Extended classes for 700-series models, for Sunspec > 2018
+// ==========================================================
+Sunspec2018Updater::Sunspec2018Updater(Inverter *inverter, InverterSettings *settings, QObject *parent):
+	SunspecUpdater(inverter, settings, parent)
+{
+}
+
+void Sunspec2018Updater::readPowerAndVoltage()
+{
+	// Read 121 values. The model is 153 long, too long for a single modbus
+	// request, This is enough to get everything we care about.
+	readHoldingRegisters(inverter()->deviceInfo().inverterModelOffset, 121);
+}
+
+void Sunspec2018Updater::writePowerLimit(double powerLimitPct)
+{
+	Q_UNUSED(powerLimitPct);
+}
+
+bool Sunspec2018Updater::parsePowerAndVoltage(QVector<quint16> values)
+{
+	if (values.size() != 121)
+		return false;
+
+	CommonInverterData cid;
+	cid.acPower = getScaledValue(values, 10, 1, 116, true);
+	cid.acCurrent = getScaledValue(values, 14, 1, 113, true);
+	cid.acVoltage = getScaledValue(values, 16, 1, 114, false);
+
+	cid.totalEnergy = getScaledValue(values, 19, 4, 120, false);
+	processor()->process(cid);
+
+	if (inverter()->deviceInfo().phaseCount > 1) {
+		ThreePhasesInverterData tpid;
+		tpid.acCurrentPhase1 = getScaledValue(values, 45, 1, 113, true);
+		tpid.acCurrentPhase2 = getScaledValue(values, 68, 1, 113, true);
+		tpid.acCurrentPhase3 = getScaledValue(values, 91, 1, 113, true);
+
+		tpid.acVoltagePhase1 = getScaledValue(values, 47, 1, 114, false);
+		tpid.acVoltagePhase2 = getScaledValue(values, 70, 1, 114, false);
+		tpid.acVoltagePhase3 = getScaledValue(values, 93, 1, 114, false);
+		processor()->process(tpid);
+	} else if (settings()->phase() == MultiPhase) {
+		// A single phase inverter across phases, in North America.
+		updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
+	}
+
+	// +1 because 2018 enum is literally off by one from the earlier spec
+	setInverterState(values[4] + 1);
+	return true;
 }

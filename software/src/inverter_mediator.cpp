@@ -182,6 +182,10 @@ void InverterMediator::startAcquisition()
 	if (mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi) {
 		SolarApiUpdater *updater = new SolarApiUpdater(mInverter, mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
+	} else if (mDeviceInfo.retrievalMode == ProtocolSunSpec2018) {
+		Sunspec2018Updater *updater = new Sunspec2018Updater(mInverter, mInverterSettings, mInverter);
+		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
+		connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
 	} else if (mDeviceInfo.deviceType != 0) {
 		FroniusSunspecUpdater *updater = new FroniusSunspecUpdater(mInverter, mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));

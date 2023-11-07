@@ -54,6 +54,16 @@ protected:
 
 	Inverter *inverter() { return mInverter; }
 
+	InverterSettings *settings() { return mSettings; }
+
+	DataProcessor *processor() { return mDataProcessor; }
+
+	void readHoldingRegisters(quint16 startRegister, quint16 count);
+
+	void updateSplitPhase(double power, double energy);
+
+	void setInverterState(int sunSpecState);
+
 private:
 	enum ModbusState {
 		ReadPowerAndVoltage,
@@ -78,17 +88,11 @@ private:
 
 	void startIdleTimer();
 
-	void setInverterState(int sunSpecState);
-
-	void readHoldingRegisters(quint16 startRegister, quint16 count);
-
 	void writeMultipleHoldingRegisters(quint16 startReg, const QVector<quint16> &values);
 
 	bool handleModbusError(ModbusReply *reply);
 
 	void handleError();
-
-	void updateSplitPhase(double power, double energy);
 
 	Inverter *mInverter;
 	InverterSettings *mSettings;
@@ -111,5 +115,19 @@ public:
 private:
 	bool parsePowerAndVoltage(QVector<quint16> values) override;
 };
+
+class Sunspec2018Updater : public SunspecUpdater
+{
+	Q_OBJECT
+public:
+	explicit Sunspec2018Updater(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
+private:
+	void readPowerAndVoltage() override;
+
+	void writePowerLimit(double powerLimitPct) override;
+
+	bool parsePowerAndVoltage(QVector<quint16> values) override;
+};
+
 
 #endif // INVERTER_MODBUS_UPDATER_H
