@@ -107,6 +107,9 @@ void SunspecDetector::onFinished()
 			di->di.inverterModelOffset = di->currentRegister;
 			break;
 		case 701:
+			// If we already detected a 100-model, stick with that.
+			if (di->di.phaseCount > 0)
+				break;
 			di->di.retrievalMode = ProtocolSunSpec2018;
 			di->di.inverterModelOffset = di->currentRegister;
 			// Call startNextRequest directly and ask for only 3 registers.
@@ -117,6 +120,9 @@ void SunspecDetector::onFinished()
 			return;
 		case 120: // Nameplate ratings
 		case 702: // IEEE 1547 DERCapacity page
+			// If we already know the max power, no need to fetch it again.
+			if (di->di.maxPower > 0)
+				break;
 			di->state = Reply::ModuleContent;
 			break;
 		case 123: // Immediate controls
