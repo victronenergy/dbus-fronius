@@ -210,7 +210,9 @@ Inverter *InverterMediator::createInverter()
 	if (mDeviceInfo.deviceType != 0) {
 		// Fronius inverters have a deviceType (obtained through the initial solarAPI detection)
 		inverter = new FroniusInverter(root, mDeviceInfo, deviceInstance, this);
-	} else if (mDeviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB) {
+	} else if (
+			mDeviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB ||
+			mInverterSettings->forceLimiter()) {
 		inverter = new ThrottledInverter(root, mDeviceInfo, deviceInstance, this);
 	} else {
 		inverter = new Inverter(root, mDeviceInfo, deviceInstance, this);
