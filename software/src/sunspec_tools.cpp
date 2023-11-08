@@ -5,29 +5,40 @@
 double getScaledValue(const QVector<quint16> &values, int offset, int size, int scaleOffset,
 					  bool isSigned)
 {
-	Q_ASSERT(size > 0 && size < 3);
+	Q_ASSERT(size > 0 && size < 5);
 	double scale = getScale(values, scaleOffset);
 	if (!qIsFinite(scale))
 		return qQNaN();
-	quint32 v = 0;
+
+	// Convert registers to a 64-bit integer
+	quint64 v = 0;
+	for (int i=0; i<size; ++i) {
+		v = (v << 16) | values[offset + i];
+	}
+
 	switch (size) {
 	case 1:
-		v = values[offset];
 		if (isSigned && v == 0x8000)
 			return qQNaN();
 		if (!isSigned && v == 0xFFFF)
 			return qQNaN();
 		break;
 	case 2:
-		v = static_cast<quint32>((values[offset] << 16) | values[offset + 1]);
 		if (isSigned && v == 0x80000000u)
 			return qQNaN();
 		if (!isSigned && v == 0xFFFFFFFFu)
 			return qQNaN();
 		break;
+	case 4:
+		if (isSigned && v == 0x8000000000000000u)
+			return qQNaN();
+		if (!isSigned && v == 0xFFFFFFFFFFFFFFFFu)
+			return qQNaN();
+		break;
+
 	}
 	double value = isSigned ?
-		static_cast<double>(size==1?static_cast<qint16>(v):static_cast<qint32>(v)) :
+		static_cast<double>(size==1?static_cast<qint16>(v):(size==2?static_cast<qint32>(v):static_cast<qint64>(v))) :
 		static_cast<double>(v);
 	return value * scale;
 }
