@@ -116,8 +116,7 @@ void SunspecDetector::onFinished()
 		case 0xFFFF:
 			if ( !di->di.productName.isEmpty() && // Model 1 is present
 					di->di.phaseCount > 0 && // Model 1xx present
-					di->di.networkId > 0 &&
-					di->di.maxPower > 0) // Model 120 is present
+					di->di.networkId > 0)
 				di->setResult();
 			setDone(di);
 			return;
