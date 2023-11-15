@@ -244,9 +244,8 @@ void SunspecUpdater::onPowerLimitExpired()
 	// Cancel limiter by resetting WMaxLim_Ena to zero.  Depending on the
 	// PV-inverter and its configuration, this will either cause it to go to
 	// full power, or to go to zero.
-	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-	writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 9, QVector<quint16>() << 0);
-	mInverter->setPowerLimit(deviceInfo.maxPower);
+	resetPowerLimit();
+	mInverter->setPowerLimit(mInverter->deviceInfo().maxPower);
 }
 
 void SunspecUpdater::onPhaseChanged()
@@ -306,6 +305,12 @@ void SunspecUpdater::writePowerLimit(double powerLimitPct)
 	values.append(0); // unused
 	values.append(1); // enabled power throttle mode
 	writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 5, values);
+}
+
+void SunspecUpdater::resetPowerLimit()
+{
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+	writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 9, QVector<quint16>() << 0);
 }
 
 bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)

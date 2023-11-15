@@ -50,6 +50,8 @@ protected:
 
 	virtual void writePowerLimit(double powerLimitPct);
 
+	virtual void resetPowerLimit();
+
 	virtual bool parsePowerAndVoltage(QVector<quint16> values);
 
 	Inverter *inverter() { return mInverter; }
