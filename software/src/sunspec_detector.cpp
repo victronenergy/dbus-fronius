@@ -134,13 +134,21 @@ void SunspecDetector::onFinished()
 				break;
 			di->state = Reply::ModuleContent;
 			break;
-		case 123: // Immediate controls
+		case 704: // DERCtlAC
+			if (di->di.immediateControlModel > 0)
+				break;
+			di->di.immediateControlOffset = di->currentRegister;
+			di->di.immediateControlModel = modelId;
+			di->state = Reply::ModuleContent;
+			break;
+		case 123: // Immediate controls, preferred over 704 if we have both
 			// SMA is always breaking model 123. Let's completely ignore
 			// model 123 to prevent issues with unreadable registers.
 			// Since model 1 always comes first, the productId will
 			// already be populated.
 			if (di->di.productId != VE_PROD_ID_PV_INVERTER_SMA) {
 				di->di.immediateControlOffset = di->currentRegister;
+				di->di.immediateControlModel = modelId;
 				di->state = Reply::ModuleContent;
 			}
 			break;
@@ -208,6 +216,10 @@ void SunspecDetector::onFinished()
 		case 123: // Immediate controls
 			if (values.size() > 23)
 				di->di.powerLimitScale = 100.0 / getScale(values, 23);
+			break;
+		case 704: // DERCtlAC
+			if (values.size() > 54)
+				di->di.powerLimitScale = 100.0 / getScale(values, 54);
 			break;
 		}
 		di->currentRegister += 2 + values[1];

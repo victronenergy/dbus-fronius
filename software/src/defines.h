@@ -37,6 +37,7 @@ struct DeviceInfo
 		retrievalMode(ProtocolFroniusSolarApi),
 		inverterModelOffset(0),
 		immediateControlOffset(0),
+		immediateControlModel(0),
 		powerLimitScale(0),
 		maxPower(0),
 		storageCapacity(0)
@@ -57,6 +58,7 @@ struct DeviceInfo
 	// Sunspec only
 	quint16 inverterModelOffset;
 	quint16 immediateControlOffset;
+	quint16 immediateControlModel; // What model to use for control, 123/704
 	double powerLimitScale;
 	double maxPower;
 	double storageCapacity; // SMA SunnyIsland will report a storage capacity
