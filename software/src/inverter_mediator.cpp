@@ -182,24 +182,34 @@ void InverterMediator::startAcquisition()
 	if (mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi) {
 		SolarApiUpdater *updater = new SolarApiUpdater(mInverter, mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
-	} else if (mDeviceInfo.retrievalMode == ProtocolSunSpec2018) {
-		Sunspec2018Updater *updater = new Sunspec2018Updater(
-			new SunspecLimiter(mInverter), mInverter,
-			mInverterSettings, mInverter);
-		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
-		connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
-	} else if (mDeviceInfo.deviceType != 0) {
-		FroniusSunspecUpdater *updater = new FroniusSunspecUpdater(
-			new SunspecLimiter(mInverter), mInverter,
-			mInverterSettings, mInverter);
-		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
-		connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
 	} else {
-		SunspecUpdater *updater = new SunspecUpdater(
-			new SunspecLimiter(mInverter), mInverter,
-			mInverterSettings, mInverter);
-		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
-		connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
+		// Select the right limiter
+		BaseLimiter *limiter = 0;
+		switch (mDeviceInfo.immediateControlModel) {
+		case 123:
+			limiter = new SunspecLimiter(mInverter);
+			break;
+		case 704:
+			limiter = new Sunspec2018Limiter(mInverter);
+			break;
+		}
+
+		if (mDeviceInfo.retrievalMode == ProtocolSunSpec2018) {
+			Sunspec2018Updater *updater = new Sunspec2018Updater(
+				limiter, mInverter, mInverterSettings, mInverter);
+			connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
+			connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
+		} else if (mDeviceInfo.deviceType != 0) {
+			FroniusSunspecUpdater *updater = new FroniusSunspecUpdater(
+				limiter, mInverter, mInverterSettings, mInverter);
+			connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
+			connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
+		} else {
+			SunspecUpdater *updater = new SunspecUpdater(
+				limiter, mInverter, mInverterSettings, mInverter);
+			connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
+			connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
+		}
 	}
 }
 
