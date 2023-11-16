@@ -22,7 +22,7 @@ static const int PowerLimitScale = 100;
 
 QList<SunspecUpdater*> SunspecUpdater::mUpdaters;
 
-SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent):
+SunspecUpdater::SunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent):
 	QObject(parent),
 	mInverter(inverter),
 	mSettings(settings),
@@ -33,7 +33,8 @@ SunspecUpdater::SunspecUpdater(Inverter *inverter, InverterSettings *settings, Q
 	mCurrentState(Idle),
 	mPowerLimitPct(1.0),
 	mRetryCount(0),
-	mWritePowerLimitRequested(false)
+	mWritePowerLimitRequested(false),
+	mLimiter(limiter)
 {
 	Q_ASSERT(inverter != 0);
 	connectModbusClient();
@@ -125,13 +126,6 @@ void SunspecUpdater::readHoldingRegisters(quint16 startRegister, quint16 count)
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	ModbusReply *reply = mModbusClient->readHoldingRegisters(deviceInfo.networkId, startRegister, count);
 	connect(reply, SIGNAL(finished()), this, SLOT(onReadCompleted()));
-}
-
-void SunspecUpdater::writeMultipleHoldingRegisters(quint16 startReg, const QVector<quint16> &values)
-{
-	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-	ModbusReply *reply = mModbusClient->writeMultipleHoldingRegisters(deviceInfo.networkId, startReg, values);
-	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
 }
 
 bool SunspecUpdater::handleModbusError(ModbusReply *reply)
@@ -295,22 +289,14 @@ void SunspecUpdater::readPowerAndVoltage()
 
 void SunspecUpdater::writePowerLimit(double powerLimitPct)
 {
-	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-
-	QVector<quint16> values;
-	quint16 pct = static_cast<quint16>(qRound(powerLimitPct * deviceInfo.powerLimitScale));
-	values.append(pct);
-	values.append(0); // unused
-	values.append(PowerLimitTimeout);
-	values.append(0); // unused
-	values.append(1); // enabled power throttle mode
-	writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 5, values);
+	ModbusReply *reply = mLimiter->writePowerLimit(mInverter, mModbusClient, powerLimitPct);
+	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
 }
 
 void SunspecUpdater::resetPowerLimit()
 {
-	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-	writeMultipleHoldingRegisters(deviceInfo.immediateControlOffset + 9, QVector<quint16>() << 0);
+	ModbusReply *reply = mLimiter->resetPowerLimit(mInverter, mModbusClient);
+	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
 }
 
 bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
@@ -404,8 +390,8 @@ static const QVector<quint16> FroniusNullFrame = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7 };
 
-FroniusSunspecUpdater::FroniusSunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent):
-	SunspecUpdater(inverter, settings, parent)
+FroniusSunspecUpdater::FroniusSunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent):
+	SunspecUpdater(limiter, inverter, settings, parent)
 {
 }
 
@@ -426,8 +412,8 @@ bool FroniusSunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 
 // Extended classes for 700-series models, for Sunspec > 2018
 // ==========================================================
-Sunspec2018Updater::Sunspec2018Updater(Inverter *inverter, InverterSettings *settings, QObject *parent):
-	SunspecUpdater(inverter, settings, parent)
+Sunspec2018Updater::Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent):
+	SunspecUpdater(limiter, inverter, settings, parent)
 {
 }
 
@@ -436,11 +422,6 @@ void Sunspec2018Updater::readPowerAndVoltage()
 	// Read 121 values. The model is 153 long, too long for a single modbus
 	// request, This is enough to get everything we care about.
 	readHoldingRegisters(inverter()->deviceInfo().inverterModelOffset, 121);
-}
-
-void Sunspec2018Updater::writePowerLimit(double powerLimitPct)
-{
-	Q_UNUSED(powerLimitPct);
 }
 
 bool Sunspec2018Updater::parsePowerAndVoltage(QVector<quint16> values)

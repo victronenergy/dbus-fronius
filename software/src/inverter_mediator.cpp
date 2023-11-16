@@ -183,15 +183,21 @@ void InverterMediator::startAcquisition()
 		SolarApiUpdater *updater = new SolarApiUpdater(mInverter, mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 	} else if (mDeviceInfo.retrievalMode == ProtocolSunSpec2018) {
-		Sunspec2018Updater *updater = new Sunspec2018Updater(mInverter, mInverterSettings, mInverter);
+		Sunspec2018Updater *updater = new Sunspec2018Updater(
+			new SunspecLimiter(mInverter), mInverter,
+			mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 		connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
 	} else if (mDeviceInfo.deviceType != 0) {
-		FroniusSunspecUpdater *updater = new FroniusSunspecUpdater(mInverter, mInverterSettings, mInverter);
+		FroniusSunspecUpdater *updater = new FroniusSunspecUpdater(
+			new SunspecLimiter(mInverter), mInverter,
+			mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 		connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
 	} else {
-		SunspecUpdater *updater = new SunspecUpdater(mInverter, mInverterSettings, mInverter);
+		SunspecUpdater *updater = new SunspecUpdater(
+			new SunspecLimiter(mInverter), mInverter,
+			mInverterSettings, mInverter);
 		connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 		connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
 	}
