@@ -12,12 +12,13 @@ class InverterSettings;
 class ModbusReply;
 class ModbusTcpClient;
 class QTimer;
+class BaseLimiter;
 
 class SunspecUpdater: public QObject
 {
 	Q_OBJECT
 public:
-	explicit SunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
+	explicit SunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
 
 	virtual ~SunspecUpdater();
 
@@ -47,10 +48,6 @@ private slots:
 
 protected:
 	virtual void readPowerAndVoltage();
-
-	virtual void writePowerLimit(double powerLimitPct);
-
-	virtual void resetPowerLimit();
 
 	virtual bool parsePowerAndVoltage(QVector<quint16> values);
 
@@ -84,13 +81,15 @@ private:
 		SunspecStandby = 8
 	};
 
+	void writePowerLimit(double powerLimitPct);
+
+	void resetPowerLimit();
+
 	void connectModbusClient();
 
 	void startNextAction(ModbusState state);
 
 	void startIdleTimer();
-
-	void writeMultipleHoldingRegisters(quint16 startReg, const QVector<quint16> &values);
 
 	bool handleModbusError(ModbusReply *reply);
 
@@ -107,13 +106,14 @@ private:
 	int mRetryCount;
 	bool mWritePowerLimitRequested;
 	static QList<SunspecUpdater*> mUpdaters; // to keep track of inverters we have a connection with
+	BaseLimiter *mLimiter;
 };
 
 class FroniusSunspecUpdater : public SunspecUpdater
 {
 	Q_OBJECT
 public:
-	explicit FroniusSunspecUpdater(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
+	explicit FroniusSunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
 private:
 	bool parsePowerAndVoltage(QVector<quint16> values) override;
 };
@@ -122,11 +122,9 @@ class Sunspec2018Updater : public SunspecUpdater
 {
 	Q_OBJECT
 public:
-	explicit Sunspec2018Updater(Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
+	explicit Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
 private:
 	void readPowerAndVoltage() override;
-
-	void writePowerLimit(double powerLimitPct) override;
 
 	bool parsePowerAndVoltage(QVector<quint16> values) override;
 };
