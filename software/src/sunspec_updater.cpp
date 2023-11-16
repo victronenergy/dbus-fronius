@@ -475,3 +475,34 @@ bool Sunspec2018Updater::parsePowerAndVoltage(QVector<quint16> values)
 	setInverterState(values[4] + 1);
 	return true;
 }
+
+BaseLimiter::BaseLimiter(QObject *parent) :
+	QObject(parent)
+{
+}
+
+SunspecLimiter::SunspecLimiter(QObject *parent) :
+	BaseLimiter(parent)
+{
+}
+
+// Limiter for model 123 (basic sunspec limiter)
+ModbusReply *SunspecLimiter::writePowerLimit(Inverter *inverter, ModbusTcpClient *client, double powerLimitPct)
+{
+	const DeviceInfo &deviceInfo = inverter->deviceInfo();
+
+	QVector<quint16> values;
+	quint16 pct = static_cast<quint16>(qRound(powerLimitPct * deviceInfo.powerLimitScale));
+	values.append(pct);
+	values.append(0); // unused
+	values.append(PowerLimitTimeout);
+	values.append(0); // unused
+	values.append(1); // enabled power throttle mode
+	return client->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 5, values);
+}
+
+ModbusReply *SunspecLimiter::resetPowerLimit(Inverter *inverter, ModbusTcpClient *client)
+{
+	const DeviceInfo &deviceInfo = inverter->deviceInfo();
+	return client->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 9, QVector<quint16>() << 0);
+}
