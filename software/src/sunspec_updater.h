@@ -81,9 +81,9 @@ private:
 		SunspecStandby = 8
 	};
 
-	void writePowerLimit(double powerLimitPct);
+	bool writePowerLimit(double powerLimitPct);
 
-	void resetPowerLimit();
+	bool resetPowerLimit();
 
 	void connectModbusClient();
 

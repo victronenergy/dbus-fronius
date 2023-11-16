@@ -70,9 +70,13 @@ void SunspecUpdater::startNextAction(ModbusState state)
 		break;
 	case WritePowerLimit:
 	{
-		writePowerLimit(mPowerLimitPct);
-		mInverter->setPowerLimit(mPowerLimitPct * deviceInfo.maxPower);
-		mPowerLimitTimer->start();
+		if (writePowerLimit(mPowerLimitPct)) {
+			mInverter->setPowerLimit(mPowerLimitPct * deviceInfo.maxPower);
+			mPowerLimitTimer->start();
+		} else {
+			mWritePowerLimitRequested = false;
+			startNextAction(ReadPowerAndVoltage);
+		}
 		break;
 	}
 	case Idle:
@@ -287,16 +291,22 @@ void SunspecUpdater::readPowerAndVoltage()
 		readHoldingRegisters(deviceInfo.inverterModelOffset, 52);
 }
 
-void SunspecUpdater::writePowerLimit(double powerLimitPct)
+bool SunspecUpdater::writePowerLimit(double powerLimitPct)
 {
+	if (!mLimiter)
+		return false;
 	ModbusReply *reply = mLimiter->writePowerLimit(mInverter, mModbusClient, powerLimitPct);
 	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
+	return true;
 }
 
-void SunspecUpdater::resetPowerLimit()
+bool SunspecUpdater::resetPowerLimit()
 {
+	if (!mLimiter)
+		return false;
 	ModbusReply *reply = mLimiter->resetPowerLimit(mInverter, mModbusClient);
 	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
+	return true;
 }
 
 bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
