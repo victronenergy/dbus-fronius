@@ -61,7 +61,7 @@ void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
 			if (dr == 0) {
 				// If we already have a connection to this inverter, the detector will return
 				// null.
-				qInfo() << QString("SunSpec scan skipped for %1:%2").arg(api->hostName()).arg(it->id);
+				qDebug() << QString("SunSpec scan skipped for %1:%2").arg(api->hostName()).arg(it->id);
 				continue;
 			}
 

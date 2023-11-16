@@ -178,7 +178,7 @@ void InverterGateway::onDetectionDone()
 		// Restart the timer to ensure at least 60 seconds space before
 		// we scan again.
 		mTimer->start();
-		qInfo() << "Auto IP scan completed. Detection finished";
+		qDebug() << "Auto IP scan completed. Detection finished";
 	}
 }
 
