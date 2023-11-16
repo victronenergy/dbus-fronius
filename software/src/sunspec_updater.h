@@ -153,4 +153,15 @@ public:
 	ModbusReply *resetPowerLimit(Inverter *inverter, ModbusTcpClient *client) override;
 };
 
+class Sunspec2018Limiter : public BaseLimiter
+{
+	Q_OBJECT
+public:
+	explicit Sunspec2018Limiter(QObject *parent = 0);
+
+	ModbusReply *writePowerLimit(Inverter *inverter, ModbusTcpClient *client, double powerLimitPct) override;
+
+	ModbusReply *resetPowerLimit(Inverter *inverter, ModbusTcpClient *client) override;
+};
+
 #endif // INVERTER_MODBUS_UPDATER_H

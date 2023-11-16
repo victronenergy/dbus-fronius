@@ -462,12 +462,12 @@ BaseLimiter::BaseLimiter(QObject *parent) :
 {
 }
 
+// Limiter for model 123 (basic sunspec limiter)
 SunspecLimiter::SunspecLimiter(QObject *parent) :
 	BaseLimiter(parent)
 {
 }
 
-// Limiter for model 123 (basic sunspec limiter)
 ModbusReply *SunspecLimiter::writePowerLimit(Inverter *inverter, ModbusTcpClient *client, double powerLimitPct)
 {
 	const DeviceInfo &deviceInfo = inverter->deviceInfo();
@@ -486,4 +486,30 @@ ModbusReply *SunspecLimiter::resetPowerLimit(Inverter *inverter, ModbusTcpClient
 {
 	const DeviceInfo &deviceInfo = inverter->deviceInfo();
 	return client->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 9, QVector<quint16>() << 0);
+}
+
+// Limiter for model 704 (2018 sunspec limiter)
+Sunspec2018Limiter::Sunspec2018Limiter(QObject *parent) :
+	BaseLimiter(parent)
+{
+}
+
+ModbusReply *Sunspec2018Limiter::writePowerLimit(Inverter *inverter, ModbusTcpClient *client, double powerLimitPct)
+{
+	const DeviceInfo &deviceInfo = inverter->deviceInfo();
+
+	QVector<quint16> values;
+	quint16 pct = static_cast<quint16>(qRound(powerLimitPct * deviceInfo.powerLimitScale));
+	values.append(1); // WMaxLimPctEna
+	values.append(pct); // WMaxLimPct
+	values.append(0); // WMaxLimPctRvrt, revert to 0%
+	values.append(1); // WMaxLimPctEnaRvrt, enable reverting to 0%
+	values.append(PowerLimitTimeout); // WMaxLimPctRvrtTms
+	return client->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 14, values);
+}
+
+ModbusReply *Sunspec2018Limiter::resetPowerLimit(Inverter *inverter, ModbusTcpClient *client)
+{
+	const DeviceInfo &deviceInfo = inverter->deviceInfo();
+	return client->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 14, QVector<quint16>() << 0);
 }
