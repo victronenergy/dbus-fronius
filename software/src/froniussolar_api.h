@@ -40,31 +40,11 @@ struct InverterInfo
 	 */
 	QString uniqueId;
 	/*!
-	 * @brief customName Name of the inverted as assigned by the user.
-	 * May be empty.
-	 */
-	QString customName;
-	/*!
 	 * @brief deviceType Type of the device. This value is not documented,
 	 * but inverters seem to have value 192. Also seen 123 on an 3 phase
 	 * inverter.
 	 */
 	int deviceType;
-	/*!
-	 * @brief errorCode
-	 * -1	No _valid_ error code
-	 *  0	OK
-	 */
-	int errorCode;
-	/*!
-	 * @brief statusCode
-	 * 0-6	Startup
-	 * 7	Running
-	 * 8	Standby
-	 * 9	Boot loading
-	 * 10	Error
-	 */
-	int statusCode;
 };
 
 struct InverterListData : public SolarApiReply

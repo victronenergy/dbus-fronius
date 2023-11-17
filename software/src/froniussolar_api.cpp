@@ -140,9 +140,6 @@ void FroniusSolarApi::processConverterInfo(const QString &networkError)
 		QVariantMap di = it.value().toMap();
 		ii.deviceType = di["DT"].toInt();
 		ii.uniqueId = di["UniqueID"].toString();
-		ii.customName = di["CustomName"].toString();
-		ii.errorCode = di["ErrorCode"].toInt();
-		ii.statusCode = di["StatusCode"].toInt();
 		data.inverters.push_back(ii);
 	}
 	emit converterInfoFound(data);
