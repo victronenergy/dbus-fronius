@@ -114,18 +114,25 @@ void SolarApiDetector::onSunspecDeviceFound(const DeviceInfo &info)
 	device.reply->setResult(i2);
 }
 
+// This is called multiple times, for each DetectorReply from the
+// SunspecDetector
 void SolarApiDetector::onSunspecDone()
 {
+	// Get the DetectorReply that sent this signal, and remove it
+	// from mDetectorReplyToInverter
 	DetectorReply *dr = static_cast<DetectorReply *>(sender());
 	dr->deleteLater();
 	ReplyToInverter device = mDetectorReplyToInverter.take(dr);
 	Q_ASSERT(device.reply != 0);
 	if (device.reply == 0)
 		return;
+
+	// If a sunspec device was found, we're done with this DetectorReply
 	if (device.deviceFound) {
-		checkFinished(device.reply);
+		checkSunspecFinished(device.reply);
 		return;
 	}
+
 	// Sunspec was not enabled for this inverter, so we fall back to solar api.
 	DeviceInfo info;
 	info.networkId = device.inverter.id;
@@ -147,7 +154,7 @@ void SolarApiDetector::onSunspecDone()
 	}
 	device.deviceFound = true;
 	device.reply->setResult(info);
-	checkFinished(device.reply);
+	checkSunspecFinished(device.reply);
 }
 
 QString SolarApiDetector::fixUniqueId(const InverterInfo &inverterInfo)
@@ -173,7 +180,7 @@ QString SolarApiDetector::fixUniqueId(int deviceType, QString uniqueId, int id)
 	return QString("%1_%2").arg(deviceType).arg(result);
 }
 
-void SolarApiDetector::checkFinished(Reply *reply)
+void SolarApiDetector::checkSunspecFinished(Reply *reply)
 {
 	// Check if there are any pending replies from the sunspec detector associated `reply`.
 	// We need this because a single call to getConverterInfoAsync in the solar API may give us

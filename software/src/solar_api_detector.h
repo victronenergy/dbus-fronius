@@ -72,7 +72,7 @@ private:
 	static QString fixUniqueId(const InverterInfo &inverterInfo);
 	static QString fixUniqueId(int deviceType, QString uniqueId, int id);
 
-	void checkFinished(Reply *reply);
+	void checkSunspecFinished(Reply *reply);
 
 	static QList<QString> mInvalidDevices;
 	QHash<DetectorReply *, ReplyToInverter> mDetectorReplyToInverter;
