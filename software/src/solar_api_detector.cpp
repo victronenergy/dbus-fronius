@@ -24,6 +24,8 @@ DetectorReply *SolarApiDetector::start(const QString &hostName, int timeout)
 		this, SLOT(onDeviceInfoFound(DeviceInfoData)));
 	connect(reply->api, SIGNAL(converterInfoFound(InverterListData)),
 		this, SLOT(onConverterInfoFound(InverterListData)));
+	connect(reply->api, SIGNAL(threePhasesDataFound(const ThreePhasesInverterData &)),
+		this, SLOT(onThreePhaseDataFound(const ThreePhasesInverterData &)));
 	reply->api->getDeviceInfoAsync();
 	return reply;
 }
@@ -71,7 +73,10 @@ void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
 			connect(dr, SIGNAL(deviceFound(DeviceInfo)),
 					this, SLOT(onSunspecDeviceFound(DeviceInfo)));
 			connect(dr, SIGNAL(finished()), this, SLOT(onSunspecDone()));
+			// Lookup structurs so we can find this data later in
+			// onSunspecDone/onSunspecDeviceFound, or based on the networkId.
 			mDetectorReplyToInverter[dr] = device;
+			mIdReplyToInverter[it->id] = device;
 			setFinished = false;
 		}
 	}
@@ -119,7 +124,9 @@ void SolarApiDetector::onSunspecDeviceFound(const DeviceInfo &info)
 void SolarApiDetector::onSunspecDone()
 {
 	// Get the DetectorReply that sent this signal, and remove it
-	// from mDetectorReplyToInverter
+	// from mDetectorReplyToInverter. Leave mIdReplyToInverter
+	// alone for now, we may need it later, but clear it
+	// the moment you know a device was found.
 	DetectorReply *dr = static_cast<DetectorReply *>(sender());
 	dr->deleteLater();
 	ReplyToInverter device = mDetectorReplyToInverter.take(dr);
@@ -129,11 +136,25 @@ void SolarApiDetector::onSunspecDone()
 
 	// If a sunspec device was found, we're done with this DetectorReply
 	if (device.deviceFound) {
+		mIdReplyToInverter.remove(device.inverter.id);
 		checkSunspecFinished(device.reply);
 		return;
 	}
 
 	// Sunspec was not enabled for this inverter, so we fall back to solar api.
+	// First attempt to look it up in our list of known inverters, if that
+	// fails, fetch the 3PInverterData collection to check if it has 3-phase
+	// support.
+	const FroniusDeviceInfo *deviceInfo = FroniusDeviceInfo::find(device.inverter.deviceType);
+	if (deviceInfo == 0) {
+		qWarning() << "Unknown inverter type:" << device.inverter.deviceType;
+		device.reply->api->getThreePhasesInverterDataAsync(device.inverter.id);
+		return; // We're done at this point
+	}
+
+	// Remove from hash, it can be handled.
+	mIdReplyToInverter.remove(device.inverter.id);
+
 	DeviceInfo info;
 	info.networkId = device.inverter.id;
 	info.uniqueId = fixUniqueId(device.inverter);
@@ -143,15 +164,42 @@ void SolarApiDetector::onSunspecDone()
 	info.productId = VE_PROD_ID_PV_INVERTER_FRONIUS;
 	info.maxPower = qQNaN();
 	info.serialNumber = device.reply->serialInfo.value(device.inverter.id, QString());
-	const FroniusDeviceInfo *deviceInfo = FroniusDeviceInfo::find(device.inverter.deviceType);
-	if (deviceInfo == 0) {
-		qWarning() << "Unknown inverter type:" << device.inverter.deviceType;
-		info.productName = "Unknown PV Inverter";
-		info.phaseCount = 1;
-	} else {
-		info.productName = deviceInfo->name;
-		info.phaseCount = deviceInfo->phaseCount;
-	}
+	info.productName = deviceInfo->name;
+	info.phaseCount = deviceInfo->phaseCount;
+	device.deviceFound = true;
+	device.reply->setResult(info);
+	checkSunspecFinished(device.reply);
+}
+
+void SolarApiDetector::onThreePhaseDataFound(const ThreePhasesInverterData &data)
+{
+	// If we are here, we're dealing with an unknown SolarApi inverter, and
+	// we're trying to find the phase config. For Solar.Net devices, the
+	// deviceId is the numeric id that matches the one we asked for, so
+	// we can use that to fetch the data pertaining to the outstanding
+	// DetectorReply, and then complete it.
+	bool ok;
+	int deviceId = data.deviceId.toInt(&ok);
+	if (!ok)
+		return;
+
+	ReplyToInverter device = mIdReplyToInverter.take(deviceId);
+
+	DeviceInfo info;
+	info.networkId = device.inverter.id;
+	info.uniqueId = fixUniqueId(device.inverter);
+	info.hostName = device.reply->api->hostName();
+	info.port = device.reply->api->port();
+	info.deviceType = device.inverter.deviceType;
+	info.productId = VE_PROD_ID_PV_INVERTER_FRONIUS;
+	info.maxPower = qQNaN();
+	info.serialNumber = device.reply->serialInfo.value(device.inverter.id, QString());
+	// To my knowledge Fronius has no split-phase (with neutral) inverters.
+	// North American inverters are 1P inverters across L1 and L2.
+	info.phaseCount = data.valid ? 3 : 1;
+	info.productName = QString("%1-phase PV Inverter").arg(data.valid?"Three":"Single");
+
+	// And complete the detection
 	device.deviceFound = true;
 	device.reply->setResult(info);
 	checkSunspecFinished(device.reply);

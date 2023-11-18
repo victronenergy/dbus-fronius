@@ -26,6 +26,8 @@ private slots:
 
 	void onSunspecDone();
 
+	void onThreePhaseDataFound(const ThreePhasesInverterData &data);
+
 private:
 	class Reply: public DetectorReply
 	{
@@ -76,6 +78,7 @@ private:
 
 	static QList<QString> mInvalidDevices;
 	QHash<DetectorReply *, ReplyToInverter> mDetectorReplyToInverter;
+	QHash<int, ReplyToInverter> mIdReplyToInverter;
 	SunspecDetector *mSunspecDetector;
 	const Settings *mSettings;
 };
