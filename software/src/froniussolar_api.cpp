@@ -174,7 +174,7 @@ void FroniusSolarApi::processThreePhasesData(const QString &networkError)
 	data.deviceId = getByPath(map, "Head/RequestArguments/DeviceId").toString();
 	QVariant d = getByPath(map, "Body/Data");
 	data.acCurrentPhase1 = getByPath(d, "IAC_L1/Value").toDouble();
-	data.acVoltagePhase1 = getByPath(d, "UAC_L1/Value").toDouble();
+	data.acVoltagePhase1 = getByPath(d, "UAC_L1/Value").toDouble(&data.valid);
 	data.acCurrentPhase2 = getByPath(d, "IAC_L2/Value").toDouble();
 	data.acVoltagePhase2 = getByPath(d, "UAC_L2/Value").toDouble();
 	data.acCurrentPhase3 = getByPath(d, "IAC_L3/Value").toDouble();

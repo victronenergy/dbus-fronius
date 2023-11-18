@@ -83,6 +83,7 @@ struct CommonInverterData : public SolarApiReply
 struct ThreePhasesInverterData : public SolarApiReply
 {
 	QString deviceId;
+	bool valid;
 	double acCurrentPhase1;
 	double acVoltagePhase1;
 	double acCurrentPhase2;
