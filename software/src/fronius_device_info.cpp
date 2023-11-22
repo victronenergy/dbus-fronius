@@ -8,6 +8,13 @@ static FroniusDeviceInfo Devices[] =
 	// inverters with battery storage anyway.
 	// TODO: isMultiString parameter is unused and can go away some day.
 	{   1, 3, true, "Fronius Tauro" },
+	{  42, 3, true, "Fronius Symo Advanced 10.0-3-M" },
+	{  43, 3, true, "Fronius Symo Advanced 20.0-3-M" },
+	{  44, 3, true, "Fronius Symo Advanced 17.5-3-M" },
+	{  45, 3, true, "Fronius Symo Advanced 15.0-3-M" },
+	{  46, 3, true, "Fronius Symo Advanced 12.5-3-M" },
+	{  51, 3, true, "Fronius Symo Advanced 12.0-3 208-240" },
+	{  52, 3, true, "Fronius Symo Advanced 10.0-3 208" },
 	{  67, 1, false, "Fronius Primo 15.0-1 208-240" },
 	{  68, 1, false, "Fronius Primo 12.5-1 208-240" },
 	{  69, 1, false, "Fronius Primo 11.4-1 208-240" },
