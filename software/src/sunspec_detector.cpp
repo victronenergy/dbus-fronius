@@ -126,8 +126,14 @@ void SunspecDetector::onFinished()
 			di->state = Reply::ModuleContent;
 			break;
 		case 123: // Immediate controls
-			di->di.immediateControlOffset = di->currentRegister;
-			di->state = Reply::ModuleContent;
+			// SMA is always breaking model 123. Let's completely ignore
+			// model 123 to prevent issues with unreadable registers.
+			// Since model 1 always comes first, the productId will
+			// already be populated.
+			if (di->di.productId != VE_PROD_ID_PV_INVERTER_SMA) {
+				di->di.immediateControlOffset = di->currentRegister;
+				di->state = Reply::ModuleContent;
+			}
 			break;
 		case 0xFFFF:
 			if ( !di->di.productName.isEmpty() && // Model 1 is present
