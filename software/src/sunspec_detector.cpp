@@ -89,6 +89,15 @@ void SunspecDetector::onFinished()
 	case Reply::ModuleHeader:
 	{
 		if (values.size() < 2) {
+			// If we get a short frame, it means there was an error reading
+			// something. As long as we have enough to keep going, call
+			// setResult anyway. This helps SMA inverters which errors
+			// when reading one register past the end, instead of returning
+			// 0xFFFF as most other implementations do.
+			if ( !di->di.productName.isEmpty() && // Model 1 is present
+					di->di.phaseCount > 0 && // Model 1xx present
+					di->di.networkId > 0)
+				di->setResult();
 			setDone(di);
 			return;
 		}
