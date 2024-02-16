@@ -36,6 +36,7 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 		QVariant() : deviceInfo.firmwareVersion);
 	produceValue(createItem("DataManagerVersion"), deviceInfo.dataManagerVersion.isEmpty() ?
 		QVariant() : deviceInfo.dataManagerVersion);
+	produceValue(createItem("Ac/NumberOfPhases"), deviceInfo.phaseCount);
 	updateConnectionItem();
 	root->produceValue(QVariant(), VeQItem::Synchronized);
 }
