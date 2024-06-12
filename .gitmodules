@@ -8,5 +8,5 @@
 	branch = master
 [submodule "software/ext/veutil"]
 	path = software/ext/veutil
-	url = git@github.com:victronenergy/veutil.git
+	url = https://github.com/victronenergy/veutil.git
 	branch = master
