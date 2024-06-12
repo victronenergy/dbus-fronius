@@ -1,5 +1,5 @@
 #include <qnumeric.h>
-#include <velib/vecan/products.h>
+#include "products.h"
 #include "froniussolar_api.h"
 #include "fronius_device_info.h"
 #include "settings.h"

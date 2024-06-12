@@ -1,7 +1,3 @@
-[submodule "software/ext/velib"]
-	path = software/ext/velib
-	url = git@github.com:victronenergy/velib.git
-	branch = master
 [submodule "software/ext/bottle"]
 	path = software/ext/bottle
 	url = https://github.com/bottlepy/bottle.git

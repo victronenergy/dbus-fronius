@@ -51,12 +51,8 @@ equals(QT_MAJOR_VERSION, 6): include(src/qhttp/qhttp.pri)
 # QT4 needs external json library
 equals(QT_MAJOR_VERSION, 4): include(src/json/json.pri)
 
-VELIB_INC = ext/velib/inc/velib/qt
-VELIB_SRC = ext/velib/src/qt
-
 INCLUDEPATH += \
     ext/qslog \
-    ext/velib/inc \
     src \
     src/modbus_tcp_client
 
@@ -105,7 +101,6 @@ HEADERS += \
     src/defines.h \
     src/fronius_device_info.h \
     src/inverter_mediator.h \
-    src/velib/velib_config_app.h \
     src/modbus_tcp_client/modbus_tcp_client.h \
     src/ve_qitem_consumer.h \
     src/ve_qitem_init_monitor.h \

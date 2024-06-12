@@ -1,4 +1,4 @@
-#include <velib/vecan/products.h>
+#include "products.h"
 #include "defines.h"
 #include "inverter.h"
 #include "fronius_inverter.h"

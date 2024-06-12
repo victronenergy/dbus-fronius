@@ -1,4 +1,4 @@
-#include <velib/vecan/products.h>
+#include "products.h"
 #include "modbus_tcp_client.h"
 #include "modbus_reply.h"
 #include "sunspec_updater.h"
