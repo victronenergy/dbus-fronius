@@ -17,6 +17,8 @@ equals(QT_MAJOR_VERSION, 4): QMAKE_CXXFLAGS += -Wno-deprecated-copy -Wno-class-m
     }
 }
 
+equals(QT_MAJOR_VERSION, 6): QMAKE_CXXFLAGS += -std=c++17
+
 # Add more folders to ship with the application here
 unix {
     bindir = $$(bindir)
