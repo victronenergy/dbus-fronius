@@ -23,13 +23,19 @@ Settings::Settings(VeQItem *root, QObject *parent) :
 	mIpAddresses(connectItem("IPAddresses", "", SIGNAL(ipAddressesChanged()), false)),
 	mKnownIpAddresses(connectItem("KnownIPAddresses", "", 0, false)),
 	mAutoScan(connectItem("AutoScan", 1, 0)),
-	mIdBySerial(connectItem("IdentifyBySerialNumber", 0, 0))
+	mIdBySerial(connectItem("IdentifyBySerialNumber", 0, 0)),
+	mModbusSlaveAddress(connectItem("ModbusSlaveAddress", 126, 0, 247))
 {
 }
 
 int Settings::portNumber() const
 {
 	return mPortNumber->getValue().toInt();
+}
+
+int Settings::modbusSlaveAddress() const
+{
+	return mModbusSlaveAddress->getValue().toInt();
 }
 
 QList<QHostAddress> Settings::ipAddresses() const
