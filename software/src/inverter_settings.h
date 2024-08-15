@@ -42,6 +42,8 @@ public:
 
 	void setSerialNumber(const QString &s);
 
+	bool enableLimiter() const;
+
 signals:
 	void phaseChanged();
 
@@ -67,6 +69,7 @@ private:
 	VeQItem *mL2Energy;
 	VeQItem *mL3Energy;
 	VeQItem *mSerialNumber;
+	VeQItem *mEnableLimiter;
 };
 
 #endif // INVERTERSETTINGS_H
