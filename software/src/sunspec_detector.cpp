@@ -185,6 +185,8 @@ void SunspecDetector::onFinished()
 					di->di.productId = VE_PROD_ID_PV_INVERTER_SMA;
 				else if ((manufacturer == "ABB") || (manufacturer == "FIMER"))
 					di->di.productId = VE_PROD_ID_PV_INVERTER_ABB;
+				else if (manufacturer.startsWith("SolarEdge"))
+					di->di.productId = VE_PROD_ID_PV_INVERTER_SOLAREDGE;
 				else
 					di->di.productId = VE_PROD_ID_PV_INVERTER_SUNSPEC;
 				QString model = getString(values, 18, 16);
