@@ -74,16 +74,12 @@ void SunspecDetector::onFinished()
 	switch (di->state) {
 	case Reply::SunSpecHeader:
 	{
-		QString sunspecId;
-		if (values.size() == 2)
-			sunspecId = getString(values, 0, 2);
-		if (sunspecId != "SunS") {
+		if (values.size() != 2 || getString(values, 0, 2) != "SunS") {
 			setDone(di);
 			return;
 		}
 		di->currentRegister += 2;
-		di->state = Reply::ModuleContent;
-		startNextRequest(di, 66);
+		requestNextHeader(di); // Probably model 1
 		break;
 	}
 	case Reply::ModuleHeader:
@@ -102,9 +98,12 @@ void SunspecDetector::onFinished()
 			return;
 		}
 		quint16 modelId = values[0];
-		quint16 modelSize = values[1];
-		di->state = Reply::ModuleHeader;
+		quint16 modelSize = values[1] + 2;
+		quint16 nextModel = di->currentRegister + modelSize;
 		switch (modelId) {
+		case 1:
+			requestNextContent(di, 1, nextModel, modelSize); // Common model
+			return;
 		case 101:
 		case 102:
 		case 103:
@@ -121,37 +120,32 @@ void SunspecDetector::onFinished()
 				break;
 			di->di.retrievalMode = ProtocolSunSpec2018;
 			di->di.inverterModelOffset = di->currentRegister;
-			// Call startNextRequest directly and ask for only 3 registers.
-			// This avoids the issue that model 701 is 153 long, too long for
-			// a single request.
-			startNextRequest(di, 3); // We Only need ACType
-			di->state = Reply::ModuleContent;
+			// Ask for only 3 registers.  This avoids the issue that model 701
+			// is 153 long, too long for a single request.
+			requestNextContent(di, 701, nextModel, 3); // We Only need ACType
 			return;
 		case 120: // Nameplate ratings
 		case 702: // IEEE 1547 DERCapacity page
 			// If we already know the max power, no need to fetch it again.
 			if (di->di.maxPower > 0)
 				break;
-			di->state = Reply::ModuleContent;
-			break;
+			requestNextContent(di, modelId, nextModel, modelSize);
+			return;
 		case 704: // DERCtlAC
 			if (di->di.immediateControlModel > 0)
 				break;
 			di->di.immediateControlOffset = di->currentRegister;
 			di->di.immediateControlModel = modelId;
-			di->state = Reply::ModuleContent;
-			break;
+			requestNextContent(di, modelId, nextModel, 1, 54); // 1 register at offset 54
+			return;
 		case 123: // Immediate controls, preferred over 704 if we have both
-			// SMA is always breaking model 123. Let's completely ignore
-			// model 123 to prevent issues with unreadable registers.
-			// Since model 1 always comes first, the productId will
-			// already be populated.
-			if (di->di.productId != VE_PROD_ID_PV_INVERTER_SMA) {
-				di->di.immediateControlOffset = di->currentRegister;
-				di->di.immediateControlModel = modelId;
-				di->state = Reply::ModuleContent;
-			}
-			break;
+			// Fetch just one record from offset 23. This avoids all the
+			// pain we get from SMA, where some registers in model 123
+			// are not readable.
+			di->di.immediateControlOffset = di->currentRegister;
+			di->di.immediateControlModel = modelId;
+			requestNextContent(di, modelId, nextModel, 1, 23);
+			return;
 		case 0xFFFF:
 			if ( !di->di.productName.isEmpty() && // Model 1 is present
 					di->di.phaseCount > 0 && // Model 1xx present
@@ -160,12 +154,10 @@ void SunspecDetector::onFinished()
 			setDone(di);
 			return;
 		}
-		if (di->state == Reply::ModuleHeader) {
-			di->currentRegister += 2 + modelSize;
-			startNextRequest(di, 2);
-		} else {
-			startNextRequest(di, modelSize + 2);
-		}
+
+		// Next header
+		di->currentRegister += modelSize;
+		requestNextHeader(di);
 		break;
 	}
 	case Reply::ModuleContent:
@@ -173,11 +165,9 @@ void SunspecDetector::onFinished()
 			setDone(di);
 			return;
 		}
-		di->state = Reply::ModuleHeader;
-		quint16 modelId = values[0];
-		switch(modelId) {
+		switch(di->currentModel) {
 		case 1:
-			if (values.size() == 66) {
+			if (values.size() >= 66) {
 				QString manufacturer = getString(values, 2, 16);
 				if (manufacturer == "Fronius")
 					di->di.productId = VE_PROD_ID_PV_INVERTER_FRONIUS;
@@ -216,18 +206,35 @@ void SunspecDetector::onFinished()
 				di->di.maxPower = getScaledValue(values, 2, 1, 45, false);
 			break;
 		case 123: // Immediate controls
-			if (values.size() > 23)
-				di->di.powerLimitScale = 100.0 / getScale(values, 23);
+			if (values.size() > 0)
+				di->di.powerLimitScale = 100.0 / getScale(values, 0);
 			break;
 		case 704: // DERCtlAC
-			if (values.size() > 54)
-				di->di.powerLimitScale = 100.0 / getScale(values, 54);
+			if (values.size() > 0)
+				di->di.powerLimitScale = 100.0 / getScale(values, 0);
 			break;
 		}
-		di->currentRegister += 2 + values[1];
-		startNextRequest(di, 2);
+		di->currentRegister = di->nextModelRegister;
+		requestNextHeader(di);
 		break;
 	}
+}
+
+void SunspecDetector::requestNextHeader(Reply *di)
+{
+	di->state = Reply::ModuleHeader;
+	di->currentModel = 0;
+	di->nextModelRegister = 0;
+	startNextRequest(di, 2);
+}
+
+void SunspecDetector::requestNextContent(Reply *di, quint16 currentModel, quint16 nextModelRegister, quint16 regCount, quint16 offset)
+{
+	di->state = Reply::ModuleContent;
+	di->currentModel = currentModel; // model being fetched
+	di->nextModelRegister = nextModelRegister;
+	di->currentRegister += offset;
+	startNextRequest(di, regCount);
 }
 
 void SunspecDetector::startNextRequest(Reply *di, quint16 regCount)
@@ -252,7 +259,9 @@ SunspecDetector::Reply::Reply(QObject *parent):
 	DetectorReply(parent),
 	client(0),
 	state(SunSpecHeader),
-	currentRegister(0)
+	currentRegister(0),
+	currentModel(0),
+	nextModelRegister(0)
 {
 }
 

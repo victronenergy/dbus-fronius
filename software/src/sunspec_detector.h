@@ -69,8 +69,12 @@ private:
 		ModbusTcpClient *client;
 		State state;
 		quint16 currentRegister;
+		quint16 currentModel;
+		quint16 nextModelRegister;
 	};
 
+	void requestNextHeader(Reply *di);
+	void requestNextContent(Reply *di, quint16 currentModel, quint16 nextModelRegister, quint16 regCount, quint16 offset = 0);
 	void startNextRequest(Reply *di, quint16 regCount);
 
 	void setDone(Reply *di);
