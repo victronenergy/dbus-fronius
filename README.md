@@ -58,13 +58,7 @@ to the network, and acts as a gateway for modbus TCP communication. Each
 inverter has its own unit ID. The unit IDs are retrieved using the solar API.
 
 SMA sunny boy:
-* The Operating State (part of the inverter model) is not supported, although
-  the SunSpec standard specifies it as mandatory. This is a problem, because
-  the power limiter in hub4control uses this state.
-* The parameters controlling power limiting are write only (SunSpec has them
-  read/write). This is a problem because it is impossible to retrieve their
-  current value, for example during startup. There is a workaround possible,
-  but it is not part of this release.
+SMA inverters mostly work. Some older inverters may not support power limiting.
 
 Solar Edge:
 * The SE2200H - SE6000H range (HD-wave) was specifically tested, though others
@@ -72,10 +66,10 @@ Solar Edge:
 * The unit id is 126.
 * Only one concurrent TCP connection is allowed on port 502. Additional
   connections are rejected.
-* The inverter publishes only the Common model and the Inverter model. This is
-  sufficient for basic operation.
-* Power limiting is not possible because the inverter does not publish model
-  123 (Immediate Controls).
+* Some inverters publish only the Common model and the Inverter model. This is
+  sufficient for basic operation, but does not support power limiting.
+* Some newer inverters may support limiting through SunSpec information model
+  704.
 
 Development & toolchain
 =====================
