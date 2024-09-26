@@ -15,7 +15,7 @@ InverterSettings::InverterSettings(VeQItem *root, QObject *parent) :
 	mL2Energy(connectItem("L2Energy", 0.0, 0.0, 1e6, SIGNAL(l2EnergyChanged()), true)),
 	mL3Energy(connectItem("L3Energy", 0.0, 0.0, 1e6, SIGNAL(l3EnergyChanged()), true)),
 	mSerialNumber(connectItem("SerialNumber", "", 0, false)),
-	mEnableLimiter(connectItem("EnableLimiter", 0, 0, 1, 0, false))
+	mEnableLimiter(connectItem("EnableLimiter", 1, 0))
 {
 }
 
