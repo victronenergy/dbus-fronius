@@ -141,15 +141,16 @@ public:
 
 	virtual void onConnected(ModbusTcpClient *client);
 
-	virtual ModbusReply *writePowerLimit(ModbusTcpClient *client, double powerLimitPct) = 0;
+	virtual ModbusReply *writePowerLimit(double powerLimitPct) = 0;
 
-	virtual ModbusReply *resetPowerLimit(ModbusTcpClient *client) = 0;
+	virtual ModbusReply *resetPowerLimit() = 0;
 
 signals:
 	void initialised();
 
 protected:
 	Inverter *mInverter;
+	ModbusTcpClient *mClient;
 };
 
 class SunspecLimiter : public BaseLimiter
@@ -158,9 +159,11 @@ class SunspecLimiter : public BaseLimiter
 public:
 	explicit SunspecLimiter(Inverter *parent);
 
-	ModbusReply *writePowerLimit(ModbusTcpClient *client, double powerLimitPct) override;
+	void onConnected(ModbusTcpClient *client) override;
 
-	ModbusReply *resetPowerLimit(ModbusTcpClient *client) override;
+	ModbusReply *writePowerLimit(double powerLimitPct) override;
+
+	ModbusReply *resetPowerLimit() override;
 };
 
 class Sunspec2018Limiter : public BaseLimiter
@@ -169,9 +172,11 @@ class Sunspec2018Limiter : public BaseLimiter
 public:
 	explicit Sunspec2018Limiter(Inverter *parent);
 
-	ModbusReply *writePowerLimit(ModbusTcpClient *client, double powerLimitPct) override;
+	void onConnected(ModbusTcpClient *client) override;
 
-	ModbusReply *resetPowerLimit(ModbusTcpClient *client) override;
+	ModbusReply *writePowerLimit(double powerLimitPct) override;
+
+	ModbusReply *resetPowerLimit() override;
 };
 
 #endif // INVERTER_MODBUS_UPDATER_H

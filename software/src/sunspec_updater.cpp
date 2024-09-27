@@ -305,7 +305,7 @@ bool SunspecUpdater::writePowerLimit(double powerLimitPct)
 {
 	if (!mLimiter)
 		return false;
-	ModbusReply *reply = mLimiter->writePowerLimit(mModbusClient, powerLimitPct);
+	ModbusReply *reply = mLimiter->writePowerLimit(powerLimitPct);
 	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
 	return true;
 }
@@ -314,7 +314,7 @@ bool SunspecUpdater::resetPowerLimit()
 {
 	if (!mLimiter)
 		return false;
-	ModbusReply *reply = mLimiter->resetPowerLimit(mModbusClient);
+	ModbusReply *reply = mLimiter->resetPowerLimit();
 	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
 	return true;
 }
@@ -485,8 +485,7 @@ BaseLimiter::BaseLimiter(Inverter *parent) :
 
 void BaseLimiter::onConnected(ModbusTcpClient *client)
 {
-	Q_UNUSED(client);
-	emit initialised();
+	mClient = client;
 }
 
 // Limiter for model 123 (basic sunspec limiter)
@@ -495,7 +494,13 @@ SunspecLimiter::SunspecLimiter(Inverter *parent) :
 {
 }
 
-ModbusReply *SunspecLimiter::writePowerLimit(ModbusTcpClient *client, double powerLimitPct)
+void SunspecLimiter::onConnected(ModbusTcpClient *client)
+{
+	BaseLimiter::onConnected(client);
+	emit initialised(); // No additional setup required
+}
+
+ModbusReply *SunspecLimiter::writePowerLimit(double powerLimitPct)
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 
@@ -506,13 +511,13 @@ ModbusReply *SunspecLimiter::writePowerLimit(ModbusTcpClient *client, double pow
 	values.append(PowerLimitTimeout);
 	values.append(0); // unused
 	values.append(1); // enabled power throttle mode
-	return client->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 5, values);
+	return mClient->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 5, values);
 }
 
-ModbusReply *SunspecLimiter::resetPowerLimit(ModbusTcpClient *client)
+ModbusReply *SunspecLimiter::resetPowerLimit()
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-	return client->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 9, QVector<quint16>() << 0);
+	return mClient->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 9, QVector<quint16>() << 0);
 }
 
 // Limiter for model 704 (2018 sunspec limiter)
@@ -521,7 +526,13 @@ Sunspec2018Limiter::Sunspec2018Limiter(Inverter *parent) :
 {
 }
 
-ModbusReply *Sunspec2018Limiter::writePowerLimit(ModbusTcpClient *client, double powerLimitPct)
+void Sunspec2018Limiter::onConnected(ModbusTcpClient *client)
+{
+	BaseLimiter::onConnected(client);
+	emit initialised(); // No additional setup required
+}
+
+ModbusReply *Sunspec2018Limiter::writePowerLimit(double powerLimitPct)
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 
@@ -532,11 +543,11 @@ ModbusReply *Sunspec2018Limiter::writePowerLimit(ModbusTcpClient *client, double
 	values.append(0); // WMaxLimPctRvrt, revert to 0%
 	values.append(1); // WMaxLimPctEnaRvrt, enable reverting to 0%
 	values.append(PowerLimitTimeout); // WMaxLimPctRvrtTms
-	return client->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 14, values);
+	return mClient->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 14, values);
 }
 
-ModbusReply *Sunspec2018Limiter::resetPowerLimit(ModbusTcpClient *client)
+ModbusReply *Sunspec2018Limiter::resetPowerLimit()
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-	return client->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 14, QVector<quint16>() << 0);
+	return mClient->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 14, QVector<quint16>() << 0);
 }
