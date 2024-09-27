@@ -38,6 +38,8 @@ private slots:
 
 	void onConnected();
 
+	void onLimiterInitialised();
+
 	void onDisconnected();
 
 	void onTimer();
@@ -137,9 +139,15 @@ class BaseLimiter : public QObject
 public:
 	explicit BaseLimiter(Inverter *parent);
 
+	virtual void onConnected(ModbusTcpClient *client);
+
 	virtual ModbusReply *writePowerLimit(ModbusTcpClient *client, double powerLimitPct) = 0;
 
 	virtual ModbusReply *resetPowerLimit(ModbusTcpClient *client) = 0;
+
+signals:
+	void initialised();
+
 protected:
 	Inverter *mInverter;
 };

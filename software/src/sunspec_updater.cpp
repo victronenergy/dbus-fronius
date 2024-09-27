@@ -219,6 +219,16 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 
 void SunspecUpdater::onConnected()
 {
+	if (mLimiter) {
+		connect(mLimiter, SIGNAL(initialised()), this, SLOT(onLimiterInitialised()));
+		mLimiter->onConnected(mModbusClient);
+	} else {
+		startNextAction(ReadPowerAndVoltage);
+	}
+}
+
+void SunspecUpdater::onLimiterInitialised()
+{
 	startNextAction(ReadPowerAndVoltage);
 }
 
@@ -471,6 +481,12 @@ BaseLimiter::BaseLimiter(Inverter *parent) :
 	QObject(parent),
 	mInverter(parent)
 {
+}
+
+void BaseLimiter::onConnected(ModbusTcpClient *client)
+{
+	Q_UNUSED(client);
+	emit initialised();
 }
 
 // Limiter for model 123 (basic sunspec limiter)
