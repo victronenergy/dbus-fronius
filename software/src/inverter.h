@@ -69,6 +69,8 @@ public:
 
 	PowerInfo *getPowerInfo(InverterPhase phase);
 
+	void setMaxPower(double p);
+
 	double powerLimit() const;
 
 	void setPowerLimit(double p);
@@ -93,6 +95,7 @@ private:
 	DeviceInfo mDeviceInfo;
 	VeQItem *mErrorCode;
 	VeQItem *mStatusCode;
+	VeQItem *mMaxPower;
 	VeQItem *mPowerLimit;
 	VeQItem *mPosition;
 	VeQItem *mDeviceInstance;

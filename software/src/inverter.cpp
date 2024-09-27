@@ -12,6 +12,7 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	mDeviceInfo(deviceInfo),
 	mErrorCode(createItem("ErrorCode")),
 	mStatusCode(createItem("StatusCode")),
+	mMaxPower(createItem("Ac/MaxPower")),
 	mPowerLimit(createItem("Ac/PowerLimit")),
 	mPosition(createItem("Position")),
 	mDeviceInstance(createItem("DeviceInstance")),
@@ -31,7 +32,7 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 		QString::number(deviceInfo.productId, 16));
 	produceValue(createItem("Serial"), deviceInfo.serialNumber.isEmpty() ? deviceInfo.uniqueId : deviceInfo.serialNumber);
 	produceValue(mDeviceInstance, deviceInstance);
-	produceDouble(createItem("Ac/MaxPower"), deviceInfo.maxPower, 0, "W");
+	produceDouble(mMaxPower, deviceInfo.maxPower, 0, "W");
 	produceValue(createItem("FirmwareVersion"), deviceInfo.firmwareVersion.isEmpty() ?
 		QVariant() : deviceInfo.firmwareVersion);
 	produceValue(createItem("DataManagerVersion"), deviceInfo.dataManagerVersion.isEmpty() ?
@@ -204,6 +205,11 @@ PowerInfo *Inverter::getPowerInfo(InverterPhase phase)
 		qCritical() << "Incorrect phase:" << phase;
 		return 0;
 	}
+}
+
+void Inverter::setMaxPower(double p)
+{
+	produceDouble(mMaxPower, p, 0, "W");
 }
 
 double Inverter::powerLimit() const
