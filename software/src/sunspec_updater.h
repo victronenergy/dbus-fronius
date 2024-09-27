@@ -135,33 +135,35 @@ class BaseLimiter : public QObject
 {
 	Q_OBJECT
 public:
-	explicit BaseLimiter(QObject *parent = 0);
+	explicit BaseLimiter(Inverter *parent);
 
-	virtual ModbusReply *writePowerLimit(Inverter *inverter, ModbusTcpClient *client, double powerLimitPct) = 0;
+	virtual ModbusReply *writePowerLimit(ModbusTcpClient *client, double powerLimitPct) = 0;
 
-	virtual ModbusReply *resetPowerLimit(Inverter *inverter, ModbusTcpClient *client) = 0;
+	virtual ModbusReply *resetPowerLimit(ModbusTcpClient *client) = 0;
+protected:
+	Inverter *mInverter;
 };
 
 class SunspecLimiter : public BaseLimiter
 {
 	Q_OBJECT
 public:
-	explicit SunspecLimiter(QObject *parent = 0);
+	explicit SunspecLimiter(Inverter *parent);
 
-	ModbusReply *writePowerLimit(Inverter *inverter, ModbusTcpClient *client, double powerLimitPct) override;
+	ModbusReply *writePowerLimit(ModbusTcpClient *client, double powerLimitPct) override;
 
-	ModbusReply *resetPowerLimit(Inverter *inverter, ModbusTcpClient *client) override;
+	ModbusReply *resetPowerLimit(ModbusTcpClient *client) override;
 };
 
 class Sunspec2018Limiter : public BaseLimiter
 {
 	Q_OBJECT
 public:
-	explicit Sunspec2018Limiter(QObject *parent = 0);
+	explicit Sunspec2018Limiter(Inverter *parent);
 
-	ModbusReply *writePowerLimit(Inverter *inverter, ModbusTcpClient *client, double powerLimitPct) override;
+	ModbusReply *writePowerLimit(ModbusTcpClient *client, double powerLimitPct) override;
 
-	ModbusReply *resetPowerLimit(Inverter *inverter, ModbusTcpClient *client) override;
+	ModbusReply *resetPowerLimit(ModbusTcpClient *client) override;
 };
 
 #endif // INVERTER_MODBUS_UPDATER_H
