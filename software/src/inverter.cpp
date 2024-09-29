@@ -209,6 +209,7 @@ PowerInfo *Inverter::getPowerInfo(InverterPhase phase)
 
 void Inverter::setMaxPower(double p)
 {
+	mDeviceInfo.maxPower = p;
 	produceDouble(mMaxPower, p, 0, "W");
 }
 
