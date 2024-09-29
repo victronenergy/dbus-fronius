@@ -14,9 +14,4 @@ FroniusInverter::FroniusInverter(VeQItem *root, const DeviceInfo &deviceInfo,
 	Inverter(root, deviceInfo, deviceInstance, parent)
 {
 	produceValue(createItem("FroniusDeviceType"), deviceInfo.deviceType);
-
-	// If it has sunspec model 123, powerLimitScale will be non-zero.
-	// Enable the power limiter and initialise it to maxPower.
-	if (deviceInfo.powerLimitScale)
-		setPowerLimit(deviceInfo.maxPower);
 }

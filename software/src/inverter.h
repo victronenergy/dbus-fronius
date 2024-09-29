@@ -109,11 +109,4 @@ private:
 	PowerInfo *mL3PowerInfo;
 };
 
-class ThrottledInverter : public Inverter
-{
-	Q_OBJECT
-public:
-	ThrottledInverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstance, QObject *parent = 0);
-};
-
 #endif // INVERTER_H

@@ -250,13 +250,3 @@ void Inverter::updateConnectionItem()
 		arg(mDeviceInfo.hostName).arg(mDeviceInfo.networkId).
 		arg(mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi ? "solarapi" : "sunspec"));
 }
-
-ThrottledInverter::ThrottledInverter(VeQItem *root, const DeviceInfo &deviceInfo,
-					int deviceInstance, QObject *parent) :
-	Inverter(root, deviceInfo, deviceInstance, parent)
-{
-	// If it has sunspec model 123, powerLimitScale will be non-zero.
-	// Enable the power limiter and initialise it to maxPower.
-	if (deviceInfo.powerLimitScale)
-		setPowerLimit(deviceInfo.maxPower);
-}

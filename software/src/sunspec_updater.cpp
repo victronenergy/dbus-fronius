@@ -1,5 +1,6 @@
 #include <qnumeric.h>
 #include <QTimer>
+#include "products.h"
 #include "froniussolar_api.h"
 #include "data_processor.h"
 #include "inverter.h"
@@ -219,7 +220,11 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 
 void SunspecUpdater::onConnected()
 {
-	if (mLimiter) {
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+	bool enableLimiter = deviceInfo.deviceType != 0 || // Fronius
+	                     deviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB ||
+	                     mSettings->enableLimiter();
+	if (mLimiter && enableLimiter) {
 		connect(mLimiter, SIGNAL(initialised(bool)), this, SLOT(onLimiterInitialised(bool)));
 		mLimiter->onConnected(mModbusClient);
 	} else {
@@ -229,6 +234,11 @@ void SunspecUpdater::onConnected()
 
 void SunspecUpdater::onLimiterInitialised(bool success)
 {
+	// If it has sunspec model 123 or 704, or some other limiter
+	// successfully initialised, enable the power limiter and
+	// initialise it to maxPower.
+	if (success)
+		mInverter->setPowerLimit(mInverter->deviceInfo().maxPower);
 	startNextAction(ReadPowerAndVoltage);
 }
 
@@ -497,7 +507,9 @@ SunspecLimiter::SunspecLimiter(Inverter *parent) :
 void SunspecLimiter::onConnected(ModbusTcpClient *client)
 {
 	BaseLimiter::onConnected(client);
-	emit initialised(true); // No additional setup required
+
+	// If model 123 exists, this will be non-zero.
+	emit initialised(mInverter->deviceInfo().powerLimitScale > 0);
 }
 
 ModbusReply *SunspecLimiter::writePowerLimit(double powerLimitPct)
@@ -529,7 +541,9 @@ Sunspec2018Limiter::Sunspec2018Limiter(Inverter *parent) :
 void Sunspec2018Limiter::onConnected(ModbusTcpClient *client)
 {
 	BaseLimiter::onConnected(client);
-	emit initialised(true); // No additional setup required
+
+	// If model 704 exists, this will be non-zero.
+	emit initialised(mInverter->deviceInfo().powerLimitScale > 0);
 }
 
 ModbusReply *Sunspec2018Limiter::writePowerLimit(double powerLimitPct)
