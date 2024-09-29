@@ -38,7 +38,7 @@ private slots:
 
 	void onConnected();
 
-	void onLimiterInitialised();
+	void onLimiterInitialised(bool success);
 
 	void onDisconnected();
 
@@ -146,7 +146,7 @@ public:
 	virtual ModbusReply *resetPowerLimit() = 0;
 
 signals:
-	void initialised();
+	void initialised(bool);
 
 protected:
 	Inverter *mInverter;

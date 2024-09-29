@@ -220,14 +220,14 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 void SunspecUpdater::onConnected()
 {
 	if (mLimiter) {
-		connect(mLimiter, SIGNAL(initialised()), this, SLOT(onLimiterInitialised()));
+		connect(mLimiter, SIGNAL(initialised(bool)), this, SLOT(onLimiterInitialised(bool)));
 		mLimiter->onConnected(mModbusClient);
 	} else {
 		startNextAction(ReadPowerAndVoltage);
 	}
 }
 
-void SunspecUpdater::onLimiterInitialised()
+void SunspecUpdater::onLimiterInitialised(bool success)
 {
 	startNextAction(ReadPowerAndVoltage);
 }
@@ -497,7 +497,7 @@ SunspecLimiter::SunspecLimiter(Inverter *parent) :
 void SunspecLimiter::onConnected(ModbusTcpClient *client)
 {
 	BaseLimiter::onConnected(client);
-	emit initialised(); // No additional setup required
+	emit initialised(true); // No additional setup required
 }
 
 ModbusReply *SunspecLimiter::writePowerLimit(double powerLimitPct)
@@ -529,7 +529,7 @@ Sunspec2018Limiter::Sunspec2018Limiter(Inverter *parent) :
 void Sunspec2018Limiter::onConnected(ModbusTcpClient *client)
 {
 	BaseLimiter::onConnected(client);
-	emit initialised(); // No additional setup required
+	emit initialised(true); // No additional setup required
 }
 
 ModbusReply *Sunspec2018Limiter::writePowerLimit(double powerLimitPct)
