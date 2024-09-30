@@ -112,6 +112,7 @@ void SunspecDetector::onFinished()
 		case 113:
 			di->di.retrievalMode = modelId > 103 ? ProtocolSunSpecFloat : ProtocolSunSpecIntSf;
 			di->di.phaseCount = modelId % 10;
+			di->di.inverterModel = modelId;
 			di->di.inverterModelOffset = di->currentRegister;
 			break;
 		case 701:
@@ -119,6 +120,7 @@ void SunspecDetector::onFinished()
 			if (di->di.phaseCount > 0)
 				break;
 			di->di.retrievalMode = ProtocolSunSpec2018;
+			di->di.inverterModel = modelId;
 			di->di.inverterModelOffset = di->currentRegister;
 			// Ask for only 3 registers.  This avoids the issue that model 701
 			// is 153 long, too long for a single request.

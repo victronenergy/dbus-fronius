@@ -40,6 +40,8 @@ public:
 
 	void setCustomName(const QString &name);
 
+	void setLimiterModel(quint16 model);
+
 	QString hostName() const;
 
 	int networkId() const;
@@ -100,6 +102,7 @@ private:
 	VeQItem *mPosition;
 	VeQItem *mDeviceInstance;
 	VeQItem *mCustomName;
+	VeQItem *mLimiterModel;
 	VeQItem *mProductName;
 	VeQItem *mConnection;
 

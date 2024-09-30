@@ -17,6 +17,7 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	mPosition(createItem("Position")),
 	mDeviceInstance(createItem("DeviceInstance")),
 	mCustomName(createItem("CustomName")),
+	mLimiterModel(createItem("Info/LimiterModel")),
 	mProductName(createItem("ProductName")),
 	mConnection(createItem("Mgmt/Connection")),
 	mMeanPowerInfo(new BasicPowerInfo(root->itemGetOrCreate("Ac", false), this)),
@@ -38,6 +39,7 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 	produceValue(createItem("DataManagerVersion"), deviceInfo.dataManagerVersion.isEmpty() ?
 		QVariant() : deviceInfo.dataManagerVersion);
 	produceValue(createItem("Ac/NumberOfPhases"), deviceInfo.phaseCount);
+	produceValue(createItem("Info/MeasurementModel"), deviceInfo.inverterModel);
 	updateConnectionItem();
 	root->produceValue(QVariant(), VeQItem::Synchronized);
 }
@@ -112,6 +114,11 @@ void Inverter::setCustomName(const QString &name)
 		return;
 	produceValue(mCustomName, name);
 	emit customNameChanged();
+}
+
+void Inverter::setLimiterModel(quint16 model)
+{
+	produceValue(mLimiterModel, model);
 }
 
 QString Inverter::hostName() const

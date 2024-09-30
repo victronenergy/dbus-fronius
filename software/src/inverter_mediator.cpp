@@ -200,6 +200,7 @@ void InverterMediator::startAcquisition()
 				limiter = new Sunspec2018Limiter(mInverter);
 				break;
 			}
+			mInverter->setLimiterModel(mDeviceInfo.immediateControlModel);
 		}
 
 		if (mDeviceInfo.retrievalMode == ProtocolSunSpec2018) {
