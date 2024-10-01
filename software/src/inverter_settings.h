@@ -42,6 +42,8 @@ public:
 
 	void setSerialNumber(const QString &s);
 
+	void setLimiterSupported(bool v);
+
 	bool enableLimiter() const;
 
 signals:
@@ -69,6 +71,7 @@ private:
 	VeQItem *mL2Energy;
 	VeQItem *mL3Energy;
 	VeQItem *mSerialNumber;
+	VeQItem *mLimiterSupported;
 	VeQItem *mEnableLimiter;
 };
 

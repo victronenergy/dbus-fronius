@@ -239,6 +239,7 @@ void SunspecUpdater::onLimiterInitialised(bool success)
 	// initialise it to maxPower.
 	if (success)
 		mInverter->setPowerLimit(mInverter->deviceInfo().maxPower);
+	mSettings->setLimiterSupported(success);
 	startNextAction(ReadPowerAndVoltage);
 }
 
