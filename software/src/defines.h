@@ -19,6 +19,12 @@ enum InverterPosition {
 	Input2 = 2
 };
 
+enum LimiterSupport {
+	LimiterDefault = -1,
+	LimiterDisabled = 0,
+	LimiterEnabled = 1
+};
+
 enum ProtocolType {
 	ProtocolFroniusSolarApi,
 	ProtocolSunSpecFloat,

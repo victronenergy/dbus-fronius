@@ -44,7 +44,7 @@ public:
 
 	void setLimiterSupported(bool v);
 
-	bool enableLimiter() const;
+	LimiterSupport enableLimiter() const;
 
 signals:
 	void phaseChanged();

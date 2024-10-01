@@ -221,9 +221,12 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 void SunspecUpdater::onConnected()
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-	bool enableLimiter = deviceInfo.deviceType != 0 || // Fronius
-	                     deviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB ||
-	                     mSettings->enableLimiter();
+	// Keep default behaviour, where Fronius and ABB has the limiter
+	// enabled by default. But allow overriding that decision.
+	bool enableLimiter = mSettings->enableLimiter() == LimiterDefault ? (
+	                     deviceInfo.deviceType != 0 || // Fronius
+	                     deviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB) :
+	                     mSettings->enableLimiter() == LimiterEnabled;
 	if (mLimiter && enableLimiter) {
 		connect(mLimiter, SIGNAL(initialised(bool)), this, SLOT(onLimiterInitialised(bool)));
 		mLimiter->onConnected(mModbusClient);
