@@ -3,7 +3,7 @@
 #include <QCoreApplication>
 #include <qnumeric.h>
 #include <QStringList>
-#include <velib/qt/ve_qitem.hpp>
+#include <veutil/qt/ve_qitem.hpp>
 #include "dbus_inverter_bridge_test.h"
 #include "inverter.h"
 #include "inverter_settings.h"

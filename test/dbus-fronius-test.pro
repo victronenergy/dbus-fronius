@@ -7,11 +7,13 @@ QMAKE_CXXFLAGS += -Wno-psabi
 # gcc 4.8 and newer don't like the QOMPILE_ASSERT in qt
 QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
 
+equals(QT_MAJOR_VERSION, 6): QMAKE_CXXFLAGS += -std=c++17
+
 # Add more folders to ship with the application here
 target.path = /opt/dbus_fronius_test
 INSTALLS += target
 
-QT += core network script
+QT += core network
 QT -= gui
 
 TARGET = dbus_fronius_test
@@ -26,11 +28,8 @@ EXTDIR = ../software/ext
 VELIB_INC = $$EXTDIR/velib/inc/velib/qt
 VELIB_SRC = $$EXTDIR/velib/src/qt
 
-include($$EXTDIR/qslog/QsLog.pri)
-include($$SRCDIR/json/json.pri)
-include($$EXTDIR/velib/src/qt/ve_qitems.pri)
-
-equals(QT_MAJOR_VERSION, 5): include($$SRCDIR/qhttp/qhttp.pri)
+include($$EXTDIR/veutil/veutil.pri)
+include($$SRCDIR/qhttp/qhttp.pri)
 
 INCLUDEPATH += \
     $$EXTDIR/velib/inc \

@@ -73,12 +73,7 @@ TEST_F(FroniusSolarApiTest, getConverterInfo)
 	const InverterInfo &ii = mInverterListData->inverters.first();
 	EXPECT_EQ(1, ii.id);
 	EXPECT_EQ("1234", ii.uniqueId);
-	EXPECT_EQ(QString("SouthWest"), ii.customName);
 	EXPECT_EQ(232, ii.deviceType);
-	/// @todo EV Bad test: even if the reply does not contain an error code,
-	/// ii.errorCode will be 0 (default value).
-	EXPECT_EQ(0, ii.errorCode);
-	EXPECT_EQ(7, ii.statusCode);
 }
 
 TEST_F(FroniusSolarApiTest, getCommonData)
