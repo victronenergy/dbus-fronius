@@ -223,10 +223,9 @@ void SunspecUpdater::onConnected()
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	// Keep default behaviour, where Fronius and ABB has the limiter
 	// enabled by default. But allow overriding that decision.
-	bool enableLimiter = mSettings->enableLimiter() == LimiterDefault ? (
-	                     deviceInfo.deviceType != 0 || // Fronius
-	                     deviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB) :
-	                     mSettings->enableLimiter() == LimiterEnabled;
+	bool enableLimiter = deviceInfo.deviceType != 0 || // Fronius
+	                     deviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB ||
+	                     mSettings->enableLimiter();
 	if (mLimiter && enableLimiter) {
 		connect(mLimiter, SIGNAL(initialised(bool)), this, SLOT(onLimiterInitialised(bool)));
 		mLimiter->onConnected(mModbusClient);
@@ -240,9 +239,14 @@ void SunspecUpdater::onLimiterInitialised(bool success)
 	// If it has sunspec model 123 or 704, or some other limiter
 	// successfully initialised, enable the power limiter and
 	// initialise it to maxPower.
-	if (success)
+	if (success) {
 		mInverter->setPowerLimit(mInverter->deviceInfo().maxPower);
-	mSettings->setLimiterSupported(success);
+		mSettings->setLimiterSupported(
+			(mInverter->deviceInfo().deviceType != 0 ||
+			 mInverter->deviceInfo().productId == VE_PROD_ID_PV_INVERTER_ABB) ? LimiterForcedEnabled : LimiterEnabled);
+	} else {
+		mSettings->setLimiterSupported(LimiterDisabled);
+	}
 	startNextAction(ReadPowerAndVoltage);
 }
 

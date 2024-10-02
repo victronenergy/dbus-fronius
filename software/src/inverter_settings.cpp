@@ -16,7 +16,7 @@ InverterSettings::InverterSettings(VeQItem *root, QObject *parent) :
 	mL3Energy(connectItem("L3Energy", 0.0, 0.0, 1e6, SIGNAL(l3EnergyChanged()), true)),
 	mSerialNumber(connectItem("SerialNumber", "", 0, false)),
 	mLimiterSupported(connectItem("LimiterSupported", 0, 0)),
-	mEnableLimiter(connectItem("EnableLimiter", -1, 0))
+	mEnableLimiter(connectItem("EnableLimiter", 1, 0))
 {
 }
 
@@ -125,12 +125,12 @@ void InverterSettings::setSerialNumber(const QString &s)
 	mSerialNumber->setValue(s);
 }
 
-void InverterSettings::setLimiterSupported(bool v)
+void InverterSettings::setLimiterSupported(LimiterSupport v)
 {
-	mLimiterSupported->setValue(bool(v));
+	mLimiterSupported->setValue(v);
 }
 
-LimiterSupport InverterSettings::enableLimiter() const
+bool InverterSettings::enableLimiter() const
 {
-	return static_cast<LimiterSupport>(mEnableLimiter->getValue().toInt());
+	return mEnableLimiter->getValue().toBool();
 }

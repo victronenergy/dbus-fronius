@@ -42,9 +42,9 @@ public:
 
 	void setSerialNumber(const QString &s);
 
-	void setLimiterSupported(bool v);
+	void setLimiterSupported(LimiterSupport v);
 
-	LimiterSupport enableLimiter() const;
+	bool enableLimiter() const;
 
 signals:
 	void phaseChanged();

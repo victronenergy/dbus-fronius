@@ -20,9 +20,10 @@ enum InverterPosition {
 };
 
 enum LimiterSupport {
-	LimiterDefault = -1,
 	LimiterDisabled = 0,
-	LimiterEnabled = 1
+	LimiterEnabled = 1,
+	LimiterForcedDisabled = 2,
+	LimiterForcedEnabled = 3
 };
 
 enum ProtocolType {
