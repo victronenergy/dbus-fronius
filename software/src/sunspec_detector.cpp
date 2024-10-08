@@ -98,6 +98,15 @@ void SunspecDetector::onFinished()
 		quint16 nextModel = di->currentRegister + modelSize;
 		switch (modelId) {
 		case 1:
+			// SolarEdge breaks the spec by having multiple device definitions
+			// without an end-model marker in between. If we see model 1 come
+			// by a second time, that means we're seeing the next device. Try
+			// to finish the detection. If we already have model 1 and a
+			// measurement model this will succeed.
+			if (di->di.productId != 0) {
+				checkDone(di);
+				return;
+			}
 			requestNextContent(di, 1, nextModel, modelSize); // Common model
 			return;
 		case 101:
