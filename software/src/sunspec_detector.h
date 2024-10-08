@@ -77,6 +77,7 @@ private:
 	void requestNextContent(Reply *di, quint16 currentModel, quint16 nextModelRegister, quint16 regCount, quint16 offset = 0);
 	void startNextRequest(Reply *di, quint16 regCount);
 
+	void checkDone(Reply *di);
 	void setDone(Reply *di);
 
 	QHash<ModbusTcpClient *, Reply *> mClientToReply;

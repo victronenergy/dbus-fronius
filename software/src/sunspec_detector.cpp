@@ -86,15 +86,11 @@ void SunspecDetector::onFinished()
 	{
 		if (values.size() < 2) {
 			// If we get a short frame, it means there was an error reading
-			// something. As long as we have enough to keep going, call
-			// setResult anyway. This helps SMA inverters which errors
-			// when reading one register past the end, instead of returning
-			// 0xFFFF as most other implementations do.
-			if ( !di->di.productName.isEmpty() && // Model 1 is present
-					di->di.phaseCount > 0 && // Model 1xx present
-					di->di.networkId > 0)
-				di->setResult();
-			setDone(di);
+			// something. Check if we have enough to still detect an inverter.
+			// This helps SMA inverters that errors when reading two registers
+			// at the end, instead of returning a zero-length end model
+			// (0xFFFF, 0) as per the spec.
+			checkDone(di);
 			return;
 		}
 		quint16 modelId = values[0];
@@ -149,11 +145,7 @@ void SunspecDetector::onFinished()
 			requestNextContent(di, modelId, nextModel, 1, 23);
 			return;
 		case 0xFFFF:
-			if ( !di->di.productName.isEmpty() && // Model 1 is present
-					di->di.phaseCount > 0 && // Model 1xx present
-					di->di.networkId > 0)
-				di->setResult();
-			setDone(di);
+			checkDone(di);
 			return;
 		}
 
@@ -245,6 +237,15 @@ void SunspecDetector::startNextRequest(Reply *di, quint16 regCount)
 														  regCount);
 	mModbusReplyToReply[reply] = di;
 	connect(reply, SIGNAL(finished()), this, SLOT(onFinished()));
+}
+
+void SunspecDetector::checkDone(Reply *di)
+{
+	if ( !di->di.productName.isEmpty() && // Model 1 is present
+			di->di.phaseCount > 0 && // Model 1xx present
+			di->di.networkId > 0)
+		di->setResult();
+	setDone(di);
 }
 
 void SunspecDetector::setDone(Reply *di)
