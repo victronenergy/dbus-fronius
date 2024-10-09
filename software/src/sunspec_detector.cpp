@@ -165,7 +165,11 @@ void SunspecDetector::onFinished()
 	}
 	case Reply::ModuleContent:
 		if (values.size() < 1) {
-			setDone(di);
+			// SMA often have all sorts of unreadable stuff in model 123, so
+			// if there is an error, but we still have at least common info
+			// and a measurement model, we call checkDone instead of setDone
+			// to at least check if we can continue.
+			checkDone(di);
 			return;
 		}
 		switch(di->currentModel) {
