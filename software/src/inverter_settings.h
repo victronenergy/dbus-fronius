@@ -61,6 +61,8 @@ signals:
 
 	void l3EnergyChanged();
 
+	void enableLimiterChanged();
+
 private:
 	VeQItem *mPhase;
 	VeQItem *mPhaseCount;

@@ -40,6 +40,8 @@ private slots:
 
 	void onLimiterInitialised(bool success);
 
+	void onEnableLimiterChanged();
+
 	void onDisconnected();
 
 	void onTimer();
