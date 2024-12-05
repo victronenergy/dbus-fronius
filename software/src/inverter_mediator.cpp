@@ -6,6 +6,7 @@
 #include "inverter_mediator.h"
 #include "sunspec_updater.h"
 #include "solaredge_limiter.h"
+#include "sma_limiter.h"
 #include "inverter_settings.h"
 #include "solar_api_updater.h"
 #include "settings.h"
@@ -189,6 +190,17 @@ void InverterMediator::startAcquisition()
 		if (mDeviceInfo.productId == VE_PROD_ID_PV_INVERTER_SOLAREDGE) {
 			qInfo() << "Using non-sunspec SolarEdge limiter";
 			limiter = new SolarEdgeLimiter(mInverter);
+		} else if (mDeviceInfo.productId == VE_PROD_ID_PV_INVERTER_SMA) {
+			switch (mDeviceInfo.immediateControlModel) {
+			case 123:
+				qInfo() << "Using SMA profile 1.1 limiter";
+				limiter = new SmaLimiter(mInverter);
+				break;
+			case 704:
+				qInfo() << "Using SMA profile 2.0 limiter";
+				limiter = new Sma2018Limiter(mInverter);
+				break;
+			}
 		} else {
 			switch (mDeviceInfo.immediateControlModel) {
 			case 123:

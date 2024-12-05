@@ -87,7 +87,8 @@ SOURCES += \
     src/sunspec_updater.cpp \
     src/solar_api_updater.cpp \
     src/data_processor.cpp \
-    src/solaredge_limiter.cpp
+    src/solaredge_limiter.cpp \
+    src/sma_limiter.cpp
 
 HEADERS += \
     src/compat.h \
@@ -119,7 +120,8 @@ HEADERS += \
     src/sunspec_updater.h \
     src/solar_api_updater.h \
     src/data_processor.h \
-    src/solaredge_limiter.h
+    src/solaredge_limiter.h \
+    src/sma_limiter.h
 
 DISTFILES += \
     ../README.md

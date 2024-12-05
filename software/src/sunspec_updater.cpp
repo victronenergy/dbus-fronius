@@ -346,7 +346,11 @@ bool SunspecUpdater::resetPowerLimit()
 {
 	if (!mLimiter)
 		return false;
+
 	ModbusReply *reply = mLimiter->resetPowerLimit();
+	if (reply == 0)
+		return false;
+
 	connect(reply, SIGNAL(finished()), this, SLOT(onWriteCompleted()));
 	return true;
 }
