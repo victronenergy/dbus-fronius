@@ -201,6 +201,7 @@ void InverterMediator::startAcquisition()
 				limiter = new Sma2018Limiter(mInverter);
 				break;
 			}
+			mInverter->setLimiterModel(mDeviceInfo.immediateControlModel);
 		} else {
 			switch (mDeviceInfo.immediateControlModel) {
 			case 123:
