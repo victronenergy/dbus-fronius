@@ -42,14 +42,9 @@ void SolarEdgeLimiter::onConnected(ModbusTcpClient *client)
 	BaseLimiter::onConnected(client);
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 
-	// If the maximum power was not obtained from model 704, or model 120,
-	// attempt to fetch it from the SolarEdge specific registers.
-	if (deviceInfo.maxPower == 0) {
-		ModbusReply *reply = client->readHoldingRegisters(deviceInfo.networkId, MaxActivePower, 2);
-		connect(reply, SIGNAL(finished()), this, SLOT(onReadMaxPowerCompleted()));
-	} else {
-		initLimiter();
-	}
+	// Always fetch maximum power from the SolarEdge specific float32 register.
+	ModbusReply *reply = client->readHoldingRegisters(deviceInfo.networkId, MaxActivePower, 2);
+	connect(reply, SIGNAL(finished()), this, SLOT(onReadMaxPowerCompleted()));
 }
 
 ModbusReply *SolarEdgeLimiter::writePowerLimit(double powerLimitPct)
