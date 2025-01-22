@@ -42,7 +42,7 @@ ModbusReply *SmaLimiter::writePowerLimit(double powerLimitPct)
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	quint16 pct = static_cast<quint16>(qRound(powerLimitPct * deviceInfo.powerLimitScale));
-	return mClient->writeSingleHoldingRegister(deviceInfo.networkId, deviceInfo.immediateControlOffset + 5, pct);
+	return mClient->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 5, QVector<quint16>() << pct);
 }
 
 ModbusReply *SmaLimiter::resetPowerLimit()
@@ -90,7 +90,7 @@ ModbusReply *Sma2018Limiter::writePowerLimit(double powerLimitPct)
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 	quint16 pct = static_cast<quint16>(qRound(powerLimitPct * deviceInfo.powerLimitScale));
-	return mClient->writeSingleHoldingRegister(deviceInfo.networkId, deviceInfo.immediateControlOffset + 15, pct);
+	return mClient->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 15, QVector<quint16>() << pct);
 }
 
 ModbusReply *Sma2018Limiter::resetPowerLimit()
