@@ -16,8 +16,11 @@ void SmaLimiter::onConnected(ModbusTcpClient *client)
 	// Check if WMaxLimPctEna is set, which we can only do if we have
 	// the required info model
 	if (deviceInfo.immediateControlOffset > 0) {
+		// The WMaxLimPctEna register is at offset 14 for model 704, 9 for
+		// model 123.
+		quint16 offset = deviceInfo.immediateControlModel==704 ? 14 : 9;
 		ModbusReply *reply = client->readHoldingRegisters(
-			deviceInfo.networkId, deviceInfo.immediateControlOffset + 9, 1);
+			deviceInfo.networkId, deviceInfo.immediateControlOffset + offset, 1);
 		connect(reply, SIGNAL(finished()), this,
 			SLOT(onReadLimitEnabledCompleted()));
 	} else {
