@@ -47,8 +47,14 @@ void DataProcessor::process(const ThreePhasesInverterData &data)
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 
 	double vi1 = data.acVoltagePhase1 * data.acCurrentPhase1;
-	double vi2 = data.acVoltagePhase2 * data.acCurrentPhase2;
-	double vi3 = data.acVoltagePhase3 * data.acCurrentPhase3;
+
+	// Some inverters only report current for L1. Since it is reasonable
+	// to assume that multiphase inverters feed all phases equally,
+	// in that case assume the current for the other phases is the same as L1.
+	// This fixes the problem for SMA inverters in North America.
+	double vi2 = data.acVoltagePhase2 * (qIsFinite(data.acCurrentPhase2) ? data.acCurrentPhase2 : data.acCurrentPhase1);
+	double vi3 = data.acVoltagePhase3 * (qIsFinite(data.acCurrentPhase3) ? data.acCurrentPhase3 : data.acCurrentPhase1);
+
 	double totalEnergy = mInverter->meanPowerInfo()->totalEnergy();
 	double energyDelta = totalEnergy - mPreviousTotalEnergy;
 	if (energyDelta < 0)
