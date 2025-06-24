@@ -164,10 +164,6 @@ public:
 
     QRingBuffer rba;
 
-#ifndef QT_NO_NETWORKPROXY
-    QNetworkProxy proxy;
-    QHttpAuthenticator proxyAuthenticator;
-#endif
     QHttpAuthenticator authenticator;
     bool repost;
     bool hasFinishedWithError;
@@ -393,44 +389,6 @@ void QHttpSetUserRequest::start(QHttp *http)
     http->d->authenticator.setPassword(pass);
     http->d->finishedWithSuccess();
 }
-
-#ifndef QT_NO_NETWORKPROXY
-
-/****************************************************
- *
- * QHttpSetProxyRequest
- *
- ****************************************************/
-
-class QHttpSetProxyRequest : public QHttpRequest
-{
-public:
-    inline QHttpSetProxyRequest(const QNetworkProxy &proxy)
-    {
-        this->proxy = proxy;
-    }
-
-    inline void start(QHttp *http) override
-    {
-        http->d->proxy = proxy;
-        QString user = proxy.user();
-        if (!user.isEmpty())
-            http->d->proxyAuthenticator.setUser(user);
-        QString password = proxy.password();
-        if (!password.isEmpty())
-            http->d->proxyAuthenticator.setPassword(password);
-        http->d->finishedWithSuccess();
-    }
-
-    inline QIODevice *sourceDevice() override
-    { return 0; }
-    inline QIODevice *destinationDevice() override
-    { return 0; }
-private:
-    QNetworkProxy proxy;
-};
-
-#endif // QT_NO_NETWORKPROXY
 
 /****************************************************
  *
@@ -1746,26 +1704,6 @@ QHttp::~QHttp()
     \sa requestFinished() error() errorString()
 */
 
-#ifndef QT_NO_NETWORKPROXY
-
-/*!
-    \fn void QHttp::proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator)
-    \since 4.3
-
-    This signal can be emitted when a \a proxy that requires
-    authentication is used. The \a authenticator object can then be
-    filled in with the required details to allow authentication and
-    continue the connection.
-
-    \note It is not possible to use a QueuedConnection to connect to
-    this signal, as the connection will fail if the authenticator has
-    not been filled in with new information when the signal returns.
-
-    \sa QAuthenticator, QNetworkProxy
-*/
-
-#endif
-
 /*!
     \fn void QHttp::authenticationRequired(const QString &hostname, quint16 port, QAuthenticator *authenticator)
     \since 4.3
@@ -2078,55 +2016,6 @@ int QHttp::setUser(const QString &userName, const QString &password)
     return d->addRequest(new QHttpSetUserRequest(userName, password));
 }
 
-#ifndef QT_NO_NETWORKPROXY
-
-/*!
-    Enables HTTP proxy support, using the proxy server \a host on port \a
-    port. \a username and \a password can be provided if the proxy server
-    requires authentication.
-
-    Example:
-
-    \snippet doc/src/snippets/code/src_network_access_qhttp.cpp 7
-
-    QHttp supports non-transparent web proxy servers only, such as the Squid
-    Web proxy cache server (from \l http://www.squid.org/). For transparent
-    proxying, such as SOCKS5, use QNetworkProxy instead.
-
-    \note setProxy() has to be called before setHost() for it to take effect.
-    If setProxy() is called after setHost(), then it will not apply until after 
-    setHost() is called again.
-
-    \sa QFtp::setProxy()
-*/
-int QHttp::setProxy(const QString &host, int port,
-                    const QString &username, const QString &password)
-{
-    QNetworkProxy proxy(QNetworkProxy::HttpProxy, host, port, username, password);
-    return d->addRequest(new QHttpSetProxyRequest(proxy));
-}
-
-/*!
-    \overload
-
-    Enables HTTP proxy support using the proxy settings from \a
-    proxy. If \a proxy is a transparent proxy, QHttp will call
-    QAbstractSocket::setProxy() on the underlying socket. If the type
-    is QNetworkProxy::HttpCachingProxy, QHttp will behave like the
-    previous function.
-
-    \note for compatibility with Qt 4.3, if the proxy type is
-    QNetworkProxy::HttpProxy and the request type is unencrypted (that
-    is, ConnectionModeHttp), QHttp will treat the proxy as a caching
-    proxy.
-*/
-int QHttp::setProxy(const QNetworkProxy &proxy)
-{
-    return d->addRequest(new QHttpSetProxyRequest(proxy));
-}
-
-#endif
-
 /*!
     Sends a get request for \a path to the server set by setHost() or
     as specified in the constructor.
@@ -2372,61 +2261,6 @@ void QHttpPrivate::_q_slotSendRequest()
 
     QString connectionHost = hostName;
     int connectionPort = port;
-    bool sslInUse = false;
-
-#ifndef QT_NO_NETWORKPROXY
-    bool cachingProxyInUse = false;
-    bool transparentProxyInUse = false;
-    if (proxy.type() == QNetworkProxy::DefaultProxy)
-        proxy = QNetworkProxy::applicationProxy();
-
-    if (proxy.type() == QNetworkProxy::HttpCachingProxy) {
-        if (proxy.hostName().isEmpty())
-            proxy.setType(QNetworkProxy::NoProxy);
-        else
-            cachingProxyInUse = true;
-    } else if (proxy.type() == QNetworkProxy::HttpProxy) {
-        // Compatibility behaviour: HttpProxy can be used to mean both
-        // transparent and caching proxy
-        if (proxy.hostName().isEmpty()) {
-            proxy.setType(QNetworkProxy::NoProxy);
-        } else if (sslInUse) {
-            // Disallow use of caching proxy with HTTPS; instead fall back to
-            // transparent HTTP CONNECT proxying.
-            transparentProxyInUse = true;
-        } else {
-            proxy.setType(QNetworkProxy::HttpCachingProxy);
-            cachingProxyInUse = true;
-        }
-    }
-
-    // Proxy support. Insert the Proxy-Authorization item into the
-    // header before it's sent off to the proxy.
-    if (cachingProxyInUse) {
-        QUrl proxyUrl;
-        proxyUrl.setScheme(QLatin1String("http"));
-        proxyUrl.setHost(hostName);
-        if (port && port != 80)
-            proxyUrl.setPort(port);
-        QString request = QString::fromLatin1(proxyUrl.resolved(QUrl::fromEncoded(header.path().toLatin1())).toEncoded());
-
-        header.setRequest(header.method(), request, header.majorVersion(), header.minorVersion());
-        header.setValue(QLatin1String("Proxy-Connection"), QLatin1String("keep-alive"));
-
-        QHttpAuthenticatorPrivate *auth = QHttpAuthenticatorPrivate::getPrivate(proxyAuthenticator);
-        if (auth && auth->method != QHttpAuthenticatorPrivate::None) {
-            QByteArray response = auth->calculateResponse(header.method().toLatin1(), header.path().toLatin1());
-            header.setValue(QLatin1String("Proxy-Authorization"), QString::fromLatin1(response));
-        }
-
-        connectionHost = proxy.hostName();
-        connectionPort = proxy.port();
-    }
-
-    if (transparentProxyInUse || sslInUse) {
-        socket->setProxy(proxy);
-    }
-#endif
 
     // Username support. Insert the user and password into the query
     // string.
@@ -2588,11 +2422,6 @@ void QHttpPrivate::_q_slotError(QAbstractSocket::SocketError err)
                 return;
             }
             break;
-#ifndef QT_NO_NETWORKPROXY
-        case QTcpSocket::ProxyAuthenticationRequiredError:
-            finishedWithError(socket->errorString(), QHttp::ProxyAuthenticationRequiredError);
-            break;
-#endif
         default:
             finishedWithError(QLatin1String(QT_TRANSLATE_NOOP("QHttp", "HTTP request failed")), QHttp::UnknownError);
             break;
@@ -2683,10 +2512,6 @@ void QHttpPrivate::_q_slotReadyRead()
         int statusCode = response.statusCode();
         if (statusCode == 401 || statusCode == 407) { // (Proxy) Authentication required
             QHttpAuthenticator *auth =
-#ifndef QT_NO_NETWORKPROXY
-                statusCode == 407
-                ? &proxyAuthenticator :
-#endif
                 &authenticator;
             if (auth->isNull())
                 auth->detach();
@@ -2694,18 +2519,6 @@ void QHttpPrivate::_q_slotReadyRead()
             priv->parseHttpResponse(response, (statusCode == 407));
             if (priv->phase == QHttpAuthenticatorPrivate::Done) {
                 socket->blockSignals(true);
-#ifndef QT_NO_NETWORKPROXY
-                if (statusCode == 407) {
-                    //need to emit a QAuthenticator to maintain source compatibility
-                    QAuthenticator qauthClean = auth->toQAuthenticator();
-                    QAuthenticator qauthToEmit = qauthClean;
-                    emit q->proxyAuthenticationRequired(proxy, &qauthToEmit);
-                    if (qauthClean != qauthToEmit) {
-                        //user changed something, copy back (which will reset our state)
-                        *auth = qauthToEmit;
-                    }
-                } else
-#endif
                 {
                     //need to emit a QAuthenticator to maintain source compatibility
                     QAuthenticator qauthClean = auth->toQAuthenticator();
@@ -2726,12 +2539,6 @@ void QHttpPrivate::_q_slotReadyRead()
 
             // priv->phase will get reset to QHttpAuthenticatorPrivate::Start if the authenticator got modified in the signal above.
             if (priv->phase == QHttpAuthenticatorPrivate::Done) {
-#ifndef QT_NO_NETWORKPROXY
-                if (statusCode == 407)
-                    finishedWithError(QLatin1String(QT_TRANSLATE_NOOP("QHttp", "Proxy authentication required")),
-                                      QHttp::ProxyAuthenticationRequiredError);
-                else
-#endif
                     finishedWithError(QLatin1String(QT_TRANSLATE_NOOP("QHttp", "Authentication required")),
                                       QHttp::AuthenticationRequiredError);
                 closeConn();
@@ -3050,10 +2857,6 @@ void QHttpPrivate::setSock(QTcpSocket *sock)
 	#endif
     QObject::connect(socket, SIGNAL(bytesWritten(qint64)),
                      q, SLOT(_q_slotBytesWritten(qint64)));
-#ifndef QT_NO_NETWORKPROXY
-    QObject::connect(socket, SIGNAL(proxyAuthenticationRequired(QNetworkProxy,QAuthenticator*)),
-                     q, SIGNAL(proxyAuthenticationRequired(QNetworkProxy,QAuthenticator*)));
-#endif
 }
 
 /*!
