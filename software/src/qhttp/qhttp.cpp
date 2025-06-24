@@ -46,7 +46,6 @@
 
 #ifndef QT_NO_HTTP
 # include "qtcpsocket.h"
-# include "qsslsocket.h"
 # include "qtextstream.h"
 # include "qmap.h"
 # include "qlist.h"
@@ -120,9 +119,6 @@ public:
     void _q_slotError(QAbstractSocket::SocketError);
     void _q_slotClosed();
     void _q_slotBytesWritten(qint64 numBytes);
-#ifndef QT_NO_OPENSSL
-    void _q_slotEncryptedBytesWritten(qint64 numBytes);
-#endif
     void _q_slotDoFinished();
     void _q_slotSendRequest();
     void _q_continuePost();
@@ -363,16 +359,6 @@ void QHttpSetHostRequest::start(QHttp *http)
     http->d->hostName = hostName;
     http->d->port = port;
     http->d->mode = mode;
-
-#ifdef QT_NO_OPENSSL
-    if (mode == QHttp::ConnectionModeHttps) {
-        // SSL requested but no SSL support compiled in
-        http->d->finishedWithError(QLatin1String(QT_TRANSLATE_NOOP("QHttp", "HTTPS connection requested but SSL support not compiled in")),
-                          QHttp::UnknownError);
-        return;
-    }
-#endif
-
     http->d->finishedWithSuccess();
 }
 
@@ -2043,10 +2029,6 @@ int QHttp::setHost(const QString &hostName, quint16 port)
 */
 int QHttp::setHost(const QString &hostName, ConnectionMode mode, quint16 port)
 {
-#ifdef QT_NO_OPENSSL
-    if (mode == ConnectionModeHttps)
-        qWarning("QHttp::setHost: HTTPS connection requested but SSL support not compiled in");
-#endif
     if (port == 0)
         port = (mode == ConnectionModeHttp) ? 80 : 443;
     return d->addRequest(new QHttpSetHostRequest(hostName, port, mode));
@@ -2392,12 +2374,6 @@ void QHttpPrivate::_q_slotSendRequest()
     int connectionPort = port;
     bool sslInUse = false;
 
-#ifndef QT_NO_OPENSSL
-    QSslSocket *sslSocket = qobject_cast<QSslSocket *>(socket);
-    if (mode == QHttp::ConnectionModeHttps || (sslSocket && sslSocket->isEncrypted()))
-        sslInUse = true;
-#endif
-
 #ifndef QT_NO_NETWORKPROXY
     bool cachingProxyInUse = false;
     bool transparentProxyInUse = false;
@@ -2463,24 +2439,13 @@ void QHttpPrivate::_q_slotSendRequest()
     // Do we need to setup a new connection or can we reuse an
     // existing one?
     if (socket->peerName() != connectionHost || socket->peerPort() != connectionPort
-        || socket->state() != QTcpSocket::ConnectedState
-#ifndef QT_NO_OPENSSL
-        || (sslSocket && sslSocket->isEncrypted() != (mode == QHttp::ConnectionModeHttps))
-#endif
-        ) {
+        || socket->state() != QTcpSocket::ConnectedState) {
         socket->blockSignals(true);
         socket->abort();
         socket->blockSignals(false);
 
         setState(QHttp::Connecting);
-#ifndef QT_NO_OPENSSL
-        if (sslSocket && mode == QHttp::ConnectionModeHttps) {
-            sslSocket->connectToHostEncrypted(hostName, port);
-        } else
-#endif
-        {
-            socket->connectToHost(connectionHost, connectionPort);
-        }
+        socket->connectToHost(connectionHost, connectionPort);
     } else {
         _q_slotConnected();
     }
@@ -2637,14 +2602,6 @@ void QHttpPrivate::_q_slotError(QAbstractSocket::SocketError err)
     closeConn();
 }
 
-#ifndef QT_NO_OPENSSL
-void QHttpPrivate::_q_slotEncryptedBytesWritten(qint64 written)
-{
-    Q_UNUSED(written);
-    postMoreData();
-}
-#endif
-
 void QHttpPrivate::_q_slotBytesWritten(qint64 written)
 {
     Q_Q(QHttp);
@@ -2664,13 +2621,7 @@ void QHttpPrivate::postMoreData()
 
     // the following is backported code from Qt 4.6 QNetworkAccessManager.
     // We also have to check the encryptedBytesToWrite() if it is an SSL socket.
-#ifndef QT_NO_OPENSSL
-    QSslSocket *sslSocket = qobject_cast<QSslSocket*>(socket);
-    // if it is really an ssl socket, check more than just bytesToWrite()
-    if ((socket->bytesToWrite() + (sslSocket ? sslSocket->encryptedBytesToWrite() : 0)) == 0) {
-#else
     if (socket->bytesToWrite() == 0) {
-#endif
         int max = qMin<qint64>(4096, postDevice->size() - postDevice->pos());
         QByteArray arr;
         arr.resize(max);
@@ -3085,12 +3036,7 @@ void QHttpPrivate::setSock(QTcpSocket *sock)
     deleteSocket = (sock == 0);
     socket = sock;
     if (!socket) {
-#ifndef QT_NO_OPENSSL
-        if (QSslSocket::supportsSsl())
-            socket = new QSslSocket();
-        else
-#endif
-            socket = new QTcpSocket();
+        socket = new QTcpSocket();
     }
 
     // connect all signals
@@ -3108,15 +3054,6 @@ void QHttpPrivate::setSock(QTcpSocket *sock)
     QObject::connect(socket, SIGNAL(proxyAuthenticationRequired(QNetworkProxy,QAuthenticator*)),
                      q, SIGNAL(proxyAuthenticationRequired(QNetworkProxy,QAuthenticator*)));
 #endif
-
-#ifndef QT_NO_OPENSSL
-    if (qobject_cast<QSslSocket *>(socket)) {
-        QObject::connect(socket, SIGNAL(sslErrors(QList<QSslError>)),
-                         q, SIGNAL(sslErrors(QList<QSslError>)));
-        QObject::connect(socket, SIGNAL(encryptedBytesWritten(qint64)),
-                         q, SLOT(_q_slotEncryptedBytesWritten(qint64)));
-    }
-#endif
 }
 
 /*!
@@ -3128,15 +3065,6 @@ void QHttpPrivate::setSock(QTcpSocket *sock)
 
     \sa QSslSocket QSslSocket::sslErrors()
 */
-#ifndef QT_NO_OPENSSL
-void QHttp::ignoreSslErrors()
-{
-    QSslSocket *sslSocket = qobject_cast<QSslSocket *>(d->socket);
-    if (sslSocket)
-        sslSocket->ignoreSslErrors();
-}
-#endif
-
 QT_END_NAMESPACE
 
 #include "moc_qhttp.cpp"

@@ -242,10 +242,6 @@ public:
 public Q_SLOTS:
     void abort();
 
-#ifndef QT_NO_OPENSSL
-    void ignoreSslErrors();
-#endif
-
 Q_SIGNALS:
     void stateChanged(int);
     void responseHeaderReceived(const QHttpResponseHeader &resp);
@@ -264,10 +260,6 @@ Q_SIGNALS:
 #endif
     void authenticationRequired(const QString &hostname, quint16 port, QAuthenticator *);
 
-#ifndef QT_NO_OPENSSL
-    void sslErrors(const QList<QSslError> &errors);
-#endif
-
 private:
     Q_DISABLE_COPY(QHttp)
     QScopedPointer<QHttpPrivate> d;
@@ -278,9 +270,6 @@ private:
     Q_PRIVATE_SLOT(d, void _q_slotError(QAbstractSocket::SocketError))
     Q_PRIVATE_SLOT(d, void _q_slotClosed())
     Q_PRIVATE_SLOT(d, void _q_slotBytesWritten(qint64 numBytes))
-#ifndef QT_NO_OPENSSL
-    Q_PRIVATE_SLOT(d, void _q_slotEncryptedBytesWritten(qint64 numBytes))
-#endif
     Q_PRIVATE_SLOT(d, void _q_slotDoFinished())
     Q_PRIVATE_SLOT(d, void _q_slotSendRequest())
     Q_PRIVATE_SLOT(d, void _q_continuePost())
