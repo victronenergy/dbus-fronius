@@ -56,8 +56,6 @@
 # include "qcoreevent.h"
 # include "qurl.h"
 # include "qnetworkproxy.h"
-# include "qauthenticator.h"
-# include "qhttpauthenticator_p.h"
 # include "qdebug.h"
 # include "qtimer.h"
 #endif
@@ -164,7 +162,6 @@ public:
 
     QRingBuffer rba;
 
-    QHttpAuthenticator authenticator;
     bool repost;
     bool hasFinishedWithError;
     bool pendingPost;
@@ -355,38 +352,6 @@ void QHttpSetHostRequest::start(QHttp *http)
     http->d->hostName = hostName;
     http->d->port = port;
     http->d->mode = mode;
-    http->d->finishedWithSuccess();
-}
-
-/****************************************************
- *
- * QHttpSetUserRequest
- *
- ****************************************************/
-
-class QHttpSetUserRequest : public QHttpRequest
-{
-public:
-    QHttpSetUserRequest(const QString &userName, const QString &password) :
-        user(userName), pass(password)
-    { }
-
-    void start(QHttp *) override;
-
-    QIODevice *sourceDevice() override
-    { return 0; }
-    QIODevice *destinationDevice() override
-    { return 0; }
-
-private:
-    QString user;
-    QString pass;
-};
-
-void QHttpSetUserRequest::start(QHttp *http)
-{
-    http->d->authenticator.setUser(user);
-    http->d->authenticator.setPassword(pass);
     http->d->finishedWithSuccess();
 }
 
@@ -1999,24 +1964,6 @@ int QHttp::setSocket(QTcpSocket *socket)
 }
 
 /*!
-    This function sets the user name \a userName and password \a
-    password for web pages that require authentication.
-
-    The function does not block; instead, it returns immediately. The request
-    is scheduled, and its execution is performed asynchronously. The
-    function returns a unique identifier which is passed by
-    requestStarted() and requestFinished().
-
-    When the request is started the requestStarted() signal is
-    emitted. When it is finished the requestFinished() signal is
-    emitted.
-*/
-int QHttp::setUser(const QString &userName, const QString &password)
-{
-    return d->addRequest(new QHttpSetUserRequest(userName, password));
-}
-
-/*!
     Sends a get request for \a path to the server set by setHost() or
     as specified in the constructor.
 
@@ -2262,14 +2209,6 @@ void QHttpPrivate::_q_slotSendRequest()
     QString connectionHost = hostName;
     int connectionPort = port;
 
-    // Username support. Insert the user and password into the query
-    // string.
-    QHttpAuthenticatorPrivate *auth = QHttpAuthenticatorPrivate::getPrivate(authenticator);
-    if (auth && auth->method != QHttpAuthenticatorPrivate::None) {
-        QByteArray response = auth->calculateResponse(header.method().toLatin1(), header.path().toLatin1());
-        header.setValue(QLatin1String("Authorization"), QString::fromLatin1(response));
-    }
-
     // Do we need to setup a new connection or can we reuse an
     // existing one?
     if (socket->peerName() != connectionHost || socket->peerPort() != connectionPort
@@ -2509,62 +2448,15 @@ void QHttpPrivate::_q_slotReadyRead()
             return;
         }
 
-        int statusCode = response.statusCode();
-        if (statusCode == 401 || statusCode == 407) { // (Proxy) Authentication required
-            QHttpAuthenticator *auth =
-                &authenticator;
-            if (auth->isNull())
-                auth->detach();
-            QHttpAuthenticatorPrivate *priv = QHttpAuthenticatorPrivate::getPrivate(*auth);
-            priv->parseHttpResponse(response, (statusCode == 407));
-            if (priv->phase == QHttpAuthenticatorPrivate::Done) {
-                socket->blockSignals(true);
-                {
-                    //need to emit a QAuthenticator to maintain source compatibility
-                    QAuthenticator qauthClean = auth->toQAuthenticator();
-                    QAuthenticator qauthToEmit = qauthClean;
-                    emit q->authenticationRequired(hostName, port, &qauthToEmit);
-                    if (qauthClean != qauthToEmit) {
-                        //user changed something, copy back (which will reset our state)
-                        *auth = qauthToEmit;
-                    }
-                }
-                socket->blockSignals(false);
-            } else if (priv->phase == QHttpAuthenticatorPrivate::Invalid) {
-                finishedWithError(QLatin1String(QT_TRANSLATE_NOOP("QHttp", "Unknown authentication method")),
-                        QHttp::AuthenticationRequiredError);
-                closeConn();
-                return;
-            }
-
-            // priv->phase will get reset to QHttpAuthenticatorPrivate::Start if the authenticator got modified in the signal above.
-            if (priv->phase == QHttpAuthenticatorPrivate::Done) {
-                    finishedWithError(QLatin1String(QT_TRANSLATE_NOOP("QHttp", "Authentication required")),
-                                      QHttp::AuthenticationRequiredError);
-                closeConn();
-                return;
-            } else {
-                // close the connection if it isn't already and reconnect using the chosen authentication method
-                bool willClose = (response.value(QLatin1String("proxy-connection")).toLower() == QLatin1String("close"))
-                                 || (response.value(QLatin1String("connection")).toLower() == QLatin1String("close"));
-                if (willClose) {
-                    if (socket) {
-                        setState(QHttp::Closing);
-                        socket->blockSignals(true);
-                        socket->close();
-                        socket->blockSignals(false);
-                        socket->readAll();
-                    }
-                    _q_slotSendRequest();
-                    return;
-                } else {
-                    repost = true;
-                }
-            }
-        } else {
-            buffer.clear();
+		// No support for auth in this version
+        if (response.statusCode() == 401 || response.statusCode() == 407) { // (Proxy) Authentication required
+			finishedWithError(QLatin1String(QT_TRANSLATE_NOOP("QHttp", "Authentication required")),
+							  QHttp::AuthenticationRequiredError);
+            closeConn();
+            return;
         }
 
+		buffer.clear();
         if (response.statusCode() == 100 && pendingPost) {
             // if we have pending POST, start sending data otherwise ignore
             post100ContinueTimer.stop();

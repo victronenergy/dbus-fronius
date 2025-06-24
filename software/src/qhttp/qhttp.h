@@ -203,7 +203,6 @@ public:
     int setHost(const QString &hostname, ConnectionMode mode, quint16 port = 0);
 
     int setSocket(QTcpSocket *socket);
-    int setUser(const QString &username, const QString &password = QString());
 
     int get(const QString &path, QIODevice *to=0);
     int post(const QString &path, QIODevice *data, QIODevice *to=0 );
@@ -266,7 +265,6 @@ private:
     friend class QHttpNormalRequest;
     friend class QHttpSetHostRequest;
     friend class QHttpSetSocketRequest;
-    friend class QHttpSetUserRequest;
     friend class QHttpSetProxyRequest;
     friend class QHttpCloseRequest;
     friend class QHttpPGHRequest;
