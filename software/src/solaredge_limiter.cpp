@@ -69,7 +69,9 @@ void SolarEdgeLimiter::onReadMaxPowerCompleted()
 {
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
-	if (!reply->error()) {
+	if (reply->error()) {
+		emit initialised(false);
+	} else {
 		QVector <quint16> words = reply->registers();
 		double value = static_cast<double>(*reinterpret_cast<float *>(words.data()));
 		if (value > 0) {
