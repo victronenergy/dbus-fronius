@@ -130,6 +130,8 @@ void FroniusSolarApi::processConverterInfo(const QString &networkError)
 {
 	InverterListData data;
 	QVariantMap map;
+	QMap<int, int> unprogrammed;
+
 	processReply(networkError, data, map);
 	QVariantMap devices = getByPath(map, "Body/Data").toMap();
 	for (QVariantMap::Iterator it = devices.begin();
@@ -140,6 +142,23 @@ void FroniusSolarApi::processConverterInfo(const QString &networkError)
 		QVariantMap di = it.value().toMap();
 		ii.deviceType = di["DT"].toInt();
 		ii.uniqueId = di["UniqueID"].toString();
+
+		// Workaround for Fronius inverters that have unprogrammed UniqueIDs,
+		// which show up as 0xFFFFFF. If the uniqueId is 16777215, and this
+		// is not the first one, append the key to the uniqueId.
+		// QMap objects always iterate in key order, so this will always
+		// be parsed in the same order. In the unlikely event that there are 10
+		// inverters on a DataManager, then 10 may sort before 2, but we don't
+		// care as long as it is consistent each time. Settings for the
+		// inverter will be stored under this key, so consistency is important.
+		// The uniqueId is later combined with the deviceType, so this only
+		// needs to be unique per DT.
+		if (ii.uniqueId == "16777215") {
+			if (unprogrammed.value(ii.deviceType) > 0)
+				ii.uniqueId.append("_").append(it.key());
+			unprogrammed[ii.deviceType]++;
+		}
+
 		data.inverters.push_back(ii);
 	}
 	emit converterInfoFound(data);
