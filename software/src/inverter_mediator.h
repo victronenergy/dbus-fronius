@@ -43,6 +43,8 @@ private slots:
 
 	void onInverterCustomNameChanged();
 
+	void onInverterPositionChanged();
+
 private:
 	void startAcquisition();
 

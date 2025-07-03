@@ -81,6 +81,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 		qInfo() << "Inverter reactivated:" << mInverter->location();
 		startAcquisition();
 		onSettingsCustomNameChanged();
+		onSettingsPositionChanged();
 	}
 	return true;
 }
@@ -116,6 +117,7 @@ void InverterMediator::onSettingsInitialized()
 		qInfo() << "New inverter:" << mInverter->location();
 		startAcquisition();
 		onSettingsCustomNameChanged();
+		onSettingsPositionChanged();
 	}
 }
 
@@ -175,6 +177,13 @@ void InverterMediator::onInverterCustomNameChanged()
 	if (mInverter == 0)
 		return;
 	mInverterSettings->setCustomName(mInverter->customName());
+}
+
+void InverterMediator::onInverterPositionChanged()
+{
+	if (mInverter == 0)
+		return;
+	mInverterSettings->setPosition(mInverter->position());
 }
 
 void InverterMediator::startAcquisition()
@@ -255,7 +264,6 @@ Inverter *InverterMediator::createInverter()
 		inverter = new Inverter(root, mDeviceInfo, deviceInstance, this);
 	}
 	connect(inverter, SIGNAL(customNameChanged()), this, SLOT(onInverterCustomNameChanged()));
-	onSettingsPositionChanged();
-	onSettingsCustomNameChanged();
+	connect(inverter, SIGNAL(positionChanged()), this, SLOT(onInverterPositionChanged()));
 	return inverter;
 }

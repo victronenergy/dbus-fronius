@@ -40,6 +40,13 @@ InverterPosition InverterSettings::position() const
 	return static_cast<InverterPosition>(mPosition->getValue().toInt());
 }
 
+void InverterSettings::setPosition(InverterPosition p)
+{
+	if (position() == p)
+		return;
+	mPosition->setValue(static_cast<int>(p));
+}
+
 QString InverterSettings::customName() const
 {
 	return mCustomName->getValue().toString();

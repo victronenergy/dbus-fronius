@@ -18,6 +18,8 @@ public:
 
 	InverterPosition position() const;
 
+	void setPosition(InverterPosition p);
+
 	QString customName() const;
 
 	void setCustomName(const QString &n);

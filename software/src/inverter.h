@@ -85,6 +85,8 @@ public:
 signals:
 	void customNameChanged();
 
+	void positionChanged();
+
 	void hostNameChanged();
 
 	void portChanged();

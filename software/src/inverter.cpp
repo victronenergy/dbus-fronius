@@ -160,6 +160,8 @@ InverterPosition Inverter::position() const
 
 void Inverter::setPosition(InverterPosition p)
 {
+	if (mPosition->getValue().isValid() && position() == p)
+		return;
 	QString text;
 	switch (p) {
 	case Input1:
@@ -176,6 +178,7 @@ void Inverter::setPosition(InverterPosition p)
 		break;
 	}
 	produceValue(mPosition, static_cast<int>(p), text);
+	emit positionChanged();
 }
 
 BasicPowerInfo *Inverter::meanPowerInfo()
@@ -238,6 +241,10 @@ int Inverter::handleSetValue(VeQItem *item, const QVariant &variant)
 	}
 	if (item == mCustomName) {
 		setCustomName(variant.toString());
+		return 0;
+	}
+	if (item == mPosition) {
+		setPosition(static_cast<InverterPosition>(variant.toInt()));
 		return 0;
 	}
 	return VeService::handleSetValue(item, variant);
