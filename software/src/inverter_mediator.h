@@ -37,7 +37,7 @@ private slots:
 
 	void onInverterModelChanged();
 
-	void onPositionChanged();
+	void onSettingsPositionChanged();
 
 	void onSettingsCustomNameChanged();
 

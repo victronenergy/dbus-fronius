@@ -89,7 +89,7 @@ void InverterMediator::onSettingsInitialized()
 {
 	// Connect the signals now that the settings are up
 	connect(mInverterSettings, SIGNAL(isActiveChanged()), this, SLOT(onIsActivatedChanged()));
-	connect(mInverterSettings, SIGNAL(positionChanged()), this, SLOT(onPositionChanged()));
+	connect(mInverterSettings, SIGNAL(positionChanged()), this, SLOT(onSettingsPositionChanged()));
 	connect(mInverterSettings, SIGNAL(customNameChanged()), this, SLOT(onSettingsCustomNameChanged()));
 
 	if (!mInverterSettings->isActive()) {
@@ -156,7 +156,7 @@ void InverterMediator::onInverterModelChanged()
 	mInverter = 0;
 }
 
-void InverterMediator::onPositionChanged()
+void InverterMediator::onSettingsPositionChanged()
 {
 	if (mInverter == 0)
 		return;
@@ -255,7 +255,7 @@ Inverter *InverterMediator::createInverter()
 		inverter = new Inverter(root, mDeviceInfo, deviceInstance, this);
 	}
 	connect(inverter, SIGNAL(customNameChanged()), this, SLOT(onInverterCustomNameChanged()));
-	onPositionChanged();
+	onSettingsPositionChanged();
 	onSettingsCustomNameChanged();
 	return inverter;
 }
