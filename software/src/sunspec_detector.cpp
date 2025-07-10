@@ -104,6 +104,8 @@ void SunspecDetector::onFinished()
 			// to finish the detection. If we already have model 1 and a
 			// measurement model this will succeed.
 			if (di->di.productId != 0) {
+                if (di->di.powerLimitScale==0)
+                    di->di.powerLimitScale=100.0f; // Set Scale to 100.0 if not set for Solaredge.
 				checkDone(di);
 				return;
 			}
