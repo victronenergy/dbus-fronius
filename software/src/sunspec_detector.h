@@ -2,6 +2,7 @@
 #define SUNSPEC_DETECTOR_H
 
 #include <QAbstractSocket>
+#include <QHash>
 #include "abstract_detector.h"
 #include "defines.h"
 
