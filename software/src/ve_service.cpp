@@ -1,6 +1,5 @@
 #include <qnumeric.h>
 #include "ve_service.h"
-#include "logging.h"
 
 VeService::VeService(VeQItem *root, QObject *parent):
 	QObject(parent),

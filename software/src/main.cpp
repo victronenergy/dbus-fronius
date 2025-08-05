@@ -1,12 +1,13 @@
 #include <QCoreApplication>
 #include <QStringList>
+#include <QLoggingCategory>
+#include <QtLogging>
 #include <unistd.h>
 #include <veutil/qt/ve_qitem.hpp>
 #include <veutil/qt/ve_qitems_dbus.hpp>
 #include <veutil/qt/ve_qitem_exported_dbus_services.hpp>
 #include "dbus_fronius.h"
 #include "ve_service.h"
-#include "logging.h"
 
 void initDBus()
 {
@@ -68,7 +69,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	initLogging(debug);
+	QLoggingCategory::defaultCategory()->setEnabled(QtDebugMsg, debug);
+	qSetMessagePattern("%{type} %{message}");
 
 	VeQItemDbusProducer producer(VeQItems::getRoot(), "sub", true, false);
 	producer.setAutoCreateItems(false);

@@ -10,7 +10,6 @@
 #include "modbus_reply.h"
 #include "power_info.h"
 #include "sunspec_tools.h"
-#include "logging.h"
 
 // The PV inverter will reset the power limit to maximum after this interval. The reset will cause
 // the power of the inverter to increase (or stay at its current value), so a large value for the

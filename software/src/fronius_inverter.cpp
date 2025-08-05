@@ -1,4 +1,3 @@
-#include "logging.h"
 #include "ve_service.h"
 #include "fronius_inverter.h"
 

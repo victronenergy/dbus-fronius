@@ -50,16 +50,12 @@ include(ext/veutil/veutil.pri)
 equals(QT_MAJOR_VERSION, 5): include(src/qhttp/qhttp.pri)
 equals(QT_MAJOR_VERSION, 6): include(src/qhttp/qhttp.pri)
 
-# QT4 needs external json library
-equals(QT_MAJOR_VERSION, 4): include(src/json/json.pri)
-
 INCLUDEPATH += \
     ext/qslog \
     src \
     src/modbus_tcp_client
 
 SOURCES += \
-    src/logging.cpp \
     src/main.cpp \
     src/froniussolar_api.cpp \
     src/inverter.cpp \
@@ -91,8 +87,6 @@ SOURCES += \
     src/sma_limiter.cpp
 
 HEADERS += \
-    src/compat.h \
-    src/logging.h \
     src/froniussolar_api.h \
     src/inverter.h \
     src/fronius_inverter.h \

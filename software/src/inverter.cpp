@@ -4,7 +4,6 @@
 #include "fronius_device_info.h"
 #include "inverter.h"
 #include "power_info.h"
-#include "logging.h"
 
 Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstance,
 				   QObject *parent) :

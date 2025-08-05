@@ -1,7 +1,6 @@
 #include "defines.h"
 #include "modbus_tcp_client.h"
 #include "inverter.h"
-#include "logging.h"
 #include "solaredge_limiter.h"
 
 // Extended classes relating to SolarEdge specific updating

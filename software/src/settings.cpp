@@ -1,21 +1,8 @@
 #include <Qt>
+#include <QRegularExpression>
 #include <veutil/qt/ve_qitem.hpp>
 #include "defines.h"
 #include "settings.h"
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#include <QRegularExpression>
-#else
-#include <QRegExp>
-#define QRegularExpression QRegExp
-#endif
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-#define SkipEmptyParts Qt::SkipEmptyParts
-#else
-#define SkipEmptyParts QString::SkipEmptyParts
-#endif
-
 
 Settings::Settings(VeQItem *root, QObject *parent) :
 	VeQItemConsumer(root, parent),
@@ -85,7 +72,7 @@ QString Settings::createInverterId(const QString &deviceSerial)
 
 QList<QHostAddress> Settings::toAdressList(const QString &s) const
 {
-	QStringList addresses = s.split(',', SkipEmptyParts);
+	QStringList addresses = s.split(',', Qt::SkipEmptyParts);
 	QList<QHostAddress> result;
 	foreach (QString address, addresses)
 		result.append(QHostAddress(address));

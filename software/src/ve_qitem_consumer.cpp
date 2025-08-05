@@ -2,29 +2,12 @@
 #include <QDBusMessage>
 #include <QDBusVariant>
 #include <QDBusArgument>
+#include <QMetaType>
 #include <veutil/qt/ve_qitems_dbus.hpp>
 #endif // QT_DBUS_LIB
 #include <qnumeric.h>
 #include <veutil/qt/ve_qitem.hpp>
 #include "ve_qitem_consumer.h"
-#include "logging.h"
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#include <QMetaType>
-
-#define META_INT QMetaType::Int
-#define META_DOUBLE QMetaType::Double
-#define META_STRING QMetaType::QString
-#define TYPE_ID(x) x.typeId()
-
-#else
-
-#define META_INT QVariant::Int
-#define META_DOUBLE QVariant::Double
-#define META_STRING QVariant::String
-#define TYPE_ID(x) x.type()
-
-#endif
 
 VeQItemConsumer::VeQItemConsumer(VeQItem *root, QObject *parent):
 	QObject(parent),
@@ -135,14 +118,14 @@ bool VeQItemConsumer::addSetting(VeQItem *root, const QString &path, const QVari
 		return false;
 	}
 	QChar type;
-	switch (TYPE_ID(defaultValue)) {
-	case META_INT:
+	switch (defaultValue.typeId()) {
+	case QMetaType::Int:
 		type = 'i';
 		break;
-	case META_DOUBLE:
+	case QMetaType::Double:
 		type = 'f';
 		break;
-	case META_STRING:
+	case QMetaType::QString:
 		type = 's';
 		break;
 	default:
