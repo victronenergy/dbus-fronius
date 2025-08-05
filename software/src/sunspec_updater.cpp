@@ -16,10 +16,6 @@
 // the power of the inverter to increase (or stay at its current value), so a large value for the
 // timeout is pretty safe.
 static const int PowerLimitTimeout = 120;
-// This value used to be bigger to prevent old Fronius firmware from running (the resolution of
-// the power limiter was 1%. New Versions support precision of 0.01%. However, since a change in
-// the algorithm in hub4control, 1% should only work.
-static const int PowerLimitScale = 100;
 
 QList<SunspecUpdater*> SunspecUpdater::mUpdaters;
 
@@ -200,9 +196,6 @@ void SunspecUpdater::onWriteCompleted()
 void SunspecUpdater::onPowerLimitRequested(double value)
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-	double powerLimitScale = deviceInfo.powerLimitScale;
-	if (powerLimitScale < PowerLimitScale)
-		return;
 	// An invalid power limit means that power limiting is not supported. So we ignore the request.
 	if (!qIsFinite(mInverter->powerLimit()))
 		return;
