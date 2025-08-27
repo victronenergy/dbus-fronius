@@ -212,6 +212,8 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 void SunspecUpdater::onConnected()
 {
 	if (mLimiter) {
+		// Make sure no signals survive from last time
+		disconnect(mLimiter, SIGNAL(initialised(bool)));
 		connect(mLimiter, SIGNAL(initialised(bool)), this, SLOT(onLimiterInitialised(bool)));
 		mLimiter->onConnected(mModbusClient);
 	} else {
