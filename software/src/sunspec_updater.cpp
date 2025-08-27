@@ -236,6 +236,7 @@ void SunspecUpdater::onLimiterInitialised(bool success)
 			mSettings->setLimiterSupported(LimiterEnabled);
 			mInverter->setPowerLimit(
 				mSettings->enableLimiter() ? deviceInfo.maxPower : qQNaN());
+			disconnect(mSettings, SIGNAL(enableLimiterChanged()));
 			connect(mSettings, SIGNAL(enableLimiterChanged()), this, SLOT(onEnableLimiterChanged()));
 		}
 	} else {
