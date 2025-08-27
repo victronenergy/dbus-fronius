@@ -221,6 +221,8 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 void SunspecUpdater::onConnected()
 {
 	if (mLimiter) {
+		// Make sure no signals survive from last time
+		disconnect(mLimiter, SIGNAL(initialised(bool)), 0, 0);
 		connect(mLimiter, SIGNAL(initialised(bool)), this, SLOT(onLimiterInitialised(bool)));
 		mLimiter->onConnected(mModbusClient);
 	} else {
@@ -243,6 +245,7 @@ void SunspecUpdater::onLimiterInitialised(bool success)
 			mSettings->setLimiterSupported(LimiterEnabled);
 			mInverter->setPowerLimit(
 				mSettings->enableLimiter() ? deviceInfo.maxPower : qQNaN());
+			disconnect(mSettings, SIGNAL(enableLimiterChanged()), 0, 0);
 			connect(mSettings, SIGNAL(enableLimiterChanged()), this, SLOT(onEnableLimiterChanged()));
 		}
 	} else {
