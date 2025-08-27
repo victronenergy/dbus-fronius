@@ -70,7 +70,6 @@ void SunspecUpdater::startNextAction(ModbusState state)
 			mInverter->setPowerLimit(mPowerLimitPct * deviceInfo.maxPower);
 			mPowerLimitTimer->start();
 		} else {
-			mWritePowerLimitRequested = false;
 			startNextAction(ReadPowerAndVoltage);
 		}
 		break;
@@ -174,6 +173,7 @@ void SunspecUpdater::onReadCompleted()
 		}
 
 		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
+		mWritePowerLimitRequested = false;
 		break;
 	}
 	default:
@@ -188,7 +188,6 @@ void SunspecUpdater::onWriteCompleted()
 {
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
-	mWritePowerLimitRequested = false;
 	startNextAction(ReadPowerAndVoltage);
 }
 
