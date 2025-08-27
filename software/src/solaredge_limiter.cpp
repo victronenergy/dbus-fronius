@@ -74,9 +74,8 @@ void SolarEdgeLimiter::onReadMaxPowerCompleted()
 		QVector <quint16> words = reply->registers();
 		double value = static_cast<double>(*reinterpret_cast<float *>(words.data()));
 		if (value > 0) {
-			qInfo() << "Setting 'Ac/MaxPower' and 'Ac/PowerLimit' to" << value << "for SolarEdge Inverter:" << mInverter->location();
+			qInfo() << "Maximum power is" << value << "for SolarEdge Inverter:" << mInverter->location();
 			mInverter->setMaxPower(value);
-			mInverter->setPowerLimit(value);
 			initLimiter();
 		} else {
 			emit initialised(false);
