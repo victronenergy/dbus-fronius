@@ -2,7 +2,6 @@
 #include "defines.h"
 #include "inverter_settings.h"
 #include "settings.h"
-#include "logging.h"
 
 InverterSettings::InverterSettings(VeQItem *root, QObject *parent) :
 	VeQItemConsumer(root, parent),

@@ -4,7 +4,6 @@
 #include "inverter_settings.h"
 #include "solar_api_updater.h"
 #include "power_info.h"
-#include "logging.h"
 
 static const int UpdateInterval = 5000;
 static const int UpdateSettingsInterval = 10 * 60 * 1000;

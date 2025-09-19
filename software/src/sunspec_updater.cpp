@@ -10,16 +10,11 @@
 #include "modbus_reply.h"
 #include "power_info.h"
 #include "sunspec_tools.h"
-#include "logging.h"
 
 // The PV inverter will reset the power limit to maximum after this interval. The reset will cause
 // the power of the inverter to increase (or stay at its current value), so a large value for the
 // timeout is pretty safe.
 static const int PowerLimitTimeout = 120;
-// This value used to be bigger to prevent old Fronius firmware from running (the resolution of
-// the power limiter was 1%. New Versions support precision of 0.01%. However, since a change in
-// the algorithm in hub4control, 1% should only work.
-static const int PowerLimitScale = 100;
 
 QList<SunspecUpdater*> SunspecUpdater::mUpdaters;
 
@@ -75,7 +70,6 @@ void SunspecUpdater::startNextAction(ModbusState state)
 			mInverter->setPowerLimit(mPowerLimitPct * deviceInfo.maxPower);
 			mPowerLimitTimer->start();
 		} else {
-			mWritePowerLimitRequested = false;
 			startNextAction(ReadPowerAndVoltage);
 		}
 		break;
@@ -179,6 +173,7 @@ void SunspecUpdater::onReadCompleted()
 		}
 
 		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
+		mWritePowerLimitRequested = false;
 		break;
 	}
 	default:
@@ -193,16 +188,12 @@ void SunspecUpdater::onWriteCompleted()
 {
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
-	mWritePowerLimitRequested = false;
 	startNextAction(ReadPowerAndVoltage);
 }
 
 void SunspecUpdater::onPowerLimitRequested(double value)
 {
 	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-	double powerLimitScale = deviceInfo.powerLimitScale;
-	if (powerLimitScale < PowerLimitScale)
-		return;
 	// An invalid power limit means that power limiting is not supported. So we ignore the request.
 	if (!qIsFinite(mInverter->powerLimit()))
 		return;
@@ -221,6 +212,8 @@ void SunspecUpdater::onPowerLimitRequested(double value)
 void SunspecUpdater::onConnected()
 {
 	if (mLimiter) {
+		// Make sure no signals survive from last time
+		disconnect(mLimiter, SIGNAL(initialised(bool)), 0, 0);
 		connect(mLimiter, SIGNAL(initialised(bool)), this, SLOT(onLimiterInitialised(bool)));
 		mLimiter->onConnected(mModbusClient);
 	} else {
@@ -243,6 +236,7 @@ void SunspecUpdater::onLimiterInitialised(bool success)
 			mSettings->setLimiterSupported(LimiterEnabled);
 			mInverter->setPowerLimit(
 				mSettings->enableLimiter() ? deviceInfo.maxPower : qQNaN());
+			disconnect(mSettings, SIGNAL(enableLimiterChanged()), 0, 0);
 			connect(mSettings, SIGNAL(enableLimiterChanged()), this, SLOT(onEnableLimiterChanged()));
 		}
 	} else {

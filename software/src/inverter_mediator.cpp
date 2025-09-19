@@ -1,3 +1,4 @@
+#include <QRegularExpression>
 #include "products.h"
 #include "defines.h"
 #include "inverter.h"
@@ -11,14 +12,6 @@
 #include "solar_api_updater.h"
 #include "settings.h"
 #include "ve_qitem_init_monitor.h"
-#include "logging.h"
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#include <QRegularExpression>
-#else
-#include <QRegExp>
-#define QRegularExpression QRegExp
-#endif
 
 InverterMediator::InverterMediator(const DeviceInfo &device, GatewayInterface *gateway,
 								   Settings *settings, QObject *parent):

@@ -1,7 +1,5 @@
 #include <QNetworkInterface>
 #include "local_ip_address_generator.h"
-#include "compat.h"
-#include "logging.h"
 
 Subnet::Subnet(LocalIpAddressGenerator *generator, quint32 first, quint32 last, quint32 localhost):
 	mGenerator(generator),
@@ -166,7 +164,7 @@ const QSet<QHostAddress> LocalIpAddressGenerator::exceptions() const
 {
 	// We exclude scanning of the priorityAddresses when doing a sweep
 	// since they were already scanned.
-	return listToSet<QHostAddress>(mPriorityAddresses);
+	return QSet<QHostAddress>(mPriorityAddresses.begin(), mPriorityAddresses.end());
 }
 
 void LocalIpAddressGenerator::setPriorityAddresses(

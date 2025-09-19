@@ -6,7 +6,6 @@
 #include "solar_api_detector.h"
 #include "sunspec_detector.h"
 #include "ve_qitem_init_monitor.h"
-#include "logging.h"
 
 DBusFronius::DBusFronius(QObject *parent) :
 	VeService(VeQItems::getRoot()->itemGetOrCreate("pub/com.victronenergy.fronius"), parent),

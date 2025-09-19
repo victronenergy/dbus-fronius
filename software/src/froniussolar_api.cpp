@@ -1,17 +1,11 @@
 #include <QtGlobal>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 #include <QJsonDocument>
 #include <QUrlQuery>
 #include "qhttp/qhttp.h"
-#else
-#include <QHttp>
-#include "json/json.h"
-#endif
 
 #include <QUrl>
 #include <QStringList>
 #include <QTimer>
-#include "logging.h"
 
 #include "froniussolar_api.h"
 
@@ -70,48 +64,31 @@ void FroniusSolarApi::getConverterInfoAsync()
 void FroniusSolarApi::getCommonDataAsync(int deviceId)
 {
 	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
-
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 	QUrlQuery query;
 	query.addQueryItem("Scope", "Device");
 	query.addQueryItem("DeviceId", QString::number(deviceId));
 	query.addQueryItem("DataCollection", "CommonInverterData");
 	url.setQuery(query);
-	#else
-	url.addQueryItem("Scope", "Device");
-	url.addQueryItem("DeviceId", QString::number(deviceId));
-	url.addQueryItem("DataCollection", "CommonInverterData");
-	#endif
 	sendGetRequest(url, "getCommonData");
 }
 
 void FroniusSolarApi::getThreePhasesInverterDataAsync(int deviceId)
 {
 	QUrl url = baseUrl("/solar_api/v1/GetInverterRealtimeData.cgi");
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 	QUrlQuery query;
 	query.addQueryItem("Scope", "Device");
 	query.addQueryItem("DeviceId", QString::number(deviceId));
 	query.addQueryItem("DataCollection", "3PInverterData");
 	url.setQuery(query);
-	#else
-	url.addQueryItem("Scope", "Device");
-	url.addQueryItem("DeviceId", QString::number(deviceId));
-	url.addQueryItem("DataCollection", "3PInverterData");
-	#endif
 	sendGetRequest(url, "getThreePhasesInverterData");
 }
 
 void FroniusSolarApi::getDeviceInfoAsync()
 {
 	QUrl url = baseUrl("/solar_api/v1/GetActiveDeviceInfo.cgi");
-	#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 	QUrlQuery query;
 	query.addQueryItem("DeviceClass", "Inverter");
 	url.setQuery(query);
-	#else
-	url.addQueryItem("DeviceClass", "Inverter");
-	#endif
 	sendGetRequest(url, "getDeviceInfo");
 }
 
@@ -297,21 +274,9 @@ QVariant FroniusSolarApi::getByPath(const QVariant &variant,
 
 QVariantMap FroniusSolarApi::parseJson(const QByteArray bytes)
 {
-		#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-		// QT5/6 version
-		QJsonDocument doc = QJsonDocument::fromJson(bytes);
-		if (doc.isNull())
-			return QVariantMap();
+	QJsonDocument doc = QJsonDocument::fromJson(bytes);
+	if (doc.isNull())
+		return QVariantMap();
 
-		return doc.toVariant().toMap();
-		#else
-		// QT4 version
-		QString result(QString::fromLocal8Bit(bytes));
-		if (!result.isEmpty())
-		{
-			return JSON::instance().parse(result).toMap();
-		} else {
-			return QVariantMap();
-		}
-		#endif
+	return doc.toVariant().toMap();
 }

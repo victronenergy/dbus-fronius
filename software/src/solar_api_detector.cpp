@@ -5,7 +5,6 @@
 #include "settings.h"
 #include "solar_api_detector.h"
 #include "sunspec_detector.h"
-#include "logging.h"
 
 QList<QString> SolarApiDetector::mInvalidDevices;
 
