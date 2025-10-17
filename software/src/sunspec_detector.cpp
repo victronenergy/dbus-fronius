@@ -51,7 +51,7 @@ void SunspecDetector::onConnected()
 	Reply *di = mClientToReply.value(client);
 	Q_ASSERT(di != 0);
 	di->state = Reply::SunSpecHeader;
-	di->currentRegister = 40000;
+	di->currentRegister = di->nextSunspecStartRegister();
 	startNextRequest(di, 2);
 }
 
@@ -75,7 +75,14 @@ void SunspecDetector::onFinished()
 	case Reply::SunSpecHeader:
 	{
 		if (values.size() != 2 || getString(values, 0, 2) != "SunS") {
-			setDone(di);
+			// Check the next expected location for a sunspec header
+			quint16 next = di->nextSunspecStartRegister();
+			if (next == 0xFFFF) {
+				setDone(di);
+				return;
+			}
+			di->currentRegister = next;
+			startNextRequest(di, 2);
 			return;
 		}
 		di->currentRegister += 2;
@@ -277,8 +284,22 @@ SunspecDetector::Reply::Reply(QObject *parent):
 	state(SunSpecHeader),
 	currentRegister(0),
 	currentModel(0),
-	nextModelRegister(0)
+	nextModelRegister(0),
+	startRegisters(QList<quint16>() << 40000 << 50000)
 {
+}
+
+void SunspecDetector::Reply::setFinished()
+{
+	startRegisters.clear();
+	emit finished();
+}
+
+quint16 SunspecDetector::Reply::nextSunspecStartRegister()
+{
+	if (!startRegisters.isEmpty())
+		return startRegisters.takeFirst();
+	return 0xFFFF;
 }
 
 SunspecDetector::Reply::~Reply()

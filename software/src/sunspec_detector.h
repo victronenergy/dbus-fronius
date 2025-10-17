@@ -3,6 +3,7 @@
 
 #include <QAbstractSocket>
 #include <QHash>
+#include <QList>
 #include "abstract_detector.h"
 #include "defines.h"
 
@@ -55,10 +56,8 @@ private:
 			emit deviceFound(di);
 		}
 
-		void setFinished()
-		{
-			emit finished();
-		}
+		void setFinished();
+		quint16 nextSunspecStartRegister();
 
 		enum State {
 			SunSpecHeader,
@@ -72,6 +71,7 @@ private:
 		quint16 currentRegister;
 		quint16 currentModel;
 		quint16 nextModelRegister;
+		QList<quint16> startRegisters;
 	};
 
 	void requestNextHeader(Reply *di);
