@@ -285,7 +285,7 @@ SunspecDetector::Reply::Reply(QObject *parent):
 	currentRegister(0),
 	currentModel(0),
 	nextModelRegister(0),
-	startRegisters(QList<quint16>() << 40000 << 50000)
+	startRegisters(QList<quint16>() << 40000 << 50000 << 0)
 {
 }
 
