@@ -4,6 +4,8 @@
 #include <QString>
 #include <QVector>
 
+double getRawValue(const QVector<quint16> &values, int offset, int size);
+
 double getScaledValue(const QVector<quint16> &values, int offset, int size,
 					  int scaleOffset, bool isSigned);
 

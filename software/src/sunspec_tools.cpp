@@ -2,6 +2,15 @@
 #include <qnumeric.h>
 #include "sunspec_tools.h"
 
+double getRawValue(const QVector<quint16> &values, int offset, int size)
+{
+	// Convert registers to a 64-bit integer
+	quint64 v = 0;
+	for (int i=0; i<size; ++i)
+		v = (v << 16) | values[offset + i];
+	return v;
+}
+
 double getScaledValue(const QVector<quint16> &values, int offset, int size, int scaleOffset,
 					  bool isSigned)
 {
@@ -11,10 +20,7 @@ double getScaledValue(const QVector<quint16> &values, int offset, int size, int 
 		return qQNaN();
 
 	// Convert registers to a 64-bit integer
-	quint64 v = 0;
-	for (int i=0; i<size; ++i) {
-		v = (v << 16) | values[offset + i];
-	}
+	quint64 v = getRawValue(values, offset, size);
 
 	switch (size) {
 	case 1:
