@@ -46,7 +46,11 @@ struct DeviceInfo
 		inverterModel(0),
 		immediateControlOffset(0),
 		immediateControlModel(0),
+		trackerModelOffset(0),
+		numberOfTrackers(0),
 		powerLimitScale(0),
+		trackerVoltageScale(0),
+		trackerPowerScale(0),
 		maxPower(0),
 		storageCapacity(0)
 	{}
@@ -68,7 +72,11 @@ struct DeviceInfo
 	quint16 inverterModel;
 	quint16 immediateControlOffset;
 	quint16 immediateControlModel; // What model to use for control, 123/704
+	quint16 trackerModelOffset;
+	int numberOfTrackers;
 	double powerLimitScale;
+	double trackerVoltageScale;
+	double trackerPowerScale;
 	double maxPower;
 	double storageCapacity; // SMA SunnyIsland will report a storage capacity
 };

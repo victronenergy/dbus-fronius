@@ -160,6 +160,11 @@ void SunspecDetector::onFinished()
 			di->di.immediateControlModel = modelId;
 			requestNextContent(di, modelId, nextModel, 1, 23);
 			return;
+		case 160: // Multiple trackers, up to 6 (120 registers) in one call
+			di->di.numberOfTrackers = qMin(6, (modelSize - 8) / 20);
+			di->di.trackerModelOffset = di->currentRegister;
+			requestNextContent(di, modelId, nextModel, 5);
+			return;
 		case 0xFFFF:
 			checkDone(di);
 			return;
@@ -226,6 +231,12 @@ void SunspecDetector::onFinished()
 		case 704: // DERCtlAC
 			if (values.size() > 0)
 				di->di.powerLimitScale = 100.0 / getScale(values, 0);
+			break;
+		case 160: // Tracker data
+			if (values.size() > 4) {
+				di->di.trackerVoltageScale = getScale(values, 3);
+				di->di.trackerPowerScale = getScale(values, 4);
+			}
 			break;
 		}
 		di->currentRegister = di->nextModelRegister;

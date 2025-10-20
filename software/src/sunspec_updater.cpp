@@ -64,6 +64,10 @@ void SunspecUpdater::startNextAction(ModbusState state)
 	case ReadPowerAndVoltage:
 		readPowerAndVoltage();
 		break;
+	case ReadTrackerData:
+		readHoldingRegisters(deviceInfo.trackerModelOffset + 10,
+			deviceInfo.numberOfTrackers * 20);
+		break;
 	case WritePowerLimit:
 	{
 		if (writePowerLimit(mPowerLimitPct)) {
@@ -172,6 +176,28 @@ void SunspecUpdater::onReadCompleted()
 			break;
 		}
 
+		// If we have tracker data, read it
+		if (mInverter->deviceInfo().trackerModelOffset > 0) {
+			nextState = ReadTrackerData;
+			break;
+		}
+
+		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
+		mWritePowerLimitRequested = false;
+		break;
+	}
+	case ReadTrackerData:
+	{
+		const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+		if (!values.isEmpty() &&
+			 values.size() == deviceInfo.numberOfTrackers * 20) {
+			for (int i=0; i < deviceInfo.numberOfTrackers; ++i) {
+				mInverter->setTrackerVoltage(i,
+					getRawValue(values, 20 * i + 10, 1) * deviceInfo.trackerVoltageScale);
+				mInverter->setTrackerPower(i,
+					getRawValue(values, 20 * i + 11, 1) * deviceInfo.trackerPowerScale);
+			}
+		}
 		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
 		mWritePowerLimitRequested = false;
 		break;

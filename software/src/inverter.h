@@ -1,11 +1,13 @@
 #ifndef INVERTER_H
 #define INVERTER_H
 
+#include <QList>
 #include "defines.h"
 #include "ve_service.h"
 
 class PowerInfo;
 class BasicPowerInfo;
+class VeQItem;
 
 class Inverter : public VeService
 {
@@ -82,6 +84,10 @@ public:
 	/// Returns a string describing the location ('<serial>@<ip-address>:<port>').
 	QString location() const;
 
+	void setTrackerVoltage(int t, double v);
+
+	void setTrackerPower(int t, double p);
+
 signals:
 	void customNameChanged();
 
@@ -112,6 +118,10 @@ private:
 	PowerInfo *mL1PowerInfo;
 	PowerInfo *mL2PowerInfo;
 	PowerInfo *mL3PowerInfo;
+
+	// Tracker voltage/power
+	QList<VeQItem *> mTrackerVoltage;
+	QList<VeQItem *> mTrackerPower;
 };
 
 #endif // INVERTER_H

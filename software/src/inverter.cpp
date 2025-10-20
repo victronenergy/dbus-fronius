@@ -39,6 +39,13 @@ Inverter::Inverter(VeQItem *root, const DeviceInfo &deviceInfo, int deviceInstan
 		QVariant() : deviceInfo.dataManagerVersion);
 	produceValue(createItem("Ac/NumberOfPhases"), deviceInfo.phaseCount);
 	produceValue(createItem("Info/MeasurementModel"), deviceInfo.inverterModel);
+
+	// Tracker values
+	for (int i=0; i<deviceInfo.numberOfTrackers; ++i) {
+		mTrackerVoltage.append(createItem(QString("/Pv/%1/V").arg(i)));
+		mTrackerPower.append(createItem(QString("/Pv/%1/P").arg(i)));
+	}
+
 	updateConnectionItem();
 	root->produceValue(QVariant(), VeQItem::Synchronized);
 }
@@ -262,4 +269,14 @@ void Inverter::updateConnectionItem()
 	produceValue(mConnection, QString("%1 - %2 (%3)").
 		arg(mDeviceInfo.hostName).arg(mDeviceInfo.networkId).
 		arg(mDeviceInfo.retrievalMode == ProtocolFroniusSolarApi ? "solarapi" : "sunspec"));
+}
+
+void Inverter::setTrackerVoltage(int t, double v)
+{
+	produceDouble(mTrackerVoltage[t], v, 1, "V");
+}
+
+void Inverter::setTrackerPower(int t, double p)
+{
+	produceDouble(mTrackerPower[t], p, 0, "W");
 }

@@ -70,6 +70,7 @@ protected:
 private:
 	enum ModbusState {
 		ReadPowerAndVoltage,
+		ReadTrackerData,
 		WritePowerLimit,
 		Idle
 	};
