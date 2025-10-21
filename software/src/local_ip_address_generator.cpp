@@ -34,7 +34,6 @@ int Subnet::position() const
 
 LocalIpAddressGenerator::LocalIpAddressGenerator():
 	mPriorityOnly(false),
-	mNetMaskLimit(0u),
 	mPriorityIndex(0),
 	mSubnetIndex(0)
 {
@@ -98,7 +97,7 @@ void LocalIpAddressGenerator::reset()
 					qInfo() << "IP Address:" << address
 							<< "Netmask:" << entry.netmask();
 					quint32 netMask = entry.netmask().toIPv4Address();
-					netMask |= mNetMaskLimit.toIPv4Address();
+					netMask |= QHostAddress(0xFFFFF000).toIPv4Address();
 
 					quint32 localHost = address.toIPv4Address();
 					// For link-local, scan only 169.254.0.180. This
@@ -141,11 +140,6 @@ int LocalIpAddressGenerator::progress(int activeCount) const
 	return (100 * qMax(0, done - activeCount)) / total;
 }
 
-bool LocalIpAddressGenerator::priorityOnly() const
-{
-	return mPriorityOnly;
-}
-
 void LocalIpAddressGenerator::setPriorityOnly(bool p)
 {
 	if (mPriorityOnly == p)
@@ -153,11 +147,6 @@ void LocalIpAddressGenerator::setPriorityOnly(bool p)
 	mPriorityOnly = p;
 	if (p)
 		reset();
-}
-
-const QList<QHostAddress> &LocalIpAddressGenerator::priorityAddresses() const
-{
-	return mPriorityAddresses;
 }
 
 const QSet<QHostAddress> LocalIpAddressGenerator::exceptions() const
@@ -174,14 +163,4 @@ void LocalIpAddressGenerator::setPriorityAddresses(
 			mPriorityIndex >= mPriorityAddresses.size();
 	mPriorityAddresses = addresses;
 	mPriorityIndex = atEnd ? mPriorityAddresses.size() : 0;
-}
-
-QHostAddress LocalIpAddressGenerator::netMaskLimit() const
-{
-	return mNetMaskLimit;
-}
-
-void LocalIpAddressGenerator::setNetMaskLimit(const QHostAddress &limit)
-{
-	mNetMaskLimit = limit;
 }

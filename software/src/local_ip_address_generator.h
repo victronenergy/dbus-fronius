@@ -67,34 +67,20 @@ public:
 	int progress(int activeCount) const;
 
 	/*!
-	 * \brief If true, the generator will only return value from the
-	 * list returned by `priorityAddresses()`.
+	 * \brief If true, the generator will only return values from the
+	 * list returned set by `setPriorityAddresses()`.
 	 * \return
 	 */
-	bool priorityOnly() const;
-
 	void setPriorityOnly(bool p);
-
-	/*!
-	 * \brief Returns the list of addresses that will be returned before
-	 * the generator starts enumerating the IP addresses in the local network.
-	 * \return
-	 */
-	const QList<QHostAddress> &priorityAddresses() const;
 
 	void setPriorityAddresses(const QList<QHostAddress> &addresses);
 
 	const QSet<QHostAddress> exceptions() const;
 
-	QHostAddress netMaskLimit() const;
-
-	void setNetMaskLimit(const QHostAddress &limit);
-
 private:
 	bool mPriorityOnly;
 	QList<Subnet> mSubnets;
 	QList<QHostAddress> mPriorityAddresses;
-	QHostAddress mNetMaskLimit;
 	int mPriorityIndex;
 	int mSubnetIndex;
 };

@@ -16,7 +16,6 @@ InverterGateway::InverterGateway(Settings *settings, QObject *parent) :
 	mScanType(None)
 {
 	Q_ASSERT(settings != 0);
-	mAddressGenerator.setNetMaskLimit(QHostAddress(0xFFFFF000));
 	mTimer->setInterval(60000);
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
 	connect(mUdpDetector, SIGNAL(finished()), this, SLOT(continueScan()));
