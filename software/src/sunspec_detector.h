@@ -21,7 +21,7 @@ public:
 	SunspecDetector(int port, quint8 unitId, QObject *parent = 0);
 
 	DetectorReply *start(const QString &hostName, int timeout) override;
-	DetectorReply *start(const QString &hostName, int timeout, quint8 unitId);
+	DetectorReply *start(const QString &hostName, int timeout, int port, quint8 unitId);
 
 private slots:
 	void onConnected();
@@ -75,6 +75,7 @@ private:
 
 	QHash<ModbusTcpClient *, Reply *> mClientToReply;
 	QHash<ModbusReply *, Reply *> mModbusReplyToReply;
+	int mPort;
 	quint8 mUnitId;
 };
 

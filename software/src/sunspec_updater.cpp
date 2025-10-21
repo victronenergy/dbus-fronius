@@ -35,7 +35,7 @@ SunspecUpdater::SunspecUpdater(BaseLimiter *limiter, Inverter *inverter, Inverte
 	Q_ASSERT(inverter != 0);
 	connectModbusClient();
 	mModbusClient->setTimeout(5000);
-	mModbusClient->connectToServer(inverter->hostName());
+	mModbusClient->connectToServer(inverter->hostName(), inverter->modbusPort());
 	connect(
 		mInverter, SIGNAL(powerLimitRequested(double)),
 		this, SLOT(onPowerLimitRequested(double)));
@@ -334,10 +334,12 @@ void SunspecUpdater::updateSplitPhase(double power, double energy)
 	l2->setTotalEnergy(energy);
 }
 
-bool SunspecUpdater::hasConnectionTo(QString host, int id)
+bool SunspecUpdater::hasConnectionTo(QString host, int port, int id)
 {
 	foreach (SunspecUpdater *u, mUpdaters) {
-		if ((host == u->mInverter->hostName()) && (id == u->mInverter->networkId())) {
+		if ((host == u->mInverter->hostName())
+			&& (id == u->mInverter->networkId())
+			&& (port == u->mInverter->modbusPort())) {
 			return true;
 		}
 	}

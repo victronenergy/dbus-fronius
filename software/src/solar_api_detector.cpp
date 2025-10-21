@@ -5,6 +5,7 @@
 #include "settings.h"
 #include "solar_api_detector.h"
 #include "sunspec_detector.h"
+#include "modbus_tcp_client.h"
 
 QList<QString> SolarApiDetector::mInvalidDevices;
 
@@ -58,7 +59,7 @@ void SolarApiDetector::onConverterInfoFound(const InverterListData &data)
 			// Allowing a longer timeout for sunspec only slows us down where
 			// we already know there is a Fronius PV-inverter, and this caters
 			// for very slow DataManagers with several PV-inverters connected.
-			DetectorReply *dr = mSunspecDetector->start(api->hostName(), 25000, it->id);
+			DetectorReply *dr = mSunspecDetector->start(api->hostName(), 25000, ModbusTcpClient::DefaultTcpPort, it->id);
 			if (dr == 0) {
 				// If we already have a connection to this inverter, the detector will return
 				// null.

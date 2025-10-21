@@ -7,28 +7,37 @@
 
 SunspecDetector::SunspecDetector(QObject *parent):
 	AbstractDetector(parent),
-	mUnitId(0)
+	mPort(ModbusTcpClient::DefaultTcpPort),
+	mUnitId(126)
 {
 }
 
 SunspecDetector::SunspecDetector(quint8 unitId, QObject *parent):
 	AbstractDetector(parent),
+	mPort(ModbusTcpClient::DefaultTcpPort),
+	mUnitId(unitId)
+{
+}
+
+SunspecDetector::SunspecDetector(int port, quint8 unitId, QObject *parent):
+	AbstractDetector(parent),
+	mPort(port),
 	mUnitId(unitId)
 {
 }
 
 DetectorReply *SunspecDetector::start(const QString &hostName, int timeout)
 {
-	return start(hostName, timeout, mUnitId);
+	return start(hostName, timeout, mPort, mUnitId);
 }
 
-DetectorReply *SunspecDetector::start(const QString &hostName, int timeout, quint8 unitId)
+DetectorReply *SunspecDetector::start(const QString &hostName, int timeout, int port, quint8 unitId)
 {
 	Q_ASSERT(unitId != 0);
 
 	// If we already have a connection to this inverter, then there is
 	// no need to scan it again.
-	if (SunspecUpdater::hasConnectionTo(hostName, unitId)) {
+	if (SunspecUpdater::hasConnectionTo(hostName, port, unitId)) {
 		return 0;
 	}
 
@@ -36,11 +45,12 @@ DetectorReply *SunspecDetector::start(const QString &hostName, int timeout, quin
 	connect(client, SIGNAL(connected()), this, SLOT(onConnected()));
 	connect(client, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
 	client->setTimeout(timeout);
-	client->connectToServer(hostName);
+	client->connectToServer(hostName, port);
 	Reply *reply = new Reply(this);
 	reply->client = client;
 	reply->di.networkId = unitId;
 	reply->di.hostName = hostName;
+	reply->di.modbusPort = port;
 	mClientToReply[client] = reply;
 	return reply;
 }

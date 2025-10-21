@@ -36,6 +36,7 @@ enum ProtocolType {
 struct DeviceInfo
 {
 	DeviceInfo():
+		modbusPort(502),
 		networkId(0),
 		port(0),
 		deviceType(0),
@@ -61,6 +62,7 @@ struct DeviceInfo
 	QString dataManagerVersion;
 	QString firmwareVersion;
 	QString serialNumber;
+	int modbusPort;
 	int networkId;
 	int port; // Fronius solar API only
 	int deviceType; // Fronius solar API only

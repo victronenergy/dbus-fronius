@@ -46,6 +46,8 @@ public:
 
 	QString hostName() const;
 
+	int modbusPort() const;
+
 	int networkId() const;
 
 	void setHostName(const QString &h);

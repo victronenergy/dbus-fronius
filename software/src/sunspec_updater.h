@@ -22,7 +22,7 @@ public:
 
 	virtual ~SunspecUpdater();
 
-	static bool hasConnectionTo(QString host, int id);
+	static bool hasConnectionTo(QString host, int port, int id);
 
 signals:
 	void connectionLost();

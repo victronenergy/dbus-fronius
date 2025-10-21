@@ -132,6 +132,11 @@ QString Inverter::hostName() const
 	return mDeviceInfo.hostName;
 }
 
+int Inverter::modbusPort() const
+{
+	return mDeviceInfo.modbusPort;
+}
+
 int Inverter::networkId() const
 {
 	return mDeviceInfo.networkId;
