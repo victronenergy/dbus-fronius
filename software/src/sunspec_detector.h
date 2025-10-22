@@ -18,18 +18,10 @@ public:
 
 	SunspecDetector(quint8 unitId, QObject *parent = 0);
 
+	SunspecDetector(int port, quint8 unitId, QObject *parent = 0);
+
 	DetectorReply *start(const QString &hostName, int timeout) override;
 	DetectorReply *start(const QString &hostName, int timeout, quint8 unitId);
-
-	quint8 unitId() const
-	{
-		return mUnitId;
-	}
-
-	void setUnitId(quint8 unitId)
-	{
-		mUnitId = unitId;
-	}
 
 private slots:
 	void onConnected();
