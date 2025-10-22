@@ -5,7 +5,6 @@
 #include <QHostAddress>
 #include <QList>
 #include <QMetaType>
-#include <QStringList>
 #include <ve_qitem_consumer.h>
 
 class VeQItem;
@@ -21,8 +20,6 @@ public:
 	int modbusSlaveAddress() const;
 
 	QList<QHostAddress> ipAddresses() const;
-
-	void setIpAddresses(const QList<QHostAddress> &addresses);
 
 	QList<QHostAddress> knownIpAddresses() const;
 

@@ -1,4 +1,5 @@
 #include <Qt>
+#include <QStringList>
 #include <QRegularExpression>
 #include <veutil/qt/ve_qitem.hpp>
 #include "defines.h"
@@ -28,11 +29,6 @@ int Settings::modbusSlaveAddress() const
 QList<QHostAddress> Settings::ipAddresses() const
 {
 	return toAdressList(mIpAddresses->getValue().toString());
-}
-
-void Settings::setIpAddresses(const QList<QHostAddress> &addresses)
-{
-	mIpAddresses->setValue(fromAddressList(addresses));
 }
 
 QList<QHostAddress> Settings::knownIpAddresses() const
