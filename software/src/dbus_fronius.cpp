@@ -40,7 +40,7 @@ int DBusFronius::handleSetValue(VeQItem *item, const QVariant &variant)
 void DBusFronius::onSettingsInitialized()
 {
 	mGateway->addDetector(new SolarApiDetector(mSettings, this));
-	mGateway->addDetector(new SunspecDetector(mSettings->modbusSlaveAddress(), this));
+	mGateway->addDetector(new SunspecDetector(126, this));
 
 	// Add detectors on additional ports and ids
 	for (QPair<int,quint8> p : mSettings->modbusAlternates()) {

@@ -18,8 +18,6 @@ public:
 
 	int portNumber() const;
 
-	int modbusSlaveAddress() const;
-
 	QList<QHostAddress> ipAddresses() const;
 
 	QList<QHostAddress> knownIpAddresses() const;
@@ -62,7 +60,6 @@ private:
 	VeQItem *mKnownIpAddresses;
 	VeQItem *mAutoScan;
 	VeQItem *mIdBySerial;
-	VeQItem *mModbusSlaveAddress;
 };
 
 #endif // SETTINGS_H
