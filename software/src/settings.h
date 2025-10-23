@@ -49,6 +49,8 @@ signals:
 
 	void ipAddressesChanged();
 
+	void modbusAlternatesChanged();
+
 private:
 	QList<QHostAddress> toAdressList(const QString &s) const;
 

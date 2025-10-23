@@ -39,6 +39,7 @@ int DBusFronius::handleSetValue(VeQItem *item, const QVariant &variant)
 
 void DBusFronius::onSettingsInitialized()
 {
+	mGateway->clearDetectors();
 	mGateway->addDetector(new SolarApiDetector(mSettings, this));
 	mGateway->addDetector(new SunspecDetector(126, this));
 
@@ -46,6 +47,10 @@ void DBusFronius::onSettingsInitialized()
 	for (QPair<int,quint8> p : mSettings->modbusAlternates()) {
 		mGateway->addDetector(new SunspecDetector(p.first, p.second, this));
 	}
+
+	// Track future changes
+	disconnect(mSettings, SIGNAL(modbusAlternatesChanged()), 0, 0);
+	connect(mSettings, SIGNAL(modbusAlternatesChanged()), this, SLOT(onSettingsInitialized()));
 
 	mGateway->initializeSettings();
 	onScanProgressChanged();

@@ -8,7 +8,7 @@
 Settings::Settings(VeQItem *root, QObject *parent) :
 	VeQItemConsumer(root, parent),
 	mPortNumber(connectItem("PortNumber", 80, SIGNAL(portNumberChanged()), false)),
-	mModbusAlternates(connectItem("ModbusAlternates", "", 0, false)),
+	mModbusAlternates(connectItem("ModbusAlternates", "", SIGNAL(modbusAlternatesChanged()), false)),
 	mIpAddresses(connectItem("IPAddresses", "", SIGNAL(ipAddressesChanged()), false)),
 	mKnownIpAddresses(connectItem("KnownIPAddresses", "", 0, false)),
 	mAutoScan(connectItem("AutoScan", 1, 0)),

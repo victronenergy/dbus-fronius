@@ -25,6 +25,11 @@ void InverterGateway::addDetector(AbstractDetector *detector) {
 	mDetectors.append(detector);
 }
 
+void InverterGateway::clearDetectors()
+{
+	mDetectors.clear();
+}
+
 bool InverterGateway::autoDetect() const
 {
 	return mAutoDetect;
@@ -45,7 +50,9 @@ int InverterGateway::scanProgress() const
 
 void InverterGateway::initializeSettings()
 {
+	disconnect(mSettings, SIGNAL(portNumberChanged()), 0, 0);
 	connect(mSettings, SIGNAL(portNumberChanged()), this, SLOT(onPortNumberChanged()));
+	disconnect(mSettings, SIGNAL(ipAddressesChanged()), 0, 0);
 	connect(mSettings, SIGNAL(ipAddressesChanged()), this, SLOT(onIpAddressesChanged()));
 }
 

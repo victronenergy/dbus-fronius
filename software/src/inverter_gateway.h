@@ -32,6 +32,8 @@ public:
 
 	void addDetector(AbstractDetector *detector);
 
+	void clearDetectors();
+
 	bool autoDetect() const;
 
 	int scanProgress() const;
