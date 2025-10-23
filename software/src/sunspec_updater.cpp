@@ -478,7 +478,7 @@ bool FroniusSunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 	// again immediately.
 	if (inverter()->deviceInfo().retrievalMode == ProtocolSunSpecIntSf &&
 			values.mid(2, 37) == FroniusNullFrame) {
-		qInfo() << "Fronius Null-frame detected" << values;
+		qDebug() << "Fronius Null-frame detected" << values;
 		return true;
 	}
 
