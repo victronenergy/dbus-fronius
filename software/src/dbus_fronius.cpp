@@ -41,6 +41,12 @@ void DBusFronius::onSettingsInitialized()
 {
 	mGateway->addDetector(new SolarApiDetector(mSettings, this));
 	mGateway->addDetector(new SunspecDetector(mSettings->modbusSlaveAddress(), this));
+
+	// Add detectors on additional ports and ids
+	for (QPair<int,quint8> p : mSettings->modbusAlternates()) {
+		mGateway->addDetector(new SunspecDetector(p.first, p.second, this));
+	}
+
 	mGateway->initializeSettings();
 	onScanProgressChanged();
 	onAutoDetectChanged();

@@ -8,6 +8,7 @@
 Settings::Settings(VeQItem *root, QObject *parent) :
 	VeQItemConsumer(root, parent),
 	mPortNumber(connectItem("PortNumber", 80, SIGNAL(portNumberChanged()), false)),
+	mModbusAlternates(connectItem("ModbusAlternates", "", 0, false)),
 	mIpAddresses(connectItem("IPAddresses", "", SIGNAL(ipAddressesChanged()), false)),
 	mKnownIpAddresses(connectItem("KnownIPAddresses", "", 0, false)),
 	mAutoScan(connectItem("AutoScan", 1, 0)),
@@ -41,6 +42,20 @@ void Settings::setKnownIpAddresses(const QList<QHostAddress> &addresses)
 	mKnownIpAddresses->setValue(fromAddressList(addresses));
 }
 
+QList<QPair<int,quint8>> Settings::modbusAlternates() const
+{
+	QList<QPair<int,quint8>> r;
+	foreach(QString a, mModbusAlternates->getValue().toString().split(",")) {
+		QStringList p = a.split(":");
+		if (p.size() > 1) {
+			int port = p[0].toInt();
+			quint8 unit = p[1].toInt();
+			if (port > 0 && unit < 247)
+				r.append(QPair<int,quint8>(port, unit));
+		}
+	}
+	return r;
+}
 
 bool Settings::autoScan() const
 {

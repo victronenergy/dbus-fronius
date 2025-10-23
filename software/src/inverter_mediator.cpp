@@ -33,6 +33,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 	if (mDeviceInfo.uniqueId != deviceInfo.uniqueId) {
 		if (mInverter != 0 &&
 			mInverter->hostName() == deviceInfo.hostName &&
+			mInverter->deviceInfo().modbusPort == deviceInfo.modbusPort &&
 			mInverter->deviceInfo().networkId == deviceInfo.networkId) {
 			qInfo() << "Another inverter found @"
 						<< deviceInfo.hostName

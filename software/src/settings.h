@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QHostAddress>
 #include <QList>
+#include <QPair>
 #include <QMetaType>
 #include <ve_qitem_consumer.h>
 
@@ -24,6 +25,8 @@ public:
 	QList<QHostAddress> knownIpAddresses() const;
 
 	void setKnownIpAddresses(const QList<QHostAddress> &addresses);
+
+	QList<QPair<int,quint8>> modbusAlternates() const;
 
 	bool autoScan() const;
 
@@ -54,6 +57,7 @@ private:
 	QString fromAddressList(const QList<QHostAddress> &a);
 
 	VeQItem *mPortNumber;
+	VeQItem *mModbusAlternates;
 	VeQItem *mIpAddresses;
 	VeQItem *mKnownIpAddresses;
 	VeQItem *mAutoScan;
