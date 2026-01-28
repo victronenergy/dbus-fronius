@@ -38,6 +38,8 @@ private slots:
 
 	void onConnected();
 
+	void onLimiterDetected(bool success);
+
 	void onLimiterInitialised(bool success);
 
 	void onEnableLimiterChanged();
@@ -144,11 +146,15 @@ public:
 
 	virtual void onConnected(ModbusTcpClient *client);
 
+	virtual void initialize();
+
 	virtual ModbusReply *writePowerLimit(double powerLimitPct) = 0;
 
 	virtual ModbusReply *resetPowerLimit() = 0;
 
 signals:
+	void detected(bool);
+
 	void initialised(bool);
 
 protected:
@@ -164,6 +170,8 @@ public:
 
 	void onConnected(ModbusTcpClient *client) override;
 
+	void initialize() override;
+
 	ModbusReply *writePowerLimit(double powerLimitPct) override;
 
 	ModbusReply *resetPowerLimit() override;
@@ -176,6 +184,8 @@ public:
 	explicit Sunspec2018Limiter(Inverter *parent);
 
 	void onConnected(ModbusTcpClient *client) override;
+
+	void initialize() override;
 
 	ModbusReply *writePowerLimit(double powerLimitPct) override;
 

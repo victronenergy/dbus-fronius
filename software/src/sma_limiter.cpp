@@ -21,7 +21,7 @@ void SmaLimiter::onConnected(ModbusTcpClient *client)
 		connect(reply, SIGNAL(finished()), this,
 			SLOT(onReadLimitEnabledCompleted()));
 	} else {
-		emit initialised(false);
+		emit detected(false);
 	}
 }
 
@@ -30,12 +30,12 @@ void SmaLimiter::onReadLimitEnabledCompleted()
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
 	if (reply->error()) {
-		emit initialised(false);
+		emit detected(false);
 		return;
 	}
 
 	QVector<quint16> values = reply->registers();
-	emit initialised(values.size() > 0 && values[0] == 1);
+	emit detected(values.size() > 0 && values[0] == 1);
 }
 
 ModbusReply *SmaLimiter::writePowerLimit(double powerLimitPct)
@@ -69,7 +69,7 @@ void Sma2018Limiter::onConnected(ModbusTcpClient *client)
 		connect(reply, SIGNAL(finished()), this,
 			SLOT(onReadLimitEnabledCompleted()));
 	} else {
-		emit initialised(false);
+		emit detected(false);
 	}
 }
 
@@ -78,12 +78,12 @@ void Sma2018Limiter::onReadLimitEnabledCompleted()
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
 	if (reply->error()) {
-		emit initialised(false);
+		emit detected(false);
 		return;
 	}
 
 	QVector<quint16> values = reply->registers();
-	emit initialised(values.size() > 0 && values[0] == 1);
+	emit detected(values.size() > 0 && values[0] == 1);
 }
 
 ModbusReply *Sma2018Limiter::writePowerLimit(double powerLimitPct)

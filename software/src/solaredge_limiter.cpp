@@ -69,18 +69,23 @@ void SolarEdgeLimiter::onReadMaxPowerCompleted()
 	ModbusReply *reply = static_cast<ModbusReply *>(sender());
 	reply->deleteLater();
 	if (reply->error()) {
-		emit initialised(false);
+		emit detected(false);
 	} else {
 		QVector <quint16> words = reply->registers();
 		double value = static_cast<double>(*reinterpret_cast<float *>(words.data()));
 		if (value > 0) {
 			qInfo() << "Maximum power is" << value << "for SolarEdge Inverter:" << mInverter->location();
 			mInverter->setMaxPower(value);
-			initLimiter();
+			emit detected(true);
 		} else {
-			emit initialised(false);
+			emit detected(false);
 		}
 	}
+}
+
+void SolarEdgeLimiter::initialize()
+{
+	initLimiter();
 }
 
 void SolarEdgeLimiter::initLimiter()

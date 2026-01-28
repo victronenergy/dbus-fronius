@@ -242,7 +242,9 @@ void SunspecUpdater::onConnected()
 {
 	if (mLimiter) {
 		// Make sure no signals survive from last time
+		disconnect(mLimiter, SIGNAL(detected(bool)), 0, 0);
 		disconnect(mLimiter, SIGNAL(initialised(bool)), 0, 0);
+		connect(mLimiter, SIGNAL(detected(bool)), this, SLOT(onLimiterDetected(bool)));
 		connect(mLimiter, SIGNAL(initialised(bool)), this, SLOT(onLimiterInitialised(bool)));
 		mLimiter->onConnected(mModbusClient);
 	} else {
@@ -250,26 +252,38 @@ void SunspecUpdater::onConnected()
 	}
 }
 
-void SunspecUpdater::onLimiterInitialised(bool success)
+void SunspecUpdater::onLimiterDetected(bool success)
 {
-	// If it has sunspec model 123 or 704, or some other limiter
-	// successfully initialised, enable the power limiter and
-	// initialise it to maxPower.
 	if (success) {
 		const DeviceInfo &deviceInfo = mInverter->deviceInfo();
 		if (deviceInfo.deviceType != 0 || // fronius
 			deviceInfo.productId == VE_PROD_ID_PV_INVERTER_ABB) {
-			mInverter->setPowerLimit(deviceInfo.maxPower);
 			mSettings->setLimiterSupported(LimiterForcedEnabled);
+			mLimiter->initialize();
 		} else {
 			mSettings->setLimiterSupported(LimiterEnabled);
-			mInverter->setPowerLimit(
-				mSettings->enableLimiter() ? deviceInfo.maxPower : qQNaN());
 			disconnect(mSettings, SIGNAL(enableLimiterChanged()), 0, 0);
 			connect(mSettings, SIGNAL(enableLimiterChanged()), this, SLOT(onEnableLimiterChanged()));
+			if (mSettings->enableLimiter()) {
+				mLimiter->initialize();
+			} else {
+				mInverter->setPowerLimit(qQNaN());
+				startNextAction(ReadPowerAndVoltage);
+			}
 		}
 	} else {
 		mSettings->setLimiterSupported(LimiterDisabled);
+		mInverter->setPowerLimit(qQNaN());
+		startNextAction(ReadPowerAndVoltage);
+	}
+}
+
+void SunspecUpdater::onLimiterInitialised(bool success)
+{
+	const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+	if (success) {
+		mInverter->setPowerLimit(deviceInfo.maxPower);
+	} else {
 		mInverter->setPowerLimit(qQNaN());
 	}
 
@@ -279,7 +293,9 @@ void SunspecUpdater::onLimiterInitialised(bool success)
 void SunspecUpdater::onEnableLimiterChanged()
 {
 	if (mSettings->enableLimiter()) {
-		mInverter->setPowerLimit(mInverter->deviceInfo().maxPower);
+		if (mLimiter) {
+			mLimiter->initialize();
+		}
 	} else {
 		resetPowerLimit();
 		mInverter->setPowerLimit(qQNaN());
@@ -549,6 +565,11 @@ void BaseLimiter::onConnected(ModbusTcpClient *client)
 	mClient = client;
 }
 
+void BaseLimiter::initialize()
+{
+	emit initialised(true);
+}
+
 // Limiter for model 123 (basic sunspec limiter)
 SunspecLimiter::SunspecLimiter(Inverter *parent) :
 	BaseLimiter(parent)
@@ -560,7 +581,12 @@ void SunspecLimiter::onConnected(ModbusTcpClient *client)
 	BaseLimiter::onConnected(client);
 
 	// If model 123 exists, this will be non-zero.
-	emit initialised(mInverter->deviceInfo().powerLimitScale > 0);
+	emit detected(mInverter->deviceInfo().powerLimitScale > 0);
+}
+
+void SunspecLimiter::initialize()
+{
+	emit initialised(true);
 }
 
 ModbusReply *SunspecLimiter::writePowerLimit(double powerLimitPct)
@@ -594,7 +620,12 @@ void Sunspec2018Limiter::onConnected(ModbusTcpClient *client)
 	BaseLimiter::onConnected(client);
 
 	// If model 704 exists, this will be non-zero.
-	emit initialised(mInverter->deviceInfo().powerLimitScale > 0);
+	emit detected(mInverter->deviceInfo().powerLimitScale > 0);
+}
+
+void Sunspec2018Limiter::initialize()
+{
+	emit initialised(true);
 }
 
 ModbusReply *Sunspec2018Limiter::writePowerLimit(double powerLimitPct)

@@ -13,6 +13,8 @@ public:
 
 	void onConnected(ModbusTcpClient *client) override;
 
+	void initialize() override;
+
 	ModbusReply *writePowerLimit(double powerLimitPct) override;
 
 	ModbusReply *resetPowerLimit() override;
