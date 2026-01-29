@@ -278,10 +278,18 @@ void Inverter::updateConnectionItem()
 
 void Inverter::setTrackerVoltage(int t, double v)
 {
+	if (t < 0 || t >= mTrackerVoltage.size()) {
+		qWarning() << "setTrackerVoltage: index" << t << "out of bounds (size:" << mTrackerVoltage.size() << ")";
+		return;
+	}
 	produceDouble(mTrackerVoltage[t], v, 1, "V");
 }
 
 void Inverter::setTrackerPower(int t, double p)
 {
+	if (t < 0 || t >= mTrackerPower.size()) {
+		qWarning() << "setTrackerPower: index" << t << "out of bounds (size:" << mTrackerPower.size() << ")";
+		return;
+	}
 	produceDouble(mTrackerPower[t], p, 0, "W");
 }
