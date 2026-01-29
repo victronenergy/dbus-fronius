@@ -192,10 +192,13 @@ void SunspecUpdater::onReadCompleted()
 		if (!values.isEmpty() &&
 			 values.size() == deviceInfo.numberOfTrackers * 20) {
 			for (int i=0; i < deviceInfo.numberOfTrackers; ++i) {
+				double rawVoltage = getRawValue(values, 20 * i + 10, 1);
+				double rawPower = getRawValue(values, 20 * i + 11, 1);
+				// 0xFFFF indicates "not implemented" in SunSpec
 				mInverter->setTrackerVoltage(i,
-					getRawValue(values, 20 * i + 10, 1) * deviceInfo.trackerVoltageScale);
+					rawVoltage == 0xFFFF ? qQNaN() : rawVoltage * deviceInfo.trackerVoltageScale);
 				mInverter->setTrackerPower(i,
-					getRawValue(values, 20 * i + 11, 1) * deviceInfo.trackerPowerScale);
+					rawPower == 0xFFFF ? qQNaN() : rawPower * deviceInfo.trackerPowerScale);
 			}
 		}
 		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
