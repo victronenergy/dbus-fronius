@@ -1,4 +1,6 @@
+#include <QDebug>
 #include <QNetworkInterface>
+
 #include "local_ip_address_generator.h"
 
 Subnet::Subnet(LocalIpAddressGenerator *generator, quint32 first, quint32 last, quint32 localhost):
