@@ -119,7 +119,7 @@ void SunspecUpdater::setInverterState(int sunSpecState)
 		break;
 	default:
 		mInverter->invalidateStatusCode();
-		return;
+		froniusState = 99;
 	}
 	mInverter->setStatusCode(froniusState);
 }
