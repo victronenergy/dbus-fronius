@@ -42,7 +42,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 			// So we found an inverter whose communication settings matches ours.
 			// We can only assume this inverter is no longer available there, so
 			// we give up and hope it will return somewhere else.
-			delete mInverter;
+			mInverter->deleteLater();
 			mInverter = 0;
 		}
 		return false;
@@ -55,7 +55,7 @@ bool InverterMediator::processNewInverter(const DeviceInfo &deviceInfo)
 	if (mInverter != 0 && mDeviceInfo.retrievalMode != deviceInfo.retrievalMode &&
 			deviceInfo.retrievalMode != ProtocolFroniusSolarApi) {
 		qInfo() << "Inverter retrieval mode has changed @" << mInverter->location();
-		delete mInverter;
+		mInverter->deleteLater();
 		mInverter = 0;
 	}
 	mDeviceInfo = deviceInfo;
@@ -88,7 +88,7 @@ void InverterMediator::onSettingsInitialized()
 	connect(mInverterSettings, SIGNAL(customNameChanged()), this, SLOT(onSettingsCustomNameChanged()));
 
 	if (!mInverterSettings->isActive()) {
-		delete mInverter;
+		mInverter->deleteLater();
 		mInverter = 0;
 		return;
 	}
@@ -123,7 +123,7 @@ void InverterMediator::onIsActivatedChanged()
 		if (mInverter == 0)
 			return;
 		qInfo() << "Inverter deactivated:" << mInverter->location();
-		delete mInverter;
+		mInverter->deleteLater();
 		mInverter = 0;
 	}
 }
