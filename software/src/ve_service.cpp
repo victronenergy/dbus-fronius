@@ -11,9 +11,10 @@ VeService::VeService(VeQItem *root, QObject *parent):
 
 VeService::~VeService()
 {
-	if (mRoot != 0)
+	if (mRoot != 0) {
 		removeFromItems(mRoot);
-	mRoot->itemDelete();
+		mRoot->itemDelete();
+	}
 	mRoot = 0;
 }
 
