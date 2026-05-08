@@ -485,7 +485,7 @@ bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 // want to filter for those.
 static const QVector<quint16> FroniusNullFrame = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7 };
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 FroniusSunspecUpdater::FroniusSunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent):
 	SunspecUpdater(limiter, inverter, settings, parent)
@@ -498,7 +498,7 @@ bool FroniusSunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 	// zeros, with Status=7. By returning true, the register will be fetched
 	// again immediately.
 	if (inverter()->deviceInfo().retrievalMode == ProtocolSunSpecIntSf &&
-			values.mid(2, 37) == FroniusNullFrame) {
+			values.mid(2, 36) == FroniusNullFrame) {
 		qDebug() << "Fronius Null-frame detected" << values;
 		return true;
 	}
