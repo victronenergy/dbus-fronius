@@ -453,7 +453,11 @@ bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 			// sunspec does not provide a voltage for the system as a whole. This does not
 			// make a lot of sense. Since previous versions of dbus-fronius published this
 			// value (retrieved via the Solar API) we use the value from phase 1.
-			cid.acVoltage = getScaledValue(values, 10, 1, 13, false);
+			cid.acVoltage = getScaledValue(values, 10, 1, 13, false);		// I_AC_VoltageAN
+			// Single-phase SolarEdge inverters may use I_AC_VoltageAB instead of I_AC_VoltageAN
+			if (std::isnan(cid.acVoltage)) {
+				cid.acVoltage = getScaledValue(values, 7, 1, 13, false);	// I_AC_VoltageAB
+			}
 			cid.totalEnergy = getScaledValue(values, 24, 2, 26, false);
 			mDataProcessor->process(cid);
 
