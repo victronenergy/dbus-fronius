@@ -88,8 +88,10 @@ void InverterMediator::onSettingsInitialized()
 	connect(mInverterSettings, SIGNAL(customNameChanged()), this, SLOT(onSettingsCustomNameChanged()));
 
 	if (!mInverterSettings->isActive()) {
-		mInverter->deleteLater();
-		mInverter = 0;
+		if (mInverter) {
+			mInverter->deleteLater();
+			mInverter = 0;
+		}
 		return;
 	}
 
