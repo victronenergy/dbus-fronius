@@ -31,6 +31,14 @@ public:
 	bool idBySerial() const;
 
 	/*!
+	 * The timeout, in seconds, after which the PV inverter reverts to its
+	 * previous power limit if no new limit instruction is received. Also
+	 * Acts as a backup for the programmatic reset (which fires half the time
+	 * earlier).
+	 */
+	int powerLimitTimeout() const;
+
+	/*!
 	 * Registers an inverter.
 	 * @param deviceType The device type as specified by Fronius.
 	 * @param unique The inverter serial (called unique ID by Fronius).
@@ -51,6 +59,8 @@ signals:
 
 	void modbusAlternatesChanged();
 
+	void powerLimitTimeoutChanged();
+
 private:
 	QList<QHostAddress> toAdressList(const QString &s) const;
 
@@ -62,6 +72,7 @@ private:
 	VeQItem *mKnownIpAddresses;
 	VeQItem *mAutoScan;
 	VeQItem *mIdBySerial;
+	VeQItem *mPowerLimitTimeout;
 };
 
 #endif // SETTINGS_H

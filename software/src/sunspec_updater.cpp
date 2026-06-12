@@ -10,18 +10,15 @@
 #include "modbus_reply.h"
 #include "power_info.h"
 #include "sunspec_tools.h"
-
-// The PV inverter will reset the power limit to maximum after this interval. The reset will cause
-// the power of the inverter to increase (or stay at its current value), so a large value for the
-// timeout is pretty safe.
-static const int PowerLimitTimeout = 120;
+#include "settings.h"
 
 QList<SunspecUpdater*> SunspecUpdater::mUpdaters;
 
-SunspecUpdater::SunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent):
+SunspecUpdater::SunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, Settings *globalSettings, QObject *parent):
 	QObject(parent),
 	mInverter(inverter),
 	mSettings(settings),
+	mGlobalSettings(globalSettings),
 	mModbusClient(new ModbusTcpClient(this)),
 	mTimer(new QTimer(this)),
 	mPowerLimitTimer(new QTimer(this)),
@@ -42,9 +39,14 @@ SunspecUpdater::SunspecUpdater(BaseLimiter *limiter, Inverter *inverter, Inverte
 	mTimer->setSingleShot(true);
 	connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
 	mPowerLimitTimer->setSingleShot(true);
-	mPowerLimitTimer->setInterval(60000);
 	connect(mPowerLimitTimer, SIGNAL(timeout()), this, SLOT(onPowerLimitExpired()));
 	connect(mSettings, SIGNAL(phaseChanged()), this, SLOT(onPhaseChanged()));
+	connect(mGlobalSettings, SIGNAL(powerLimitTimeoutChanged()),
+		this, SLOT(onPowerLimitTimeoutChanged()));
+
+	// Apply the configured power-limit timeout to the limiter and the
+	// programmatic reset timer (which fires 10 seconds earlier).
+	onPowerLimitTimeoutChanged();
 
 	mUpdaters.append(this);
 }
@@ -327,6 +329,16 @@ void SunspecUpdater::onPowerLimitExpired()
 	mInverter->setPowerLimit(mInverter->deviceInfo().maxPower);
 }
 
+void SunspecUpdater::onPowerLimitTimeoutChanged()
+{
+	int timeout = mGlobalSettings->powerLimitTimeout();
+	if (mLimiter)
+		mLimiter->setPowerLimitTimeout(timeout);
+	// The programmatic reset fires halfway before the inverter-side timeout,
+	// so the inverter-side timeout only acts as a backup.
+	mPowerLimitTimer->setInterval((timeout/2) * 1000);
+}
+
 void SunspecUpdater::onPhaseChanged()
 {
 	if (mInverter->deviceInfo().phaseCount > 1)
@@ -487,8 +499,8 @@ static const QVector<quint16> FroniusNullFrame = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-FroniusSunspecUpdater::FroniusSunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent):
-	SunspecUpdater(limiter, inverter, settings, parent)
+FroniusSunspecUpdater::FroniusSunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, Settings *globalSettings, QObject *parent):
+	SunspecUpdater(limiter, inverter, settings, globalSettings, parent)
 {
 }
 
@@ -509,8 +521,8 @@ bool FroniusSunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 
 // Extended classes for 700-series models, for Sunspec > 2018
 // ==========================================================
-Sunspec2018Updater::Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent):
-	SunspecUpdater(limiter, inverter, settings, parent)
+Sunspec2018Updater::Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, Settings *globalSettings, QObject *parent):
+	SunspecUpdater(limiter, inverter, settings, globalSettings, parent)
 {
 }
 
@@ -599,7 +611,7 @@ ModbusReply *SunspecLimiter::writePowerLimit(double powerLimitPct)
 	quint16 pct = static_cast<quint16>(qRound(powerLimitPct * deviceInfo.powerLimitScale));
 	values.append(pct);
 	values.append(0); // unused
-	values.append(PowerLimitTimeout);
+	values.append(mPowerLimitTimeout);
 	values.append(0); // unused
 	values.append(1); // enabled power throttle mode
 	return mClient->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 5, values);
@@ -642,7 +654,7 @@ ModbusReply *Sunspec2018Limiter::writePowerLimit(double powerLimitPct)
 	values.append(pct); // WMaxLimPct
 	values.append(0); // WMaxLimPctRvrt, revert to 0%
 	values.append(1); // WMaxLimPctEnaRvrt, enable reverting to 0%
-	values.append(PowerLimitTimeout); // WMaxLimPctRvrtTms
+	values.append(mPowerLimitTimeout); // WMaxLimPctRvrtTms
 	return mClient->writeMultipleHoldingRegisters(deviceInfo.networkId, deviceInfo.immediateControlOffset + 14, values);
 }
 

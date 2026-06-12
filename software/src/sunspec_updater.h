@@ -13,12 +13,13 @@ class ModbusReply;
 class ModbusTcpClient;
 class QTimer;
 class BaseLimiter;
+class Settings;
 
 class SunspecUpdater: public QObject
 {
 	Q_OBJECT
 public:
-	explicit SunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
+	explicit SunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, Settings *globalSettings, QObject *parent = 0);
 
 	virtual ~SunspecUpdater();
 
@@ -51,6 +52,8 @@ private slots:
 	void onPowerLimitExpired();
 
 	void onPhaseChanged();
+
+	void onPowerLimitTimeoutChanged();
 
 protected:
 	virtual void readPowerAndVoltage();
@@ -104,6 +107,7 @@ private:
 
 	Inverter *mInverter;
 	InverterSettings *mSettings;
+	Settings *mGlobalSettings;
 	ModbusTcpClient *mModbusClient;
 	QTimer *mTimer;
 	QTimer *mPowerLimitTimer;
@@ -120,7 +124,7 @@ class FroniusSunspecUpdater : public SunspecUpdater
 {
 	Q_OBJECT
 public:
-	explicit FroniusSunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
+	explicit FroniusSunspecUpdater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, Settings *globalSettings, QObject *parent = 0);
 private:
 	bool parsePowerAndVoltage(QVector<quint16> values) override;
 };
@@ -129,7 +133,7 @@ class Sunspec2018Updater : public SunspecUpdater
 {
 	Q_OBJECT
 public:
-	explicit Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, QObject *parent = 0);
+	explicit Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, Settings *globalSettings, QObject *parent = 0);
 private:
 	void readPowerAndVoltage() override;
 
@@ -152,6 +156,12 @@ public:
 
 	virtual ModbusReply *resetPowerLimit() = 0;
 
+	/*!
+	 * Sets the timeout, in seconds, written to the inverter, after which it
+	 * reverts to its previous power limit if no new instruction is received.
+	 */
+	void setPowerLimitTimeout(int seconds) { mPowerLimitTimeout = seconds; }
+
 signals:
 	void detected(bool);
 
@@ -160,6 +170,7 @@ signals:
 protected:
 	Inverter *mInverter;
 	ModbusTcpClient *mClient;
+	int mPowerLimitTimeout = 120;
 };
 
 class SunspecLimiter : public BaseLimiter

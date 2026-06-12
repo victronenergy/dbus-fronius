@@ -12,7 +12,9 @@ Settings::Settings(VeQItem *root, QObject *parent) :
 	mIpAddresses(connectItem("IPAddresses", "", SIGNAL(ipAddressesChanged()), false)),
 	mKnownIpAddresses(connectItem("KnownIPAddresses", "", 0, false)),
 	mAutoScan(connectItem("AutoScan", 1, 0)),
-	mIdBySerial(connectItem("IdentifyBySerialNumber", 0, 0))
+	mIdBySerial(connectItem("IdentifyBySerialNumber", 0, 0)),
+	mPowerLimitTimeout(connectItem("PowerLimitTimeout", 120.0, 30.0, 600.0,
+		SIGNAL(powerLimitTimeoutChanged()), false))
 {
 }
 
@@ -59,6 +61,11 @@ bool Settings::autoScan() const
 bool Settings::idBySerial() const
 {
 	return mIdBySerial->getValue().toBool();
+}
+
+int Settings::powerLimitTimeout() const
+{
+	return mPowerLimitTimeout->getValue().toInt();
 }
 
 int Settings::registerInverter(const QString &uniqueId)

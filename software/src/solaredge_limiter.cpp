@@ -95,7 +95,7 @@ void SolarEdgeLimiter::initLimiter()
 	mCommands.append({ActivePowerRampUpRate,     toWords(static_cast<float>(-1))});
 	mCommands.append({ActivePowerRampDownRate,   toWords(static_cast<float>(-1))});
 	mCommands.append({FallbackActivePowerLimit,  toWords(FallbackActivePowerLimitValue)});
-	mCommands.append({CommandTimeout,            toWords(static_cast<uint32_t>(120))}); // 2 minutes
+	mCommands.append({CommandTimeout,            toWords(static_cast<uint32_t>(mPowerLimitTimeout))});
 	mCommands.append({EnableDynamicPowerControl, {1}});
 	qInfo() << "Writing EDPC settings to SolarEdge Inverter:" << mInverter->location();
 	writeCommands(true);

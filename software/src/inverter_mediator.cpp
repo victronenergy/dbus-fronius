@@ -222,19 +222,19 @@ void InverterMediator::startAcquisition()
 		if (mDeviceInfo.retrievalMode == ProtocolSunSpec2018) {
 			qInfo() << "Using protocol IEEE1547-2018";
 			Sunspec2018Updater *updater = new Sunspec2018Updater(
-				limiter, mInverter, mInverterSettings, mInverter);
+				limiter, mInverter, mInverterSettings, mSettings, mInverter);
 			connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 			connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
 		} else if (mDeviceInfo.deviceType != 0) {
 			qInfo() << "Using legacy sunspec protocol: Fronius";
 			FroniusSunspecUpdater *updater = new FroniusSunspecUpdater(
-				limiter, mInverter, mInverterSettings, mInverter);
+				limiter, mInverter, mInverterSettings, mSettings, mInverter);
 			connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 			connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
 		} else {
 			qInfo() << "Using legacy sunspec protocol: Generic";
 			SunspecUpdater *updater = new SunspecUpdater(
-				limiter, mInverter, mInverterSettings, mInverter);
+				limiter, mInverter, mInverterSettings, mSettings, mInverter);
 			connect(updater, SIGNAL(connectionLost()), this, SLOT(onConnectionLost()));
 			connect(updater, SIGNAL(inverterModelChanged()), this, SLOT(onInverterModelChanged()));
 		}
