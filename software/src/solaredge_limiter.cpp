@@ -21,7 +21,7 @@ enum PowerControl : uint16_t {
 	/* add if/when needed */
 };
 
-static constexpr float FallbackActivePowerLimitValue = 0;   // [%] For timeout on inverter (e.g. communication failure)
+static constexpr float FallbackActivePowerLimitValue = 100; // [%] For timeout on inverter (e.g. communication failure)
 static constexpr float PowerLimitDisableValue = 100;        // [%] For timeout on updating powerLimit (venus-os)
 
 template <typename T, typename std::enable_if<std::is_arithmetic<T>::value, bool>::type = true>
