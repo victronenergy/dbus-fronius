@@ -521,6 +521,17 @@ bool FroniusSunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 
 // Extended classes for 700-series models, for Sunspec > 2018
 // ==========================================================
+
+// Model 701 is 153 registers long, too long for a single modbus request, and
+// some inverters cap requests well below the modbus maximum. A Growatt was
+// observed to reject anything over 118 registers. So read only the window we
+// actually use: from InvSt (offset 4) up to and including TotWh_SF (offset
+// 120), the scale factor for the energy counters. That is 117 registers.
+// Offsets used in parsePowerAndVoltage below are relative to the start of this
+// window, that is, the offset within the model minus Sunspec2018ReadOffset.
+static const quint16 Sunspec2018ReadOffset = 4;
+static const quint16 Sunspec2018ReadCount = 117;
+
 Sunspec2018Updater::Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, Settings *globalSettings, QObject *parent):
 	SunspecUpdater(limiter, inverter, settings, globalSettings, parent)
 {
@@ -528,33 +539,33 @@ Sunspec2018Updater::Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter,
 
 void Sunspec2018Updater::readPowerAndVoltage()
 {
-	// Read 121 values. The model is 153 long, too long for a single modbus
-	// request, This is enough to get everything we care about.
-	readHoldingRegisters(inverter()->deviceInfo().inverterModelOffset, 121);
+	readHoldingRegisters(
+		inverter()->deviceInfo().inverterModelOffset + Sunspec2018ReadOffset,
+		Sunspec2018ReadCount);
 }
 
 bool Sunspec2018Updater::parsePowerAndVoltage(QVector<quint16> values)
 {
-	if (values.size() != 121)
+	if (values.size() != Sunspec2018ReadCount)
 		return false;
 
 	CommonInverterData cid;
-	cid.acPower = getScaledValue(values, 10, 1, 116, true);
-	cid.acCurrent = getScaledValue(values, 14, 1, 113, true);
-	cid.acVoltage = getScaledValue(values, 16, 1, 114, false);
+	cid.acPower = getScaledValue(values, 6, 1, 112, true);
+	cid.acCurrent = getScaledValue(values, 10, 1, 109, true);
+	cid.acVoltage = getScaledValue(values, 12, 1, 110, false);
 
-	cid.totalEnergy = getScaledValue(values, 19, 4, 120, false);
+	cid.totalEnergy = getScaledValue(values, 15, 4, 116, false);
 	processor()->process(cid);
 
 	if (inverter()->deviceInfo().phaseCount > 1) {
 		ThreePhasesInverterData tpid;
-		tpid.acCurrentPhase1 = getScaledValue(values, 45, 1, 113, true);
-		tpid.acCurrentPhase2 = getScaledValue(values, 68, 1, 113, true);
-		tpid.acCurrentPhase3 = getScaledValue(values, 91, 1, 113, true);
+		tpid.acCurrentPhase1 = getScaledValue(values, 41, 1, 109, true);
+		tpid.acCurrentPhase2 = getScaledValue(values, 64, 1, 109, true);
+		tpid.acCurrentPhase3 = getScaledValue(values, 87, 1, 109, true);
 
-		tpid.acVoltagePhase1 = getScaledValue(values, 47, 1, 114, false);
-		tpid.acVoltagePhase2 = getScaledValue(values, 70, 1, 114, false);
-		tpid.acVoltagePhase3 = getScaledValue(values, 93, 1, 114, false);
+		tpid.acVoltagePhase1 = getScaledValue(values, 43, 1, 110, false);
+		tpid.acVoltagePhase2 = getScaledValue(values, 66, 1, 110, false);
+		tpid.acVoltagePhase3 = getScaledValue(values, 89, 1, 110, false);
 		processor()->process(tpid);
 	} else if (settings()->phase() == MultiPhase) {
 		// A single phase inverter across phases, in North America.
@@ -562,7 +573,7 @@ bool Sunspec2018Updater::parsePowerAndVoltage(QVector<quint16> values)
 	}
 
 	// +1 because 2018 enum is literally off by one from the earlier spec
-	setInverterState(values[4] + 1);
+	setInverterState(values[0] + 1);
 	return true;
 }
 
