@@ -9,6 +9,9 @@ double getRawValue(const QVector<quint16> &values, int offset, int size);
 double getScaledValue(const QVector<quint16> &values, int offset, int size,
 					  int scaleOffset, bool isSigned);
 
+double getValueWithScale(const QVector<quint16> &values, int offset, int size,
+						 double scale, bool isSigned);
+
 double getScale(const QVector<quint16> &values, int offset);
 
 double getFloat(const QVector<quint16> &values, int offset);

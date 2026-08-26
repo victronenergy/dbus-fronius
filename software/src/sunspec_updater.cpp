@@ -524,13 +524,15 @@ bool FroniusSunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 
 // Model 701 is 153 registers long, too long for a single modbus request, and
 // some inverters cap requests well below the modbus maximum. A Growatt was
-// observed to reject anything over 118 registers. So read only the window we
-// actually use: from InvSt (offset 4) up to and including TotWh_SF (offset
-// 120), the scale factor for the energy counters. That is 117 registers.
+// observed to reject anything over 118 registers, a Solis over 85. So read
+// only the window we actually use: from InvSt (offset 4) up to and including
+// the voltage of phase 3 (offset 93). That is 90 registers. The scale factors
+// live past the end of this window, but they never change, so they are read
+// once during detection and kept in DeviceInfo instead.
 // Offsets used in parsePowerAndVoltage below are relative to the start of this
 // window, that is, the offset within the model minus Sunspec2018ReadOffset.
 static const quint16 Sunspec2018ReadOffset = 4;
-static const quint16 Sunspec2018ReadCount = 117;
+static const quint16 Sunspec2018ReadCount = 90;
 
 Sunspec2018Updater::Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, Settings *globalSettings, QObject *parent):
 	SunspecUpdater(limiter, inverter, settings, globalSettings, parent)
@@ -549,23 +551,25 @@ bool Sunspec2018Updater::parsePowerAndVoltage(QVector<quint16> values)
 	if (values.size() != Sunspec2018ReadCount)
 		return false;
 
-	CommonInverterData cid;
-	cid.acPower = getScaledValue(values, 6, 1, 112, true);
-	cid.acCurrent = getScaledValue(values, 10, 1, 109, true);
-	cid.acVoltage = getScaledValue(values, 12, 1, 110, false);
+	const DeviceInfo &deviceInfo = inverter()->deviceInfo();
 
-	cid.totalEnergy = getScaledValue(values, 15, 4, 116, false);
+	CommonInverterData cid;
+	cid.acPower = getValueWithScale(values, 6, 1, deviceInfo.acPowerScale, true);
+	cid.acCurrent = getValueWithScale(values, 10, 1, deviceInfo.acCurrentScale, true);
+	cid.acVoltage = getValueWithScale(values, 12, 1, deviceInfo.acVoltageScale, false);
+
+	cid.totalEnergy = getValueWithScale(values, 15, 4, deviceInfo.totalEnergyScale, false);
 	processor()->process(cid);
 
-	if (inverter()->deviceInfo().phaseCount > 1) {
+	if (deviceInfo.phaseCount > 1) {
 		ThreePhasesInverterData tpid;
-		tpid.acCurrentPhase1 = getScaledValue(values, 41, 1, 109, true);
-		tpid.acCurrentPhase2 = getScaledValue(values, 64, 1, 109, true);
-		tpid.acCurrentPhase3 = getScaledValue(values, 87, 1, 109, true);
+		tpid.acCurrentPhase1 = getValueWithScale(values, 41, 1, deviceInfo.acCurrentScale, true);
+		tpid.acCurrentPhase2 = getValueWithScale(values, 64, 1, deviceInfo.acCurrentScale, true);
+		tpid.acCurrentPhase3 = getValueWithScale(values, 87, 1, deviceInfo.acCurrentScale, true);
 
-		tpid.acVoltagePhase1 = getScaledValue(values, 43, 1, 110, false);
-		tpid.acVoltagePhase2 = getScaledValue(values, 66, 1, 110, false);
-		tpid.acVoltagePhase3 = getScaledValue(values, 89, 1, 110, false);
+		tpid.acVoltagePhase1 = getValueWithScale(values, 43, 1, deviceInfo.acVoltageScale, false);
+		tpid.acVoltagePhase2 = getValueWithScale(values, 66, 1, deviceInfo.acVoltageScale, false);
+		tpid.acVoltagePhase3 = getValueWithScale(values, 89, 1, deviceInfo.acVoltageScale, false);
 		processor()->process(tpid);
 	} else if (settings()->phase() == MultiPhase) {
 		// A single phase inverter across phases, in North America.
