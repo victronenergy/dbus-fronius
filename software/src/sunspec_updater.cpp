@@ -89,6 +89,9 @@ void SunspecUpdater::startNextAction(ModbusState state)
 	case ReadPowerAndVoltage:
 		readPowerAndVoltage();
 		break;
+	case ReadPhaseData:
+		readPhaseData();
+		break;
 	case ReadTrackerData:
 		readHoldingRegisters(deviceInfo.trackerModelOffset + TrackerReadOffset,
 			trackerReadCount(deviceInfo.numberOfTrackers));
@@ -200,6 +203,33 @@ void SunspecUpdater::onReadCompleted()
 			nextState = Idle;
 			break;
 		}
+
+		const DeviceInfo &deviceInfo = mInverter->deviceInfo();
+
+		// Model 701 is too large to read in a single request, so the
+		// per-phase measurements are fetched separately. A single phase
+		// inverter has none we publish, so don't bother in that case.
+		if (deviceInfo.inverterModel == 701 && deviceInfo.phaseCount > 1) {
+			nextState = ReadPhaseData;
+			break;
+		}
+
+		// If we have tracker data, read it
+		if (deviceInfo.trackerModelOffset > 0) {
+			nextState = ReadTrackerData;
+			break;
+		}
+
+		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
+		mWritePowerLimitRequested = false;
+		break;
+	}
+	case ReadPhaseData:
+	{
+		if (values.isEmpty())
+			break;
+
+		parsePhaseData(values);
 
 		// If we have tracker data, read it
 		if (mInverter->deviceInfo().numberOfTrackers > 0) {
@@ -512,6 +542,22 @@ bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 	return true;
 }
 
+// Only model 701 is too large to read in a single request, so only
+// Sunspec2018Updater splits off a second read for the per-phase measurements.
+// The state machine does not enter ReadPhaseData for the other models, but go
+// idle rather than stall if it somehow does.
+void SunspecUpdater::readPhaseData()
+{
+	Q_ASSERT(false);
+	startNextAction(Idle);
+}
+
+void SunspecUpdater::parsePhaseData(QVector<quint16> values)
+{
+	Q_UNUSED(values);
+	Q_ASSERT(false);
+}
+
 // Extended classes relating to Fronius specific updating
 // ======================================================
 // Fronius inverters send a null payload during certain solar net timeouts. We
@@ -545,15 +591,24 @@ bool FroniusSunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 
 // Model 701 is 153 registers long, too long for a single modbus request, and
 // some inverters cap requests well below the modbus maximum. A Growatt was
-// observed to reject anything over 118 registers, a Solis over 85. So read
-// only the window we actually use: from InvSt (offset 4) up to and including
-// the voltage of phase 3 (offset 93). That is 90 registers. The scale factors
-// live past the end of this window, but they never change, so they are read
-// once during detection and kept in DeviceInfo instead.
-// Offsets used in parsePowerAndVoltage below are relative to the start of this
-// window, that is, the offset within the model minus Sunspec2018ReadOffset.
+// observed to reject anything over 118 registers, a Solis over 85. So it is
+// read in two parts, each skipping whatever we don't use at the end.
+//
+// The first part holds the totals, from InvSt (offset 4) up to and including
+// the TotWhInj energy counter (offsets 19 to 22), so 19 registers. The second
+// holds the per-phase measurements, from the current of phase 1 (offset 45) up
+// to the voltage of phase 3 (offset 93), so 49 registers. The second read is
+// only done for a multi-phase inverter.
+//
+// The scale factors (offsets 113 to 122) fall outside both windows, but they
+// never change, so they are read once during detection and kept in DeviceInfo.
+//
+// Offsets used when parsing below are relative to the start of the window they
+// belong to, that is, the offset within the model minus the read offset.
 static const quint16 Sunspec2018ReadOffset = 4;
-static const quint16 Sunspec2018ReadCount = 90;
+static const quint16 Sunspec2018ReadCount = 19;
+static const quint16 Sunspec2018PhaseOffset = 45;
+static const quint16 Sunspec2018PhaseCount = 49;
 
 Sunspec2018Updater::Sunspec2018Updater(BaseLimiter *limiter, Inverter *inverter, InverterSettings *settings, Settings *globalSettings, QObject *parent):
 	SunspecUpdater(limiter, inverter, settings, globalSettings, parent)
@@ -582,17 +637,7 @@ bool Sunspec2018Updater::parsePowerAndVoltage(QVector<quint16> values)
 	cid.totalEnergy = getValueWithScale(values, 15, 4, deviceInfo.totalEnergyScale, false);
 	processor()->process(cid);
 
-	if (deviceInfo.phaseCount > 1) {
-		ThreePhasesInverterData tpid;
-		tpid.acCurrentPhase1 = getValueWithScale(values, 41, 1, deviceInfo.acCurrentScale, true);
-		tpid.acCurrentPhase2 = getValueWithScale(values, 64, 1, deviceInfo.acCurrentScale, true);
-		tpid.acCurrentPhase3 = getValueWithScale(values, 87, 1, deviceInfo.acCurrentScale, true);
-
-		tpid.acVoltagePhase1 = getValueWithScale(values, 43, 1, deviceInfo.acVoltageScale, false);
-		tpid.acVoltagePhase2 = getValueWithScale(values, 66, 1, deviceInfo.acVoltageScale, false);
-		tpid.acVoltagePhase3 = getValueWithScale(values, 89, 1, deviceInfo.acVoltageScale, false);
-		processor()->process(tpid);
-	} else if (settings()->phase() == MultiPhase) {
+	if (deviceInfo.phaseCount <= 1 && settings()->phase() == MultiPhase) {
 		// A single phase inverter across phases, in North America.
 		updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
 	}
@@ -600,6 +645,32 @@ bool Sunspec2018Updater::parsePowerAndVoltage(QVector<quint16> values)
 	// +1 because 2018 enum is literally off by one from the earlier spec
 	setInverterState(values[0] + 1);
 	return true;
+}
+
+void Sunspec2018Updater::readPhaseData()
+{
+	readHoldingRegisters(
+		inverter()->deviceInfo().inverterModelOffset + Sunspec2018PhaseOffset,
+		Sunspec2018PhaseCount);
+}
+
+void Sunspec2018Updater::parsePhaseData(QVector<quint16> values)
+{
+	if (values.size() != Sunspec2018PhaseCount)
+		return;
+
+	const DeviceInfo &deviceInfo = inverter()->deviceInfo();
+
+	// The three phases are 23 registers apart.
+	ThreePhasesInverterData tpid;
+	tpid.acCurrentPhase1 = getValueWithScale(values, 0, 1, deviceInfo.acCurrentScale, true);
+	tpid.acCurrentPhase2 = getValueWithScale(values, 23, 1, deviceInfo.acCurrentScale, true);
+	tpid.acCurrentPhase3 = getValueWithScale(values, 46, 1, deviceInfo.acCurrentScale, true);
+
+	tpid.acVoltagePhase1 = getValueWithScale(values, 2, 1, deviceInfo.acVoltageScale, false);
+	tpid.acVoltagePhase2 = getValueWithScale(values, 25, 1, deviceInfo.acVoltageScale, false);
+	tpid.acVoltagePhase3 = getValueWithScale(values, 48, 1, deviceInfo.acVoltageScale, false);
+	processor()->process(tpid);
 }
 
 BaseLimiter::BaseLimiter(Inverter *parent) :
