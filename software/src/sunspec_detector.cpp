@@ -225,6 +225,17 @@ void SunspecDetector::onFinished()
 		case 701: // DERMeasureAC
 			if (values.size() > 2)
 				di->di.phaseCount = values[2] + 1;
+			// Fetch the scale factors, they don't change. Start at A_SF (113)
+			// up to TotWh_SF (121).
+			requestNextContent(di, 0xF701, di->nextModelRegister, 8, 113);
+			return;
+		case 0xF701: // Not a real model, second half of 701
+			if (values.size() >= 8) {
+				di->di.acCurrentScale = getScale(values, 0); // A_SF
+				di->di.acVoltageScale = getScale(values, 1); // V_SF
+				di->di.acPowerScale = getScale(values, 3); // W_SF
+				di->di.totalEnergyScale = getScale(values, 7); // TotWh_SF
+			}
 			break;
 		case 120: // Nameplate ratings
 			if (values.size() > 4)
@@ -280,7 +291,10 @@ void SunspecDetector::checkDone(Reply *di)
 {
 	if ( !di->di.productName.isEmpty() && // Model 1 is present
 			di->di.phaseCount > 0 && // Model 1xx present
-			di->di.networkId > 0)
+			di->di.networkId > 0 &&
+			// Model 701 is parsed using the scale factors read here, so
+			// without them the inverter is of no use to us.
+			(di->di.inverterModel != 701 || qIsFinite(di->di.acPowerScale)))
 		di->setResult();
 	setDone(di);
 }

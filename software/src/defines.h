@@ -2,6 +2,7 @@
 #define DEFINES_H
 
 #include <QString>
+#include <qnumeric.h>
 
 enum InverterPhase {
 	/*!
@@ -50,6 +51,10 @@ struct DeviceInfo
 		trackerModelOffset(0),
 		numberOfTrackers(0),
 		powerLimitScale(0),
+		acCurrentScale(qQNaN()),
+		acVoltageScale(qQNaN()),
+		acPowerScale(qQNaN()),
+		totalEnergyScale(qQNaN()),
 		maxPower(0),
 		storageCapacity(0)
 	{}
@@ -75,6 +80,14 @@ struct DeviceInfo
 	quint16 trackerModelOffset;
 	int numberOfTrackers;
 	double powerLimitScale;
+	// Scale factors of model 701. These never change, so they are read once
+	// during detection and kept out of the periodic read window. The block
+	// runs from offset 113 (A_SF) to 122 (TotVArh_SF), we keep the ones used
+	// when parsing model 701.
+	double acCurrentScale; // A_SF, model offset 113
+	double acVoltageScale; // V_SF, model offset 114
+	double acPowerScale; // W_SF, model offset 116
+	double totalEnergyScale; // TotWh_SF, model offset 120
 	double maxPower;
 	double storageCapacity; // SMA SunnyIsland will report a storage capacity
 };
