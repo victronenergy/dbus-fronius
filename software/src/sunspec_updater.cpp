@@ -58,6 +58,29 @@ SunspecUpdater::~SunspecUpdater()
 	mUpdaters.removeAll(this);
 }
 
+// Model 160 (multiple MPPT) is a 10 register fixed block followed by a 20
+// register repeating block per tracker. The scale factors sit in the fixed
+// block and are not static, Fronius inverters change them at runtime, so they
+// have to be read together with the tracker data rather than cached at
+// detection time.
+//
+// The window therefore starts at DCV_SF (offset 3) instead of at the first
+// repeating block (offset 10). To stay within one modbus request it stops at
+// the DCW of the last tracker, dropping the unused tail of that block (DCWH,
+// Tms, Tmp, DCSt, DCEvt). That is 20 * n - 1 registers, 119 for the maximum of
+// 6 trackers.
+//
+// Offsets below are relative to the start of this window: DCV_SF and DCW_SF are
+// 0 and 1, and tracker i has DCV at 20 * i + 17 and DCW at 20 * i + 18.
+static const quint16 TrackerReadOffset = 3;
+static const int TrackerVoltageScaleOffset = 0;
+static const int TrackerPowerScaleOffset = 1;
+
+static quint16 trackerReadCount(int numberOfTrackers)
+{
+	return static_cast<quint16>(20 * numberOfTrackers - 1);
+}
+
 void SunspecUpdater::startNextAction(ModbusState state)
 {
 	mCurrentState = state;
@@ -67,8 +90,8 @@ void SunspecUpdater::startNextAction(ModbusState state)
 		readPowerAndVoltage();
 		break;
 	case ReadTrackerData:
-		readHoldingRegisters(deviceInfo.trackerModelOffset + 10,
-			deviceInfo.numberOfTrackers * 20);
+		readHoldingRegisters(deviceInfo.trackerModelOffset + TrackerReadOffset,
+			trackerReadCount(deviceInfo.numberOfTrackers));
 		break;
 	case WritePowerLimit:
 	{
@@ -179,7 +202,7 @@ void SunspecUpdater::onReadCompleted()
 		}
 
 		// If we have tracker data, read it
-		if (mInverter->deviceInfo().trackerModelOffset > 0) {
+		if (mInverter->deviceInfo().numberOfTrackers > 0) {
 			nextState = ReadTrackerData;
 			break;
 		}
@@ -191,16 +214,14 @@ void SunspecUpdater::onReadCompleted()
 	case ReadTrackerData:
 	{
 		const DeviceInfo &deviceInfo = mInverter->deviceInfo();
-		if (!values.isEmpty() &&
-			 values.size() == deviceInfo.numberOfTrackers * 20) {
+		if (values.size() == trackerReadCount(deviceInfo.numberOfTrackers)) {
 			for (int i=0; i < deviceInfo.numberOfTrackers; ++i) {
-				double rawVoltage = getRawValue(values, 20 * i + 10, 1);
-				double rawPower = getRawValue(values, 20 * i + 11, 1);
-				// 0xFFFF indicates "not implemented" in SunSpec
+				// getScaledValue yields NaN for a 0xFFFF value or a 0x8000
+				// scale factor, both meaning "not implemented" in SunSpec.
 				mInverter->setTrackerVoltage(i,
-					rawVoltage == 0xFFFF ? qQNaN() : rawVoltage * deviceInfo.trackerVoltageScale);
+					getScaledValue(values, 20 * i + 17, 1, TrackerVoltageScaleOffset, false));
 				mInverter->setTrackerPower(i,
-					rawPower == 0xFFFF ? qQNaN() : rawPower * deviceInfo.trackerPowerScale);
+					getScaledValue(values, 20 * i + 18, 1, TrackerPowerScaleOffset, false));
 			}
 		}
 		nextState = mWritePowerLimitRequested ? WritePowerLimit : Idle;
