@@ -221,6 +221,15 @@ void InverterMediator::startAcquisition()
 			mInverter->setLimiterModel(mDeviceInfo.immediateControlModel);
 		}
 
+		// If no limiter object was created, detection didn't find model 123/704
+		// this time. onLimiterDetected() is the only other place that updates
+		// LimiterSupported, and it's only reachable via limiter->onConnected(),
+		// so without this it stays stuck at whatever a previous detection set
+		// it to (e.g. a device that used to support limiting and no longer does).
+		if (limiter == 0) {
+			mInverterSettings->setLimiterSupported(LimiterDisabled);
+		}
+
 		if (mDeviceInfo.retrievalMode == ProtocolSunSpec2018) {
 			qInfo() << "Using protocol IEEE1547-2018";
 			Sunspec2018Updater *updater = new Sunspec2018Updater(
