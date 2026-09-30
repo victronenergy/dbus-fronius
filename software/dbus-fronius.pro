@@ -25,7 +25,7 @@ unix {
 MOC_DIR=.moc
 OBJECTS_DIR=.obj
 
-QT += core network dbus xml
+QT += core network dbus
 QT -= gui
 
 TARGET = dbus-fronius
