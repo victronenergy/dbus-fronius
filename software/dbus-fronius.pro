@@ -5,19 +5,11 @@ VERSION = 1.7.29
 QMAKE_CXXFLAGS += -Wno-psabi
 
 # gcc 4.8 and newer don't like the QOMPILE_ASSERT in qt
-QMAKE_CXXFLAGS += -Wno-unused-local-typedefs
+QMAKE_CXXFLAGS += -Wno-unused-local-typedefs -Wsuggest-override -std=c++17
 
-# Silence a heap of moaning about internal QT4 definitions
-equals(QT_MAJOR_VERSION, 4): QMAKE_CXXFLAGS += -Wno-deprecated-copy -Wno-class-memaccess
-
-!lessThan(QT_VERSION, 5) {
-    QMAKE_CXXFLAGS += "-Wsuggest-override"
-    CONFIG(debug, debug|release) {
-        QMAKE_CXXFLAGS += "-Werror=suggest-override"
-    }
+CONFIG(debug, debug|release) {
+	QMAKE_CXXFLAGS += "-Werror=suggest-override"
 }
-
-equals(QT_MAJOR_VERSION, 6): QMAKE_CXXFLAGS += -std=c++17
 
 # Add more folders to ship with the application here
 unix {
