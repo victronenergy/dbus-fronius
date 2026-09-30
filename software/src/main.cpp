@@ -72,7 +72,10 @@ int main(int argc, char *argv[])
 	QLoggingCategory::defaultCategory()->setEnabled(QtDebugMsg, debug);
 	qSetMessagePattern("%{type} %{message}");
 
-	VeQItemDbusProducer producer(VeQItems::getRoot(), "sub", true, false);
+	// We only consume com.victronenergy.settings, so don't watch all
+	// com.victronenergy services. Doing so subscribes to PropertiesChanged
+	// and ItemsChanged of every service, which costs memory and CPU.
+	VeQItemDbusProducer producer(VeQItems::getRoot(), "sub", false, false);
 	producer.setAutoCreateItems(false);
 	producer.open(dbusAddress);
 
