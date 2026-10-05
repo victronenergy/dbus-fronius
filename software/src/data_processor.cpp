@@ -18,7 +18,14 @@ void DataProcessor::process(const CommonInverterData &data)
 	BasicPowerInfo *pi = mInverter->meanPowerInfo();
 	pi->setPower(data.acPower);
 	// Fronius gives us energy in Wh. We need kWh here.
-	pi->setTotalEnergy(data.totalEnergy / 1000);
+	double totalEnergy = data.totalEnergy / 1000;
+	// Some inverters report a total of 0 for a while after waking up. Keep
+	// the last value, or the way back up is counted as production.
+	if (totalEnergy > 0)
+		mSettings->setLastTotalEnergy(totalEnergy);
+	else if (totalEnergy == 0)
+		totalEnergy = mSettings->lastTotalEnergy();
+	pi->setTotalEnergy(totalEnergy);
 	InverterPhase phase = getPhase();
 	if (phase != MultiPhase) {
 		PowerInfo *li = mInverter->getPowerInfo(phase);

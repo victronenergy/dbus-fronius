@@ -251,6 +251,151 @@ TEST_F(DataProcessorTest, SplitPhase)
 	EXPECT_NAN(mInverter->l3PowerInfo()->power());
 }
 
+TEST_F(DataProcessorTest, EnergyDropToZero)
+{
+	setUpProcessor(PhaseL1);
+
+	CommonInverterData data;
+	data.acPower = 0;
+	data.acVoltage = 230;
+	data.acCurrent = 0;
+	data.acFrequency = 50;
+
+	// Some inverters report a total of 0 for a while when they wake up.
+	data.totalEnergy = 1000000;
+	mProcessor->process(data);
+	EXPECT_FLOAT_EQ(1000, mInverter->meanPowerInfo()->totalEnergy());
+
+	data.totalEnergy = 0;
+	mProcessor->process(data);
+	EXPECT_FLOAT_EQ(1000, mInverter->meanPowerInfo()->totalEnergy());
+	EXPECT_FLOAT_EQ(1000, mInverter->l1PowerInfo()->totalEnergy());
+
+	data.totalEnergy = 1001000;
+	mProcessor->process(data);
+	EXPECT_FLOAT_EQ(1001, mInverter->meanPowerInfo()->totalEnergy());
+	EXPECT_FLOAT_EQ(1001, mInverter->l1PowerInfo()->totalEnergy());
+}
+
+TEST_F(DataProcessorTest, EnergyDropToZeroThreePhase)
+{
+	setUpProcessor(MultiPhase);
+
+	CommonInverterData data;
+	data.acPower = 445.7;
+	data.acVoltage = 232.8;
+	data.acCurrent = 1.93;
+	data.acFrequency = 59.5;
+
+	ThreePhasesInverterData tpd;
+	tpd.acCurrentPhase1 = 0.61;
+	tpd.acVoltagePhase1 = 229.8;
+	tpd.acCurrentPhase2 = 0.57;
+	tpd.acVoltagePhase2 = 231.2;
+	tpd.acCurrentPhase3 = 0.63;
+	tpd.acVoltagePhase3 = 227.3;
+
+	BasicPowerInfo *pt = mInverter->meanPowerInfo();
+	PowerInfo *p1 = mInverter->l1PowerInfo();
+	PowerInfo *p2 = mInverter->l2PowerInfo();
+	PowerInfo *p3 = mInverter->l3PowerInfo();
+
+	data.totalEnergy = 1000000;
+	mProcessor->process(data);
+	mProcessor->process(tpd);
+	data.totalEnergy = 1000500;
+	mProcessor->process(data);
+	mProcessor->process(tpd);
+	EXPECT_FLOAT_EQ(1000.5, pt->totalEnergy());
+
+	data.totalEnergy = 0;
+	mProcessor->process(data);
+	mProcessor->process(tpd);
+	EXPECT_FLOAT_EQ(1000.5, pt->totalEnergy());
+	EXPECT_FLOAT_EQ(1000.5, p1->totalEnergy() + p2->totalEnergy() + p3->totalEnergy());
+
+	data.totalEnergy = 1001000;
+	mProcessor->process(data);
+	mProcessor->process(tpd);
+	EXPECT_FLOAT_EQ(1001, pt->totalEnergy());
+	EXPECT_FLOAT_EQ(1001, p1->totalEnergy() + p2->totalEnergy() + p3->totalEnergy());
+}
+
+TEST_F(DataProcessorTest, EnergyDropToZeroAfterReconnect)
+{
+	setUpProcessor(PhaseL1);
+
+	CommonInverterData data;
+	data.acPower = 0;
+	data.acVoltage = 230;
+	data.acCurrent = 0;
+	data.acFrequency = 50;
+
+	data.totalEnergy = 1000000;
+	mProcessor->process(data);
+
+	// The inverter is recreated after a lost connection, but the settings
+	// are kept.
+	mProcessor.reset();
+	DeviceInfo deviceInfo = mInverter->deviceInfo();
+	mInverter.reset(new Inverter(mItemProducer->services()->itemGetOrCreate(
+		"com.victronenergy.pvinverter.test2"), deviceInfo, 124));
+	mProcessor.reset(new DataProcessor(mInverter.data(), mSettings.data()));
+
+	data.totalEnergy = 0;
+	mProcessor->process(data);
+	EXPECT_FLOAT_EQ(1000, mInverter->meanPowerInfo()->totalEnergy());
+	EXPECT_FLOAT_EQ(1000, mInverter->l1PowerInfo()->totalEnergy());
+}
+
+TEST_F(DataProcessorTest, EnergyReset)
+{
+	setUpProcessor(PhaseL1);
+
+	CommonInverterData data;
+	data.acPower = 0;
+	data.acVoltage = 230;
+	data.acCurrent = 0;
+	data.acFrequency = 50;
+
+	// A replaced inverter, or a counter reset, starts again from a lower
+	// value, which must be accepted.
+	data.totalEnergy = 1000000;
+	mProcessor->process(data);
+	data.totalEnergy = 5000;
+	mProcessor->process(data);
+	EXPECT_FLOAT_EQ(5, mInverter->meanPowerInfo()->totalEnergy());
+	EXPECT_FLOAT_EQ(5, mInverter->l1PowerInfo()->totalEnergy());
+}
+
+TEST_F(DataProcessorTest, EnergyDropToZeroSplitPhase)
+{
+	setUpProcessor(MultiPhase, 1);
+
+	CommonInverterData data;
+	data.acPower = 0;
+	data.acVoltage = 240;
+	data.acCurrent = 0;
+	data.acFrequency = 60;
+
+	data.totalEnergy = 1000000;
+	mProcessor->process(data);
+	mProcessor->processSplitPhase(data);
+
+	data.totalEnergy = 0;
+	mProcessor->process(data);
+	mProcessor->processSplitPhase(data);
+	EXPECT_FLOAT_EQ(1000, mInverter->meanPowerInfo()->totalEnergy());
+	EXPECT_FLOAT_EQ(500, mInverter->l1PowerInfo()->totalEnergy());
+	EXPECT_FLOAT_EQ(500, mInverter->l2PowerInfo()->totalEnergy());
+
+	data.totalEnergy = 1001000;
+	mProcessor->process(data);
+	mProcessor->processSplitPhase(data);
+	EXPECT_FLOAT_EQ(500.5, mInverter->l1PowerInfo()->totalEnergy());
+	EXPECT_FLOAT_EQ(500.5, mInverter->l2PowerInfo()->totalEnergy());
+}
+
 void DataProcessorTest::SetUp()
 {
 }

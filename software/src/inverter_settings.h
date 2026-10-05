@@ -48,6 +48,10 @@ public:
 
 	bool enableLimiter() const;
 
+	double lastTotalEnergy() const;
+
+	void setLastTotalEnergy(double e);
+
 signals:
 	void phaseChanged();
 
@@ -77,6 +81,9 @@ private:
 	VeQItem *mSerialNumber;
 	VeQItem *mLimiterSupported;
 	VeQItem *mEnableLimiter;
+	// Not stored in localsettings. It lives here, rather than with the
+	// inverter, so that it survives losing the connection overnight.
+	double mLastTotalEnergy;
 };
 
 #endif // INVERTERSETTINGS_H
