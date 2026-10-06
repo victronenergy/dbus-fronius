@@ -97,6 +97,17 @@ void DataProcessor::process(const ThreePhasesInverterData &data)
 	mPreviousTotalEnergy = totalEnergy;
 }
 
+void DataProcessor::processSplitPhase(const CommonInverterData &data)
+{
+	PowerInfo *l1 = mInverter->l1PowerInfo();
+	PowerInfo *l2 = mInverter->l2PowerInfo();
+	l1->setPower(data.acPower / 2);
+	l2->setPower(data.acPower / 2);
+	double energy = mInverter->meanPowerInfo()->totalEnergy() / 2;
+	l1->setTotalEnergy(energy);
+	l2->setTotalEnergy(energy);
+}
+
 void DataProcessor::updateEnergySettings()
 {
 	updateEnergySettings(PhaseL1);

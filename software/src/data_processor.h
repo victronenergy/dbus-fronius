@@ -29,6 +29,12 @@ public:
 
 	void process(const ThreePhasesInverterData &data);
 
+	/*!
+	 * Splits power and energy equally over L1 and L2, for a single phase
+	 * inverter connected across two phases. Call process() first.
+	 */
+	void processSplitPhase(const CommonInverterData &data);
+
 	void updateEnergySettings();
 
 private:

@@ -406,16 +406,6 @@ void SunspecUpdater::connectModbusClient()
 }
 
 
-void SunspecUpdater::updateSplitPhase(double power, double energy)
-{
-	PowerInfo *l1 = mInverter->getPowerInfo(PhaseL1);
-	PowerInfo *l2 = mInverter->getPowerInfo(PhaseL2);
-	l1->setPower(power);
-	l2->setPower(power);
-	l1->setTotalEnergy(energy);
-	l2->setTotalEnergy(energy);
-}
-
 bool SunspecUpdater::hasConnectionTo(QString host, int port, int id)
 {
 	foreach (SunspecUpdater *u, mUpdaters) {
@@ -498,7 +488,7 @@ bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 				// generator. This only makes sense in a split-phase
 				// system. Typical in North America, and fully
 				// supported by Fronius.
-				updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
+				mDataProcessor->processSplitPhase(cid);
 			}
 		}
 		setInverterState(values[48]);
@@ -534,7 +524,7 @@ bool SunspecUpdater::parsePowerAndVoltage(QVector<quint16> values)
 				// generator. This only makes sense in a split-phase
 				// system. Typical in North America, and fully
 				// supported by Fronius.
-				updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
+				mDataProcessor->processSplitPhase(cid);
 			}
 		}
 		setInverterState(values[38]);
@@ -639,7 +629,7 @@ bool Sunspec2018Updater::parsePowerAndVoltage(QVector<quint16> values)
 
 	if (deviceInfo.phaseCount <= 1 && settings()->phase() == MultiPhase) {
 		// A single phase inverter across phases, in North America.
-		updateSplitPhase(cid.acPower/2, cid.totalEnergy/2);
+		processor()->processSplitPhase(cid);
 	}
 
 	// +1 because 2018 enum is literally off by one from the earlier spec

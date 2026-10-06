@@ -72,8 +72,6 @@ protected:
 
 	void readHoldingRegisters(quint16 startRegister, quint16 count);
 
-	void updateSplitPhase(double power, double energy);
-
 	void setInverterState(int sunSpecState);
 
 private:

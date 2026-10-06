@@ -17,7 +17,7 @@ protected:
 
 	virtual void TearDown();
 
-	void setUpProcessor(InverterPhase phase);
+	void setUpProcessor(InverterPhase phase, int phaseCount = 0);
 
 	QScopedPointer<Inverter> mInverter;
 	QScopedPointer<InverterSettings> mSettings;

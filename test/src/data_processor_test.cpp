@@ -227,6 +227,30 @@ TEST_F(DataProcessorTest, ThreePhaseMultiple)
 	}
 }
 
+TEST_F(DataProcessorTest, SplitPhase)
+{
+	// A single phase inverter configured as multiphase
+	setUpProcessor(MultiPhase, 1);
+
+	CommonInverterData data;
+	data.acPower = 3000;
+	data.acVoltage = 240;
+	data.acCurrent = 12.5;
+	data.acFrequency = 60;
+	data.totalEnergy = 34596.9; // Wh
+	mProcessor->process(data);
+	mProcessor->processSplitPhase(data);
+
+	EXPECT_FLOAT_EQ(3000, mInverter->meanPowerInfo()->power());
+	EXPECT_FLOAT_EQ(34.5969, mInverter->meanPowerInfo()->totalEnergy());
+
+	EXPECT_FLOAT_EQ(1500, mInverter->l1PowerInfo()->power());
+	EXPECT_FLOAT_EQ(1500, mInverter->l2PowerInfo()->power());
+	EXPECT_FLOAT_EQ(17.29845, mInverter->l1PowerInfo()->totalEnergy());
+	EXPECT_FLOAT_EQ(17.29845, mInverter->l2PowerInfo()->totalEnergy());
+	EXPECT_NAN(mInverter->l3PowerInfo()->power());
+}
+
 void DataProcessorTest::SetUp()
 {
 }
@@ -240,12 +264,12 @@ void DataProcessorTest::TearDown()
 	mItemSubscriber.reset();
 }
 
-void DataProcessorTest::setUpProcessor(InverterPhase phase)
+void DataProcessorTest::setUpProcessor(InverterPhase phase, int phaseCount)
 {
 	mItemProducer.reset(new VeProducer(VeQItems::getRoot(), "pub"));
 	mItemSubscriber.reset(new VeQItemProducer(VeQItems::getRoot(), "sub"));
 	DeviceInfo deviceInfo;
-	deviceInfo.phaseCount = phase == MultiPhase ? 3 : 1;
+	deviceInfo.phaseCount = phaseCount > 0 ? phaseCount : (phase == MultiPhase ? 3 : 1);
 	deviceInfo.hostName = "10.0.1.4";
 	deviceInfo.port = 80;
 	deviceInfo.uniqueId = "756";
