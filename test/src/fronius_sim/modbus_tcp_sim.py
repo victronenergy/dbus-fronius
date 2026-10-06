@@ -1,3 +1,4 @@
+# Needs pymodbus 2.x and twisted. Run with: python3 modbus_tcp_sim.py
 import bisect
 import traceback
 from pymodbus.server.asynchronous import ModbusSocketFramer, ModbusServerFactory
@@ -218,3 +219,10 @@ def start_server(inverters):
 	context = ModbusServerContext(slaves=store, single=False)
 	factory = ModbusServerFactory(context, ModbusSocketFramer, None)
 	reactor.listenTCP(5020, factory, interface='0.0.0.0')
+
+
+if __name__ == '__main__':
+	from twisted.internet import reactor
+	from app import inverters, sma_inverter
+	start_server(inverters + [sma_inverter])
+	reactor.run()

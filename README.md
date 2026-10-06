@@ -109,7 +109,11 @@ The README.md of localsettings contains some information on how to run localsett
 Unit tests
 ==========
 
-In order to run the unit tests, you need to install a python interpreter (v2.7 or newer).
+In order to run the unit tests, you need python3. Run `./test.sh`. The tests
+start `test/src/fronius_sim/app.py`, which simulates the Solar API on port 8080.
+
+`test/src/fronius_sim/modbus_tcp_sim.py` simulates SunSpec over Modbus TCP on
+port 5020, for testing by hand. It needs pymodbus 2.x and twisted.
 
 Architecture
 ============

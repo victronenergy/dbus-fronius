@@ -1,7 +1,7 @@
 [submodule "software/ext/bottle"]
 	path = software/ext/bottle
 	url = https://github.com/bottlepy/bottle.git
-	branch = release-0.12
+	branch = release-0.13
 [submodule "software/ext/googletest"]
 	path = software/ext/googletest
 	url = https://github.com/google/googletest

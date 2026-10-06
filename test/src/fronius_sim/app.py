@@ -1,10 +1,8 @@
 #!/usr/bin/python -u
 
 import datetime
-import modbus_tcp_sim
 import os
 import sys
-from twisted.internet import reactor
 from fronius_sim import FroniusSim
 
 app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -157,22 +155,6 @@ def create_head(args, error_code=0, error_message=''):
 		'Timestamp': datetime.datetime.now().isoformat()}
 
 
-class TwistedServer(bottle.ServerAdapter):
-	def start(self, handler):
-		from twisted.web import server, wsgi
-		from twisted.python.threadpool import ThreadPool
-		from twisted.internet import reactor
-		thread_pool = ThreadPool(minthreads=0, maxthreads=1)
-		thread_pool.start()
-		reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
-		factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
-		reactor.listenTCP(self.port, factory, interface=self.host)
-		# reactor.run()
-
-
 if __name__ == '__main__':
 	# host='0.0.0.0': accept connections from all sources
-	server = TwistedServer(host='0.0.0.0', port=8080, debug=True)
-	server.start(application)
-	modbus_tcp_sim.start_server(inverters + [sma_inverter])
-	reactor.run()
+	bottle.run(application, host='0.0.0.0', port=8080)
