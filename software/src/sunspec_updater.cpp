@@ -368,7 +368,7 @@ void SunspecUpdater::onTimer()
 	if (mModbusClient->isConnected())
 		startNextAction(mCurrentState == Idle ? ReadPowerAndVoltage : mCurrentState);
 	else
-		mModbusClient->connectToServer(mInverter->hostName());
+		mModbusClient->connectToServer(mInverter->hostName(), mInverter->modbusPort());
 }
 
 void SunspecUpdater::onPowerLimitExpired()
