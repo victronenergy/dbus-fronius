@@ -60,6 +60,10 @@ protected:
 
 	virtual bool parsePowerAndVoltage(QVector<quint16> values);
 
+	virtual void readPhaseData();
+
+	virtual void parsePhaseData(QVector<quint16> values);
+
 	Inverter *inverter() { return mInverter; }
 
 	InverterSettings *settings() { return mSettings; }
@@ -75,6 +79,7 @@ protected:
 private:
 	enum ModbusState {
 		ReadPowerAndVoltage,
+		ReadPhaseData, // Model 701 only, see readPhaseData
 		ReadTrackerData,
 		WritePowerLimit,
 		Idle
@@ -138,6 +143,10 @@ private:
 	void readPowerAndVoltage() override;
 
 	bool parsePowerAndVoltage(QVector<quint16> values) override;
+
+	void readPhaseData() override;
+
+	void parsePhaseData(QVector<quint16> values) override;
 };
 
 // Limiting functionality

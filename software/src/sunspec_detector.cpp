@@ -170,11 +170,13 @@ void SunspecDetector::onFinished()
 			di->di.immediateControlModel = modelId;
 			requestNextContent(di, modelId, nextModel, 1, 23);
 			return;
-		case 160: // Multiple trackers, up to 6 (120 registers) in one call
+		case 160: // Multiple trackers, up to 6
 			di->di.numberOfTrackers = qMin(6, (modelSize - 8) / 20);
 			di->di.trackerModelOffset = di->currentRegister;
-			requestNextContent(di, modelId, nextModel, 5);
-			return;
+			// The scale factors are deliberately not fetched here. They are not
+			// static, Fronius inverters change them at runtime, so the updater
+			// reads them along with the tracker data on every update.
+			break;
 		case 0xFFFF:
 			checkDone(di);
 			return;
@@ -223,6 +225,17 @@ void SunspecDetector::onFinished()
 		case 701: // DERMeasureAC
 			if (values.size() > 2)
 				di->di.phaseCount = values[2] + 1;
+			// Fetch the scale factors, they don't change. Start at A_SF (113)
+			// up to TotWh_SF (121).
+			requestNextContent(di, 0xF701, di->nextModelRegister, 8, 113);
+			return;
+		case 0xF701: // Not a real model, second half of 701
+			if (values.size() >= 8) {
+				di->di.acCurrentScale = getScale(values, 0); // A_SF
+				di->di.acVoltageScale = getScale(values, 1); // V_SF
+				di->di.acPowerScale = getScale(values, 3); // W_SF
+				di->di.totalEnergyScale = getScale(values, 7); // TotWh_SF
+			}
 			break;
 		case 120: // Nameplate ratings
 			if (values.size() > 4)
@@ -241,12 +254,6 @@ void SunspecDetector::onFinished()
 		case 704: // DERCtlAC
 			if (values.size() > 0)
 				di->di.powerLimitScale = 100.0 / getScale(values, 0);
-			break;
-		case 160: // Tracker data
-			if (values.size() > 4) {
-				di->di.trackerVoltageScale = getScale(values, 3);
-				di->di.trackerPowerScale = getScale(values, 4);
-			}
 			break;
 		}
 		di->currentRegister = di->nextModelRegister;
@@ -284,7 +291,10 @@ void SunspecDetector::checkDone(Reply *di)
 {
 	if ( !di->di.productName.isEmpty() && // Model 1 is present
 			di->di.phaseCount > 0 && // Model 1xx present
-			di->di.networkId > 0)
+			di->di.networkId > 0 &&
+			// Model 701 is parsed using the scale factors read here, so
+			// without them the inverter is of no use to us.
+			(di->di.inverterModel != 701 || qIsFinite(di->di.acPowerScale)))
 		di->setResult();
 	setDone(di);
 }

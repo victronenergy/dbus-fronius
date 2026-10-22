@@ -14,8 +14,17 @@ double getRawValue(const QVector<quint16> &values, int offset, int size)
 double getScaledValue(const QVector<quint16> &values, int offset, int size, int scaleOffset,
 					  bool isSigned)
 {
+	return getValueWithScale(values, offset, size, getScale(values, scaleOffset), isSigned);
+}
+
+// Same as getScaledValue, but for a scale factor that is already known, rather
+// than one that sits in the same set of registers. Used for models where the
+// scale factors are static and read only once, so they don't have to be
+// included in the periodic read.
+double getValueWithScale(const QVector<quint16> &values, int offset, int size, double scale,
+						 bool isSigned)
+{
 	Q_ASSERT(size > 0 && size < 5);
-	double scale = getScale(values, scaleOffset);
 	if (!qIsFinite(scale))
 		return qQNaN();
 
