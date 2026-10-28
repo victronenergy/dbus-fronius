@@ -215,7 +215,7 @@ void SunspecUpdater::onReadCompleted()
 		}
 
 		// If we have tracker data, read it
-		if (deviceInfo.trackerModelOffset > 0) {
+		if (deviceInfo.numberOfTrackers > 0) {
 			nextState = ReadTrackerData;
 			break;
 		}
