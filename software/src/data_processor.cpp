@@ -17,8 +17,12 @@ void DataProcessor::process(const CommonInverterData &data)
 {
 	BasicPowerInfo *pi = mInverter->meanPowerInfo();
 	pi->setPower(data.acPower);
+	// Some inverters report a total of 0 for a while after waking up. Treat
+	// that as invalid and keep the last published value (invalid at startup),
+	// otherwise the way back up is counted as production.
 	// Fronius gives us energy in Wh. We need kWh here.
-	pi->setTotalEnergy(data.totalEnergy / 1000);
+	if (data.totalEnergy > 0)
+		pi->setTotalEnergy(data.totalEnergy / 1000);
 	InverterPhase phase = getPhase();
 	if (phase != MultiPhase) {
 		PowerInfo *li = mInverter->getPowerInfo(phase);
@@ -94,7 +98,10 @@ void DataProcessor::process(const ThreePhasesInverterData &data)
 		updateEnergyValue(PhaseL3, accumulatedEnergy, vi3 * energyCorrection);
 	}
 
-	mPreviousTotalEnergy = totalEnergy;
+	// The total is invalid until the inverter reports a non-zero value. Stay
+	// in the initial state until then.
+	if (qIsFinite(totalEnergy))
+		mPreviousTotalEnergy = totalEnergy;
 }
 
 void DataProcessor::processSplitPhase(const CommonInverterData &data)
