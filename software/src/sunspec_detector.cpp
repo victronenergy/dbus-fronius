@@ -289,13 +289,21 @@ void SunspecDetector::startNextRequest(Reply *di, quint16 regCount)
 
 void SunspecDetector::checkDone(Reply *di)
 {
-	if ( !di->di.productName.isEmpty() && // Model 1 is present
-			di->di.phaseCount > 0 && // Model 1xx present
-			di->di.networkId > 0 &&
-			// Model 701 is parsed using the scale factors read here, so
-			// without them the inverter is of no use to us.
-			(di->di.inverterModel != 701 || qIsFinite(di->di.acPowerScale)))
-		di->setResult();
+	if (!di->di.productName.isEmpty()) { // Model 1 is present
+		if (di->di.serialNumber.trimmed().isEmpty()) {
+			// Some inverters (eg Enphase) intermittently report an empty
+			// serial number. Since it doubles as the unique id, don't
+			// detect the inverter now. It will be picked up on a later scan.
+			qInfo() << "Ignoring SunSpec device without serial number"
+					<< di->di.productName << "@" << di->di.hostName;
+		} else if (di->di.phaseCount > 0 && // Model 1xx present
+				di->di.networkId > 0 &&
+				// Model 701 is parsed using the scale factors read here, so
+				// without them the inverter is of no use to us.
+				(di->di.inverterModel != 701 || qIsFinite(di->di.acPowerScale))) {
+			di->setResult();
+		}
+	}
 	setDone(di);
 }
 
